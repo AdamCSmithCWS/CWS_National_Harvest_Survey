@@ -31,13 +31,11 @@ sp,species,newvar,source,as_var,group
 1650,White-winged Scoter,kill_ys,duck,axcomp_axsy,sea_ducks
 1660,Surf Scoter,kill_ys,duck,axcomp_axsy,sea_ducks
 1670,Ruddy Duck,kill_ys,duck,axcomp_axsy,puddle_ducks
-1690,Lesser Snow Goose: white phase,kill_ys,goose,axcomp_axsy,
-1691,Lesser Snow Goose: blue phase,kill_ys,goose,axcomp_axsy,
+1690,Lesser Snow Goose,kill_ys,goose,axcomp_axsy,
 1699,Greater Snow Goose,kill_ys,goose,axcomp_axsy,
 1700,Ross' Goose,kill_ys,goose,axcomp_axsy,
 1710,White-fronted Goose,kill_ys,goose,axcomp_axsy,
-1720,Canada Goose,kill_ys,goose,axcomp_axsy,
-1721,Canada Goose: small races,kill_ys,goose,axcomp_axsy,
-1722,Canada Goose: large races,kill_ys,goose,axcomp_axsy,
+1721,Cackling Goose,kill_ys,goose,axcomp_axsy,
+1722,Canada Goose,kill_ys,goose,axcomp_axsy,
 1730,Brant,kill_ys,goose,axcomp_axsy,
 1740,Black Brant,kill_ys,goose,axcomp_axsy,
