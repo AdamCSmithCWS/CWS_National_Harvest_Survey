@@ -10,8 +10,9 @@
 # nyears = nyears, #integer length = 1 number of years
 # nhunter_y = nhunter_y, # nhunter_y[nyears] number active hunters by year
 # nhunter_cy = nhunter_cy, # nhunter_cy[castes,nyears] number active hunters by caste and year
-# castes = castes, # castes (numeric, 1:4)
-# ncastes = length(castes), # number of castes
+# castes = castes, # castes (numeric, 1:4)   
+### castes always in this order, 1 = D-renewal > 1year, 2 = B-renewal = 1year, 3 = A-nonrenewal (new hunter), 4 = E-nonresident
+# ncastes = length(castes), # number of castes 
 # nhs = nhs, # integer length = 1 number of active hunters over all years (nrow for sumkill_active)
 # #main data for overall harvest estimates
 # hunter = hunter_n_cy, # vector(length = nhs) unique numeric indicator for active hunters by caste and year 
@@ -185,13 +186,13 @@ for(g in 1:ngroups){
    }
 
   
- ############################### forcing a single estimate of hunter level variance from caste D onto all other castes
+ ############################### forcing a single estimate of hunter level harvest variance from caste D onto all other castes
    for(g in 1:ngroups){
    retrans_hunter[1,g] <- (0.5*(1/tauhunter[1,g]))/nu_ret[g]
 
  sdhunter[1,g] <- 1/pow(tauhunter[1,g],0.5)
  #tauhunter[1] ~ dgamma(0.01,0.01)
- tauhunter[1,g] ~ dscaled.gamma(0.5,50) #implicit prior on sigma of a half-t dist: sigma = 1*t(df = 50) , i.e., 99% prob sd < 2
+ tauhunter[1,g] ~ dscaled.gamma(0.5,50) #implicit prior on sigma of a half-t dist: sigma = 0.5*t(df = 50) , i.e., 99% prob sd < 2
  
  nu[1,g] ~ dgamma(2,0.2)
  

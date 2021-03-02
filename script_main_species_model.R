@@ -124,6 +124,7 @@ for(spgp in c("murre","duck","goose")){
     
     
   }
+  
   if(spgp == "duck"){
     
     Y <- 2019
@@ -189,19 +190,19 @@ for(spgp in c("murre","duck","goose")){
   
 
 # Province and Zone loop --------------------------------------------------
-  n_cores <- length(provs2)
-  cluster <- makeCluster(n_cores, type = "PSOCK")
-  registerDoParallel(cluster)
-  
-  
-  
-  fullrun <- foreach(pr = provs2,
-                     .packages = c("jagsUI","tidyverse"),
-                     .inorder = FALSE,
-                     .errorhandling = "pass") %dopar%
-    {
-      
-  
+  # n_cores <- length(provs2)
+  # cluster <- makeCluster(n_cores, type = "PSOCK")
+  # registerDoParallel(cluster)
+  # 
+  # 
+  # 
+  # fullrun <- foreach(pr = provs2,
+  #                    .packages = c("jagsUI","tidyverse"),
+  #                    .inorder = FALSE,
+  #                    .errorhandling = "pass") %dopar%
+  #   {
+  #     
+  for(pr in provs2){
   zns <- unique(period[which(period$pr == pr),"zo"])
   
   # Set up parallel stuff
@@ -284,7 +285,7 @@ if(class(out2) != "try-error"){
   }#z
 
 }#pr
-  stopCluster(cl = cluster)
+#  stopCluster(cl = cluster)
   
 
 

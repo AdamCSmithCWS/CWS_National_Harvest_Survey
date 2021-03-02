@@ -74,184 +74,189 @@ load(paste0("data/parts and harvest survey info",Y,".RData"))
 provzone <- read.csv("data/Province and zone table.csv")
 
 
-# load published estimates by zone ----------------------------------------
-
-pubEsts_simple = read.csv("data/enp_nhs_a_by_zone_20200416.csv",stringsAsFactors = F)
-names(pubEsts_simple) <- c("var","name","prov","zone","resid","year","mean","sd")
-pubEsts_simple$lci = ceiling(pubEsts_simple$mean-(1.96*pubEsts_simple$sd))
-pubEsts_simple$uci = ceiling(pubEsts_simple$mean+(1.96*pubEsts_simple$sd))
-pubEsts_simple[which(pubEsts_simple$lci < 0),"lci"] <- 0
-
-
-pubEsts_species = read.csv("data/enp_nhs_b_by_zone_20200416.csv",stringsAsFactors = F)
-names(pubEsts_species) <- c("sp","species","prov","zone","year","mean","sd")
-pubEsts_species$lci = ceiling(pubEsts_species$mean-(1.96*pubEsts_species$sd))
-pubEsts_species$uci = ceiling(pubEsts_species$mean+(1.96*pubEsts_species$sd))
-pubEsts_species[which(pubEsts_species$lci < 0),"lci"] <- 0
-
-species_web_names = unique(pubEsts_species[,c("sp","species")])
-
-
-pubEsts_age_sex = read.csv("data/enp_nhs_c_by_zone_20200416.csv",stringsAsFactors = F)
-names(pubEsts_species) <- c("sp","species","prov","zone","year","age_ratio")
-
-# compile total harvest estimates into a dataframe ------------------------
-
-### compile total harvest estimates into a dataframe of
-#### permit, year, caste, totalkill
- 
-cls = c("PERMIT",
-   "CASTE",
-   "YEAR",
-   "SELYEAR",
-   "PRHUNT",
-   "ZOHUNT",
-   "LATD",
-   "LOND",
-   "TODUK",
-   "TOGOK",
-   "COOTK",
-   "WOODK",
-   "SNIPK",
-   "DOVEK",
-   "PIGEK",
-   "CRANK",
-   "RAILK",
-   "MURRK",
-   "RNDMURK",
-   "DAYWF",
-   "DAYOT",
-   "DAYM",
-   "PRHUNTG",
-   "ZOHUNTG",
-   "LATG",
-   "LONG",
-   "PRHUNTM",
-   "ZOHUNTM",
-   "LATM",
-   "LONM",
-   "SUCCWF",
-   "SUTODU",
-   "SUTOGO",
-   "SUCCOT",
-   "SUCCM",
-   "ACTIVEOT",
-   "ACTIVE",
-   "ACTIVEWF",
-   "ACTIVEM",
-   "POTNTL",
-   "PRSALE",
-   "ZOSALE",
-   "PRSAMP",
-   "ZOSAMP")
-allkill <- NULL
-
-for(y in years){
-  tmp1 <- harvw[[as.character(y)]]
-  tmp <- tmp1[,which(names(tmp1) %in% cls)]
-#tmp = tmp1
-
-  if(y == years[1]){
-    allkill <- tmp
-  }else{
-    allkill <- bind_rows(allkill,tmp)
-  }
-}
-
-trem = which(allkill$CASTE %in% c("C","F","H"))
-if(length(trem)>0){
-  allkill = allkill[-trem,]
-}### removing the unused castes; there are permits that have this caste designation across all years
-
-
-tkp = which(allkill$POTNTL == "Y")
-if(length(tkp)>0){
-  allkill = allkill[tkp,]
-}### removing the hunters sampled from last year's permit file who indicated they didn't buy a permit this year
-### and are therefore not potential hunters
-
-
-trem = which(allkill$PERMIT == 0)
-if(length(trem)>0){
-  allkill = allkill[-trem,]
-}### removes a single permit from 1985 with no permit number
-
-
-# tkp = which(allkill$PRHUNT %in% c("AB","BC","MB","NB","NF","NS","NT","ON","PE","PQ","SK","YT","")) #drops NU and non provincial values
+# # load published estimates by zone ----------------------------------------
+# 
+# pubEsts_simple = read.csv("data/enp_nhs_a_by_zone_20200416.csv",stringsAsFactors = F)
+# names(pubEsts_simple) <- c("var","name","prov","zone","resid","year","mean","sd")
+# pubEsts_simple$lci = ceiling(pubEsts_simple$mean-(1.96*pubEsts_simple$sd))
+# pubEsts_simple$uci = ceiling(pubEsts_simple$mean+(1.96*pubEsts_simple$sd))
+# pubEsts_simple[which(pubEsts_simple$lci < 0),"lci"] <- 0
+# 
+# 
+# pubEsts_species = read.csv("data/enp_nhs_b_by_zone_20200416.csv",stringsAsFactors = F)
+# names(pubEsts_species) <- c("sp","species","prov","zone","year","mean","sd")
+# pubEsts_species$lci = ceiling(pubEsts_species$mean-(1.96*pubEsts_species$sd))
+# pubEsts_species$uci = ceiling(pubEsts_species$mean+(1.96*pubEsts_species$sd))
+# pubEsts_species[which(pubEsts_species$lci < 0),"lci"] <- 0
+# 
+# species_web_names = unique(pubEsts_species[,c("sp","species")])
+# 
+# 
+# pubEsts_age_sex = read.csv("data/enp_nhs_c_by_zone_20200416.csv",stringsAsFactors = F)
+# names(pubEsts_species) <- c("sp","species","prov","zone","year","age_ratio")
+# 
+# # compile total harvest estimates into a dataframe ------------------------
+# 
+# ### compile total harvest estimates into a dataframe of
+# #### permit, year, caste, totalkill
+#  
+# cls = c("PERMIT",
+#    "CASTE",
+#    "YEAR",
+#    "SELYEAR",
+#    "PRHUNT",
+#    "ZOHUNT",
+#    "LATD",
+#    "LOND",
+#    "TODUK",
+#    "TOGOK",
+#    "COOTK",
+#    "WOODK",
+#    "SNIPK",
+#    "DOVEK",
+#    "PIGEK",
+#    "CRANK",
+#    "RAILK",
+#    "MURRK",
+#    "RNDMURK",
+#    "DAYWF",
+#    "DAYOT",
+#    "DAYM",
+#    "PRHUNTG",
+#    "ZOHUNTG",
+#    "LATG",
+#    "LONG",
+#    "PRHUNTM",
+#    "ZOHUNTM",
+#    "LATM",
+#    "LONM",
+#    "SUCCWF",
+#    "SUTODU",
+#    "SUTOGO",
+#    "SUCCOT",
+#    "SUCCM",
+#    "ACTIVEOT",
+#    "ACTIVE",
+#    "ACTIVEWF",
+#    "ACTIVEM",
+#    "POTNTL",
+#    "PRSALE",
+#    "ZOSALE",
+#    "PRSAMP",
+#    "ZOSAMP")
+# allkill <- NULL
+# 
+# for(y in years){
+#   tmp1 <- harvw[[as.character(y)]]
+#   tmp <- tmp1[,which(names(tmp1) %in% cls)]
+# #tmp = tmp1
+# 
+#   if(y == years[1]){
+#     allkill <- tmp
+#   }else{
+#     allkill <- bind_rows(allkill,tmp)
+#   }
+# }
+# 
+# trem = which(allkill$CASTE %in% c("C","F","H"))
+# if(length(trem)>0){
+#   allkill = allkill[-trem,]
+# }### removing the unused castes; there are permits that have this caste designation across all years
+# 
+# 
+# tkp = which(allkill$POTNTL == "Y")
 # if(length(tkp)>0){
 #   allkill = allkill[tkp,]
-# }### 
-
-
-
-allkill$uniperm = allkill$PERMIT + allkill$SELYEAR*1000000 + allkill$YEAR*10000000000
-dupuni = allkill$uniperm[duplicated(allkill$uniperm)]
-# dupdf = allkill[which(allkill$uniperm %in% dupuni),]
-# dupdf = dupdf[order(dupdf$uniperm),]
-
-wmigoo <- which(allkill$PRHUNTG == "")
-allkill$PRHUNTG = as.character(allkill$PRHUNTG)
-allkill[wmigoo,"PRHUNTG"] <- as.character(allkill[wmigoo,"PRHUNT"])
-allkill[wmigoo,"ZOHUNTG"] <- allkill[wmigoo,"ZOHUNT"]
-
-
-
-wsud = which(allkill$TODUK > 0)
-allkill$SUTODU <- "N"
-allkill[wsud,"SUTODU"] <- "Y"
-
-
-wsud = which(allkill$TOGOK > 0)
-allkill$SUTOGO <- "N"
-allkill[wsud,"SUTOGO"] <- "Y"
-
-
-
-tkeepP = which(allkill$PRSAMP %in% provs) #keeps only permits sampled in primary provinces. for now ignores territories
-
-allkill = allkill[tkeepP,]
-
-
-
-nrow(allkill) == length(unique(allkill$uniperm))
-allkill$year = allkill$YEAR-(min(allkill$YEAR)-1)
-allkill$caste = factor(allkill$CASTE,
-                       ordered = T,
-                       levels = c("A","B","D","E"))
-
-
+# }### removing the hunters sampled from last year's permit file who indicated they didn't buy a permit this year
+# ### and are therefore not potential hunters
 # 
-# save(list = c("allkill"),
-#      file = "data/allkill.RData")
+# 
+# trem = which(allkill$PERMIT == 0)
+# if(length(trem)>0){
+#   allkill = allkill[-trem,]
+# }### removes a single permit from 1985 with no permit number
+# 
+# 
+# # tkp = which(allkill$PRHUNT %in% c("AB","BC","MB","NB","NF","NS","NT","ON","PE","PQ","SK","YT","")) #drops NU and non provincial values
+# # if(length(tkp)>0){
+# #   allkill = allkill[tkp,]
+# # }### 
+# 
+# 
+# 
+# allkill$uniperm = allkill$PERMIT + allkill$SELYEAR*1000000 + allkill$YEAR*10000000000
+# dupuni = allkill$uniperm[duplicated(allkill$uniperm)]
+# # dupdf = allkill[which(allkill$uniperm %in% dupuni),]
+# # dupdf = dupdf[order(dupdf$uniperm),]
+# 
+# wmigoo <- which(allkill$PRHUNTG == "")
+# allkill$PRHUNTG = as.character(allkill$PRHUNTG)
+# allkill[wmigoo,"PRHUNTG"] <- as.character(allkill[wmigoo,"PRHUNT"])
+# allkill[wmigoo,"ZOHUNTG"] <- allkill[wmigoo,"ZOHUNT"]
+# 
+# 
+# 
+# wsud = which(allkill$TODUK > 0)
+# allkill$SUTODU <- "N"
+# allkill[wsud,"SUTODU"] <- "Y"
+# 
+# 
+# wsud = which(allkill$TOGOK > 0)
+# allkill$SUTOGO <- "N"
+# allkill[wsud,"SUTOGO"] <- "Y"
+# 
+# 
+# 
+# tkeepP = which(allkill$PRSAMP %in% provs) #keeps only permits sampled in primary provinces. for now ignores territories
+# 
+# allkill = allkill[tkeepP,]
+# 
+# 
+# 
+# nrow(allkill) == length(unique(allkill$uniperm))
+# allkill$year = allkill$YEAR-(min(allkill$YEAR)-1)
+# allkill$caste = factor(allkill$CASTE,
+#                        ordered = T,
+#                        levels = c("A","B","D","E"))
+# 
+# 
+# # 
+# # save(list = c("allkill"),
+# #      file = "data/allkill.RData")
+# 
+load("data/allkill.RData")
+### species lists
 
-######## sampling population sizes
-popsiz_s = merge(popsiz,provzone[,c("prov","provn")],by.x = "PRSAMP",by.y = "provn",all.x = T)
-popsiz_s = unique(popsiz_s)
 
-
-
-#### total number of permits in each year
-
-popsiz_perm = merge(perms,provzone[,c("prov","provn")],by.x = "PRSALE",by.y = "provn",all.x = T)
-popsiz_perm = unique(popsiz_perm)
-
-
-### total number of permits by zone and year
-
-z_pops <- popsiz_perm %>%
-  select(-PRSALE) %>% 
-  rename(PRSAMP = prov,ZOSAMP = ZOSALE) %>% 
-  group_by(PRSAMP,ZOSAMP,YEAR) %>% 
-  summarise(TOTSALE = sum(TOTSALE))
-
-# popsiz_perm$yr = str_sub(popsiz_perm$YEAR,start = 3,end = 4)
-# tmp = left_join(popsiz_perm,popsiz_s[,c("zone","caste","TOTPERM","yr","prov")])
-
+# ######## sampling population sizes
+# popsiz_s = merge(popsiz,provzone[,c("prov","provn")],by.x = "PRSAMP",by.y = "provn",all.x = T)
+# popsiz_s = unique(popsiz_s)
+# 
+# 
+# 
+# #### total number of permits in each year
+# 
+# popsiz_perm = merge(perms,provzone[,c("prov","provn")],by.x = "PRSALE",by.y = "provn",all.x = T)
+# popsiz_perm = unique(popsiz_perm)
+# 
+# 
+# ### total number of permits by zone and year
+# 
+# z_pops <- popsiz_perm %>%
+#   select(-PRSALE) %>%
+#   rename(PRSAMP = prov,ZOSAMP = ZOSALE) %>%
+#   group_by(PRSAMP,ZOSAMP,YEAR) %>%
+#   summarise(TOTSALE = sum(TOTSALE))
+# 
+# # popsiz_perm$yr = str_sub(popsiz_perm$YEAR,start = 3,end = 4)
+# # tmp = left_join(popsiz_perm,popsiz_s[,c("zone","caste","TOTPERM","yr","prov")])
+# 
 
 ### species lists
 
 
-others = c("COOTK","WOODK","SNIPK","DOVEK","PIGEK","CRANK","RAILK","MURRK")
+others = c("COOTK","WOODK","SNIPK","DOVEK","PIGEK","CRANK") #"RAILK" ,"MURRK"
+#dropping Rails because the data need to be reconciled
 
 #prov_otherk <- read.csv(stringsAsFactors = F,"data/OTHERK_by_Prov.csv")
 
@@ -276,7 +281,7 @@ keep_E <- paste(rep(c("MB","NB","SK"),each = 3),rep(c(1,2,3),times = 3))
 # province and zone loops -------------------------------------------------
 non_res_combine <- non_res_combine[-which(non_res_combine %in% keep_E)]
 
-for(pr in provs){
+for(pr in provs[12]){
   
   
   #################### try keeping all caste effects constant through time - done (except caste-D day effect)
@@ -316,10 +321,14 @@ for(pr in provs){
   ngroups <- length(grps) #to enter model as data
   if("SNIPK" %in% grps){
     regs[which(regs$YEAR < 1992), "SNIPK"] <- 0
-  }### remove Snipe hunt per 1991
+  }### remove Snipe hunt pre 1991
   if("MURRK" %in% grps){
-    regs[which(regs$YEAR >2012 | regs$YEAR < 2001), "MURRK"] <- 0
-  }### remove Snipe hunt per 1991
+   # regs[which(regs$YEAR >2012 | regs$YEAR < 2001), "MURRK"] <- 0
+
+    regs[, "MURRK"] <- 0
+  }### remove Murre hunts need to reconcile historical database
+  
+  
   reg_mat <- as.matrix(regs[,grps]) #to enter model as data ensuring that group-level annual estimates are never > 0 in years with no season.
   grps_f <- factor(grps,levels = grps,ordered = TRUE) #ensures consistent ordering of the harvested groups
   
@@ -446,9 +455,8 @@ sumkill = allkill[which(allkill[,phunt] == pr &
 if(paste(pr,z) %in% non_res_combine){
   
   #combines castes A and E into resident non-renewal hunters
-  #### for 8 zones this is necessary because there are very few non-resident hunters
-  ##### now with sharing of info through time, this is worth reconsidering...
-  
+  #### for most zones this is necessary because there are very few non-resident hunters
+
 sumkill[which(sumkill$CASTE == "E"),"CASTE"] <- "A" 
 
 sumkill$caste = factor(as.character(sumkill$CASTE),ordered = T,levels = c("D","B","A")) #D-renewal > 1year, B-renewal = 1year, A-nonrenewal (new hunter) plus the few nonresidents
@@ -657,7 +665,7 @@ save(list = c("jdat","grps"),
 
 # MCMC loops --------------------------------------------------------------
 
-n_cores <- length(provs)
+n_cores <- 6#length(provs)
 cluster <- makeCluster(n_cores, type = "PSOCK")
 registerDoParallel(cluster)
 
@@ -745,6 +753,10 @@ if(class(out2) != "try-error"){
 #   #
 # ggmcmc(pgg_ann,file = paste0("output/conv/ann_",pr,z,".pdf"),param_page = 5)
 #   
+  
+  
+  
+  #launch_shinystan(shinystan::as.shinystan(out2$samples, model_name = mod.file)) 
   
   save(list = c("out2","jdat","grps"),
        file = paste("output/other harvest zip",pr,z,"alt mod.RData"))
