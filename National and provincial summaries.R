@@ -82,7 +82,14 @@ provzone <- read.csv("data/Province and zone table.csv")
 
 # Load other harvest regulations ------------------------------------------
 
-others = c("COOTK","WOODK","SNIPK","DOVEK","PIGEK","CRANK","RAILK","MURRK")
+others = c("COOTK","WOODK","SNIPK","DOVEK","PIGEK","CRANK") #"RAILK" ,"MURRK"
+#dropping Rails because the data need to be reconciled
+
+#prov_otherk <- read.csv(stringsAsFactors = F,"data/OTHERK_by_Prov.csv")
+
+
+
+# regulations compile -----------------------------------------------------
 
 regs_other <- list()
 length(regs_other) <- length(others)
@@ -91,9 +98,15 @@ names(regs_other) <- others
 for(spgp in others){ 
   tmp <- read.csv(file = paste0("data/reg_",spgp,".csv"))
   names(tmp)[which(names(tmp) == "QC")] <- "PQ"
-  names(tmp)[which(names(tmp) == "YK")] <- "YT"
   regs_other[[spgp]] <- tmp
 }
+
+
+non_res_combine = paste(rep(provs,each = 3),rep(c(1,2,3),times = length(provs)))
+#this above just ensures all non-resident hunters are combined with resident hunters for these groups, separating out caste E is rarely feasible (even caste B is sketchy)
+keep_E <- paste(rep(c("MB","NB","SK"),each = 3),rep(c(1,2,3),times = 3))
+# province and zone loops -------------------------------------------------
+non_res_combine <- non_res_combine[-which(non_res_combine %in% keep_E)]
 
 
 # compile website file b --------------------------------------------------
