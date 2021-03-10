@@ -20,6 +20,7 @@ SUTOGO,Successful geese hunters (total),NSUCC_y,goose
 SUTOOT,Successful non-waterfowl hunters (total),NSUCC_y,other
 SUTOWF,Successful waterfowl hunters (total),,
 SUWOOD,Successful woodcock hunters,NSUCC_yg,other
+SUMURR,Successful murre hunters,NSUCC_y,murre
 TODUK,Total ducks harvest,kill_y,duck
 TOGOK,Total geese harvest,kill_y,goose
 TOOTK,Total non-waterfowl harvest,kill_y,other

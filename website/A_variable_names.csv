@@ -1,0 +1,30 @@
+Variable_Code,Description_En,Description_Fr,keep in new database
+ACTIOT,Active non-waterfowl hunters,Chasseurs d'oiseaux autres que la sauvagine actifs,TRUE
+ACTIWF,Active waterfowl hunters,Chasseurs de sauvagine actifs,TRUE
+DAYOT,Non-waterfowl hunting days,Jours de chasse d'oiseaux autres que la sauvagine,TRUE
+DAYWF,Waterfowl hunting days,Jours de chasse de sauvagine,TRUE
+POTNTL,Potential hunters,Chasseurs potentiels,FALSE
+COOTK,Coot harvest,Prises de foulques,TRUE
+SUCOOT,Successful coots hunters,Chasseurs avec prises de foulques,TRUE
+CRANK,Crane harvest,Prises de grues,TRUE
+SUCRAN,Successful cranes hunters,Chasseurs avec prises de grues,TRUE
+DOVEK,Dove harvest,Prises de tourterelles,TRUE
+SUDOVE,Successful doves hunters,Chasseurs avec prises de tourterelles,TRUE
+PIGEK,Band-tailed Pigeon harvest,Prises de Pigeons à queue barrée,TRUE
+SUPIGE,Successful band-tailed pigeons hunters,Chasseurs avec prises de Pigeons à queue barrée,TRUE
+RAILK,Rail harvest,Prises de râles,TRUE
+SURAIL,Successful rails hunters,Chasseurs avec prises de râles,TRUE
+SNIPK,Snipe harvest,Prises de bécassines,TRUE
+SUSNIP,Successful snipe hunters,Chasseurs avec prises de bécassines,TRUE
+WOODK,Woodcock harvest,Prises de bécasses,TRUE
+SUWOOD,Successful woodcock hunters,Chasseurs avec prises de bécasses,TRUE
+TOOTK,Total non-waterfowl harvest,Prises totales d'oiseaux autres que la sauvagine,TRUE
+SUTOOT,Successful non-waterfowl hunters (total),Chasseurs avec prises d'oiseaux autre que la sauvagine (total),TRUE
+TODUK,Total ducks harvest,Prises totales de canards,TRUE
+SUTODU,Successful ducks hunters (total),Chasseurs avec prises de canards (total),TRUE
+TOGOK,Total geese harvest,Prises totales d'oies et bernaches,TRUE
+SUTOGO,Successful geese hunters (total),Chasseurs avec prises d'oies et bernaches (total),TRUE
+TOWFK,Total waterfowl harvest,Prises totales de sauvagine,FALSE
+SUTOWF,Successful waterfowl hunters (total),Chasseurs avec prises de sauvagine (total),FALSE
+MURRK,Total murre harvest,Prises totales de guillemots,TRUE
+SUMURR,Successful murre hunters ,Chasseurs avec prises de guillemots,TRUE

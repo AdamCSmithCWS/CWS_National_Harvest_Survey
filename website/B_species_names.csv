@@ -1,0 +1,42 @@
+Species_Code,English_Name,French_Name_New,French_Name_Old,Scientific_Name
+1290,Common Merganser,Grand Harle,Grand Bec-scie,Mergus merganser
+1300,Red-breasted Merganser,Harle huppé,Bec-scie à poitrine rousse,Mergus serrator
+1310,Hooded Merganser,Harle couronné,Bec-scie couronné,Lophodytes cucullatus
+1320,Mallard,Canard colvert,Canard colvert,Anas platyrhynchos
+1330,American Black Duck,Canard noir,Canard noir,Anas rubripes
+1350,Gadwall,Canard chipeau,Canard chipeau,Anas strepera
+1360,Eurasian Wigeon,Canard siffleur,Canard siffleur d'Europe,Anas penelope
+1370,American Wigeon,Canard d'Amérique,Canard siffleur d'Amérique,Anas americana
+1380,Eurasian Green-winged Teal,Sarcelle d'hiver,Sarcelles à ailes vertes (d'Eurasie),Anas crecca
+1390,American Green-winged Teal,Sarcelle à ailes vertes,Sarcelle à ailes vertes (d'Amérique),Anas (c.) carolinensis
+1400,Blue-winged Teal,Sarcelle à ailes bleues,Sarcelles à ailes bleues,Anas discors
+1420,Northern Shoveler,Canard souchet,Canard souchet,Anas clypeata
+1430,Northern Pintail,Canard pilet,Canard pilet,Anas acuta
+1440,Wood Duck,Canard branchu,Canard branchu (Canard huppé),Aix sponsa
+1460,Redhead,Fuligule à tête rouge,Morillon à tête rouge,Aythya americana
+1470,Canvasback,Fuligule à dos blanc,Morillon à dos blanc,Aythya valisineria
+1480,Greater Scaup,Fuligule milouinan,Grand Morillon,Aythya marila
+1490,Lesser Scaup,Petit Fuligule,Petit Morillon,Aythya affinis
+1500,Ring-necked Duck,Fuligule à collier,Morillon à collier,Aythya collaris
+1510,Common Goldeneye,Garrot à oeil d'or,Garrot à oeil d'or (Garrot commun),Bucephala clangula
+1520,Barrow's Goldeneye,Garrot d'Islande,Garrot de Barrow,Bucephala islandica
+1530,Bufflehead,Petit Garrot,Petit Garrot,Bucephala albeola
+1540,Long-Tailed Duck,Harelde kakawi,Canard kakawi,Clangula hyemalis
+1550,Harlequin Duck,Arlequin plongeur,Canard arlequin,Histrionicus histrionicus
+1590,Common Eider,Eider à duvet,Eider à duvet,Somateria mollissima
+1620,King Eider,Eider à tête grise,Eider à tête grise,Somateria spectabilis
+1630,Black Scoter,Macreuse à bec jaune,Macreuse à bec jaune,Melanitta (nigra) americana
+1650,White-winged Scoter,Macreuse à ailes blanches,Macreuse à ailes blanches,Melanitta (fusca) deglandi
+1660,Surf Scoter,Macreuse à front blanc,Macreuse à front blanc,Melanitta perspicillata
+1670,Ruddy Duck,Érismature rousse,Canard Roux,Oxyura jamaicensis
+1690,Lesser Snow Goose,Oie des neiges : petite oie blanche,Oie des neiges : petite oie blanche,Anser caerulescens caerulescens
+1699,Greater Snow Goose,Oie des neiges : grande,Oie des neiges : grande oie blanche,Anser caerulescens atlantica
+1700,Ross' Goose,Oie de Ross,Oie de Ross,Anser rossii
+1710,White-fronted Goose,Oie rieuse,Oie naine/rieuse (Oie à front blanc),Anser albifrons
+1721,Cackling Goose,Bernache de Hutchins,Cackling Goose,Bernache de Hutchins
+1722,Canada Goose,Bernache du Canada,Bernache du Canada,Branta canadensis
+1730,Brant,Bernache cravant,Bernache cravant,Branta bernicla
+1740,Black Brant,Bernache cravant : race de l'Ouest,Bernache cravant : race de l'Ouest,Branta bernicla
+300,Common Murre,Guillemot marmette,Guillemot marmette,Uria aalge
+2280,American Woodcock,Bécasse d'Amerique,Bécasse d'Amerique,Scolopax minor
+310,Thick-billed Murre,Guillemot de Brünnich,Guillemot de Brünnich,Uria lomvia

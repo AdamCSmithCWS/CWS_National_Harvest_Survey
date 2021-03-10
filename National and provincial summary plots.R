@@ -50,25 +50,41 @@ pubEsts_simple_all$lci = ceiling(pubEsts_simple_all$mean-(1.96*pubEsts_simple_al
 pubEsts_simple_all$uci = ceiling(pubEsts_simple_all$mean+(1.96*pubEsts_simple_all$sd))
 pubEsts_simple_all[which(pubEsts_simple_all$lci < 0),"lci"] <- 0
 pubEsts_simple_all[which(is.na(pubEsts_simple_all$prov)),"prov"] <- "Canada"
+pubEsts_simple_all[which((pubEsts_simple_all$prov == "Yukon Territory")),"prov"] <- "Yukon"
+
 
 names(pubEsts_species_all) <- c("sp","species","prov","zone","year","mean","sd")
 pubEsts_species_all$lci = ceiling(pubEsts_species_all$mean-(1.96*pubEsts_species_all$sd))
 pubEsts_species_all$uci = ceiling(pubEsts_species_all$mean+(1.96*pubEsts_species_all$sd))
 pubEsts_species_all[which(pubEsts_species_all$lci < 0),"lci"] <- 0
 pubEsts_species_all[which(is.na(pubEsts_species_all$prov)),"prov"] <- "Canada"
+pubEsts_species_all[which((pubEsts_species_all$prov == "Yukon Territory")),"prov"] <- "Yukon"
 
 
 names(pubEsts_age_sex_all) <- c("sp","species","prov","zone","year","age_ratio")
 pubEsts_age_sex_all[which(is.na(pubEsts_age_sex_all$prov)),"prov"] <- "Canada"
+pubEsts_age_sex_all[which((pubEsts_age_sex_all$prov == "Yukon Territory")),"prov"] <- "Yukon"
 
 
 pubEsts_age_sex_all <- pubEsts_age_sex_all[which(pubEsts_age_sex_all$year > 1975),]
 pubEsts_species_all <- pubEsts_species_all[which(pubEsts_species_all$year > 1975),]
 pubEsts_simple_all <- pubEsts_simple_all[which(pubEsts_simple_all$year > 1975),]
 
+pubEsts_age_sex_all <- pubEsts_age_sex_all[,-which(names(pubEsts_age_sex_all) == "species")]
+
+pubEsts_species_all <- pubEsts_species_all[,-which(names(pubEsts_species_all) == "species")]
 
 
-species_web_names = unique(pubEsts_species_all[,c("sp","species")])
+
+sim_vars <- read.csv("data/website_variable_names_in.csv")
+sp_vars <- read.csv("data/website_species_variable_names_in.csv")
+
+sp_list <- read.csv("data/Bird_names_2019.csv")
+
+pubEsts_age_sex_all <- left_join(pubEsts_age_sex_all,sp_list[,1:3],by = c("sp" = "AOU"))
+pubEsts_species_all <- left_join(pubEsts_species_all,sp_list[,1:3],by = "AOU")
+
+species_web_names = unique(pubEsts_species_all[,c("AOU","ENGLISH","FRENCH")])
 
 var_names_sim <- unique(pubEsts_simple_all[,c("var","name")])
 # write.csv(var_names_sim,"data/website_variable_names.csv",row.names = F)
@@ -84,7 +100,7 @@ provzone <- read.csv("data/Province and zone table.csv")
 
 # Load other harvest regulations ------------------------------------------
 
-others = c("COOTK","WOODK","SNIPK","DOVEK","PIGEK","CRANK","RAILK","MURRK")
+others = c("COOTK","WOODK","SNIPK","DOVEK","PIGEK","CRANK")#,"RAILK","MURRK")
 
 regs_other <- list()
 length(regs_other) <- length(others)
@@ -97,8 +113,6 @@ for(spgp in others){
 }
 
 
-sim_vars <- read.csv("data/website_variable_names_in.csv")
-sp_vars <- read.csv("data/website_species_variable_names_in.csv")
 
 
 
@@ -109,6 +123,12 @@ sp_vars <- read.csv("data/website_species_variable_names_in.csv")
 
 load("data/Posterior_summaries.RData")
 source("functions/comparison_simple.R")
+# source("functions/simple_plot_function_a.R")
+# 
+# pdf("Figures/Species_harvest_prov.pdf",
+#     wdith = 8.5,height = 11)
+# prov_plot = simpl
+
 source("functions/comparison_by_species.R")
 source("functions/comparison_CV_by_species.R")
 
@@ -147,7 +167,7 @@ zone_sums_a <- left_join(zone_sums_a,provs,by = "prov")
 
 
 sums_a <- bind_rows(nat_sums_a,prov_sums_a)
-names(species_web_names) <- c("AOU","species")
+names(species_web_names) <- c("AOU","species","espece")
 sums_a <- left_join(sums_a,species_web_names)
 zone_sums_a <- left_join(zone_sums_a,species_web_names)
 
@@ -186,63 +206,8 @@ for(pp in 1:length(ttt)){
 }
 dev.off()
 
-ttt = comp_plot_species(dat = both_a,reg = "Canada",sp = sp_vars[which(sp_vars$group == "diving_ducks"),"species"])
-pdf(file = "Figures/National_diving_duck_summaries.pdf",width = 8.5,height = 11)
-for(pp in 1:length(ttt)){
-  print(ttt[[pp]])
-}
-dev.off()
-
-ttt = comp_plot_species(dat = both_a,reg = "Canada",
-                        sp = sp_vars[which(sp_vars$group == "sea_ducks"),"species"])
-pdf(file = "Figures/National_sea_duck_summaries.pdf",width = 8.5,height = 11)
-for(pp in 1:length(ttt)){
-  print(ttt[[pp]])
-}
-dev.off()
-
-ttt = comp_plot_species(dat = both_a,reg = "Canada",
-                        sp = sp_vars[which(sp_vars$group == "puddle_ducks"),"species"])
-pdf(file = "Figures/National_puddle_duck_summaries.pdf",width = 8.5,height = 11)
-for(pp in 1:length(ttt)){
-  print(ttt[[pp]])
-}
-dev.off()
 
 
-ttt = comp_plot_species(dat = both_a,reg = "Canada",sp = sp_vars[which(sp_vars$source == "goose"),"species"])
-pdf(file = "Figures/National_goose_summaries.pdf",width = 8.5,height = 11)
-for(pp in 1:length(ttt)){
-  print(ttt[[pp]])
-}
-dev.off()
-
-
-
-ttt = comp_plot_species_CV(dat = both_a)
-
-pdf(file = "Figures/species_summaries_CV.pdf",width = 8.5,height = 11)
-for(pp in 1:length(ttt)){
-  print(ttt[[pp]])
-}
-dev.off()
-
-ttt = comp_plot_species_CV(dat = both_a,reg = "Canada",sp = sp_vars[which(sp_vars$source == "duck"),"species"])
-
-pdf(file = "Figures/national_duck_summaries_CV.pdf",width = 8.5,height = 11)
-for(pp in 1:length(ttt)){
-  print(ttt[[pp]])
-}
-dev.off()
-
-
-ttt = comp_plot_species_CV(dat = both_a,reg = "Canada",sp = sp_vars[which(sp_vars$source == "goose"),"species"])
-
-pdf(file = "Figures/national_goose_summaries_CV.pdf",width = 8.5,height = 11)
-for(pp in 1:length(ttt)){
-  print(ttt[[pp]])
-}
-dev.off()
 
 
 # B tables ----------------------------------------------------------------
@@ -385,7 +350,7 @@ nat_sums_c <- left_join(nat_sums_c,provs,by = "prov")
 zone_sums_c <- left_join(zone_sums_c,provs,by = "prov")
 
 sums_c <- bind_rows(nat_sums_c,prov_sums_c)
-names(species_web_names) <- c("AOU","species")
+names(species_web_names) <- c("AOU","species","espece")
 sums_c <- left_join(sums_c,species_web_names)
 zone_sums_c <- left_join(zone_sums_c,species_web_names)
 
@@ -491,7 +456,7 @@ nat_sums_c2 <- left_join(nat_sums_c2,provs,by = "prov")
 zone_sums_c2 <- left_join(zone_sums_c2,provs,by = "prov")
 
 sums_c2 <- bind_rows(nat_sums_c2,prov_sums_c2)
-names(species_web_names) <- c("AOU","species")
+names(species_web_names) <- c("AOU","species","espece")
 sums_c2 <- left_join(sums_c2,species_web_names)
 zone_sums_c2 <- left_join(zone_sums_c2,species_web_names)
 
@@ -511,6 +476,42 @@ zone_both_c <- zone_both_c[which(!is.na(zone_both_c$species)),]
 
 ############# consider if this is necessary. since everything is graphed.
 ############# figure out which tables should be produced and in what format
+
+
+
+# A tables - simple summaries ---------------------------------------------
+
+
+
+
+
+
+# B Tables - species harvest summaries incl demographic harvests ----------
+
+
+
+
+
+
+# C Tables - Age Ratios ---------------------------------------------------
+
+### consider adding Female only age ratios
+### consider adding proportion estimates as well (more numerically stable)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

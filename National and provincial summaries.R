@@ -358,7 +358,9 @@ for(pr in provs){
        
        #harvests
        tmp_otherk <- out2$samples %>% gather_draws(NACTIVE_y[y],
-                                                  days_y[y])
+                                                  days_y[y],
+                                                  kill_y[y],
+                                                  NSUCC_y[y])
        
        tmp_otherk <- left_join(tmp_otherk,vnm,by = c(".variable" = "newvar"))
        
