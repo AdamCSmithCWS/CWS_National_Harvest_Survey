@@ -9,7 +9,7 @@ library(RColorBrewer)
 
 
 load("data/Posterior_summaries.RData")
-
+prov_trans <- read.csv("data/Province_names_EN_FR.csv")
 
 Y <- 2019
 FY = 1976
@@ -17,7 +17,7 @@ years <- FY:Y
 
 names(years) <- paste(years)
 
-
+prov_sort <- c("CAN","BC","YT","AB","SK","NT","MB","ON","PQ","NB","PE","NS","NF")
 
 # General Harvest Estimates Table -----------------------------------------------------------------
 mod_vars = unique(nat_sums_b$var)
@@ -28,26 +28,38 @@ a_var = read.csv("website/A_variable_names.csv")
 a_var = a_var[which(a_var$keep.in.new.database == TRUE),]
 a_var = a_var[,-which(names(a_var) == "keep.in.new.database")]
 avars = a_var$Variable_Code
-nat_sums_b$prov <- "Canada"
+nat_sums_b$prov <- "CAN"
 a_tab <- bind_rows(nat_sums_b,prov_sums_b,zone_sums_b) %>% 
   filter(var %in% avars) %>% 
   left_join(.,a_var,by = c("var" = "Variable_Code")) %>% 
   select(-median) %>% 
   mutate(mean = as.integer(ceiling(mean)),
          lci = as.integer(ceiling(lci)),
-         uci = as.integer(ceiling(uci)))%>% 
-  arrange(prov,zone,var,year) %>% 
+         uci = as.integer(ceiling(uci)),
+         prov = factor(prov,levels = prov_sort,ordered = TRUE))%>% 
+  arrange(prov,zone,var,desc(year)) %>% 
   filter(var != "SNIPK" | (var== "SNIPK" & year > 1991)) %>% 
   filter(var != "SUSNIP" | (var== "SUSNIP" & year > 1991)) %>% 
+  left_join(.,prov_trans[,c("prov","Prov_name_e","Prov_name_f")],by = "prov") %>% 
   relocate(var,prov,zone,year,
            mean,lci,uci,
            Description_En,
-           Description_Fr)
+           Description_Fr,
+           Prov_name_e,Prov_name_f)
 
 miss_var = avars[-which(avars %in% unique(a_tab$var))]
 print(paste("Data missing for variables",paste(miss_var,collapse = " ")))
 
 write.csv(a_tab,"website/General_harvest_table.csv",row.names = FALSE)
+
+a_tab <- a_tab %>% relocate(Description_Fr,
+                  Description_En,
+                  Prov_name_f,Prov_name_e,zone,year,
+                  mean,lci,uci,
+                  var,prov)
+
+write.csv(a_tab,paste0("GoogleDrive/General_Estimates_",FY,"-",Y,".csv"),row.names = FALSE)
+
 
 # Species Harvest Estimates Table -----------------------------------------------------------------
 sp_harv_list = unique(nat_sums_a$AOU)
@@ -55,22 +67,24 @@ sp_harv_list = unique(nat_sums_a$AOU)
 b_var = read.csv("website/B_species_names.csv")
 
 bvars = b_var$Species_Code
-nat_sums_a$prov <- "Canada"
+nat_sums_a$prov <- "CAN"
 b_tab <- bind_rows(nat_sums_a,prov_sums_a,zone_sums_a) %>% 
   filter(AOU %in% bvars)%>% 
   left_join(.,b_var,by = c("AOU" = "Species_Code")) %>% 
   select(-median) %>% 
   mutate(mean = as.integer(ceiling(mean)),
          lci = as.integer(ceiling(lci)),
-         uci = as.integer(ceiling(uci))) %>% 
-  arrange(prov,zone,AOU,year)
+         uci = as.integer(ceiling(uci)),
+         prov = factor(prov,levels = prov_sort,ordered = TRUE))%>% 
+  arrange(prov,zone,AOU,desc(year)) %>% 
+  left_join(.,prov_trans[,c("prov","Prov_name_e","Prov_name_f")],by = "prov") 
 
 # Add the species demographic harvest estimates to same file
 
 
-nat_sums_ag$prov <- "Canada"
-nat_sums_sx$prov <- "Canada"
-nat_sums_asxy$prov <- "Canada"
+nat_sums_ag$prov <- "CAN"
+nat_sums_sx$prov <- "CAN"
+nat_sums_asxy$prov <- "CAN"
 
 asxy_tab <- bind_rows(nat_sums_ag,prov_sums_ag,zone_sums_ag,
                    nat_sums_sx,prov_sums_sx,zone_sums_sx,
@@ -80,18 +94,31 @@ asxy_tab <- bind_rows(nat_sums_ag,prov_sums_ag,zone_sums_ag,
   select(-median) %>% 
   mutate(mean = as.integer(ceiling(mean)),
          lci = as.integer(ceiling(lci)),
-         uci = as.integer(ceiling(uci))) %>% 
-  arrange(prov,zone,AOU,BAGE,BSEX,year)
+         uci = as.integer(ceiling(uci)),
+         prov = factor(prov,levels = prov_sort,ordered = TRUE)) %>% 
+  arrange(prov,zone,AOU,BAGE,BSEX,desc(year)) %>% 
+  left_join(.,prov_trans[,c("prov","Prov_name_e","Prov_name_f")],by = "prov")
 
 b_tab <- bind_rows(b_tab,asxy_tab) %>% 
   relocate(AOU,BAGE,BSEX,prov,zone,year,
            mean,lci,uci,
-           English_Name,French_Name_New,French_Name_Old,Scientific_Name) %>% 
+           English_Name,French_Name_New,French_Name_Old,Scientific_Name,
+           Prov_name_e,Prov_name_f) %>% 
   rename(Age = BAGE,
          Sex = BSEX)
 
 write.csv(b_tab,"website/species_harvest_table_incl_age_sex.csv",row.names = FALSE)
 
+
+b_tab <- b_tab %>% relocate(French_Name_New,
+                            English_Name,
+                            Scientific_Name,
+                            Prov_name_f,Prov_name_e,
+                            zone,year,
+                            mean,lci,uci,
+                            French_Name_Old)
+
+write.csv(b_tab,paste0("GoogleDrive/Species_Harvest_Estimates_incl_age_sex_",FY,"-",Y,".csv"),row.names = FALSE)
 
 
 
@@ -102,21 +129,43 @@ write.csv(b_tab,"website/species_harvest_table_incl_age_sex.csv",row.names = FAL
 
 
 
-nat_sums_c$prov <- "Canada"
+nat_sums_c$prov <- "CAN"
 c_tab <- bind_rows(nat_sums_c,prov_sums_c,zone_sums_c) %>% 
   filter(AOU %in% bvars)%>% 
   left_join(.,b_var,by = c("AOU" = "Species_Code")) %>% 
   select(-median) %>% 
   mutate(mean = round(mean,2),
          lci = round(lci,2),
-         uci = round(uci,2)) %>% 
-  arrange(prov,zone,AOU,year) %>% 
+         uci = round(uci,2),
+         prov = factor(prov,levels = prov_sort,ordered = TRUE)) %>% 
+  arrange(prov,zone,AOU,desc(year)) %>% 
+  left_join(.,prov_trans[,c("prov","Prov_name_e","Prov_name_f")],by = "prov") %>% 
   relocate(AOU,prov,zone,year,
            mean,lci,uci,
-           English_Name,French_Name_New,French_Name_Old,Scientific_Name)
+           English_Name,French_Name_New,French_Name_Old,Scientific_Name,
+           Prov_name_e,Prov_name_f)
 
 
 write.csv(c_tab,"website/species_age_ratios.csv",row.names = FALSE)
+
+c_tab <- c_tab %>% relocate(French_Name_New,
+                            English_Name,
+                            Scientific_Name,
+                            Prov_name_f,Prov_name_e,
+                            zone,year,
+                            mean,lci,uci,
+                            French_Name_Old)
+
+write.csv(c_tab,paste0("GoogleDrive/Species_Age_Ratios_",FY,"-",Y,".csv"),row.names = FALSE)
+
+
+
+
+# Graphing of each set of estimates by region ---------------------------------------
+
+## one pdf for each region with all estimates for that region
+
+### in English and French
 
 
 
@@ -130,37 +179,177 @@ base_map = st_read(dsn = "input_map",
 
 plot(base_map)
 
+#colours for ratios (split at 1.0)
+colscale2 <- brewer.pal(11,"RdBu")[-c(5,7)] #removes the middle lightest colour leaves 5 red (1:5), 5 blue (6:10)
+
 
 ## colour palette (different than one used in 2017 version)
 # colour for harvest estimates
-colscale1 <- brewer.pal(9,"Blues")
-#colours for ratios (split at 1.0)
-colscale2 <- brewer.pal(11,"RdBu")[-6] #removes the middle lightest colour leaves 5 red (1:5), 5 blue (6:10)
+colscale1 <- brewer.pal(9,"Blues")[-c(1,2)]
+seqs <- seq(0,1,length = length(colscale1)+1)[-c(1,length(colscale1)+1)]
 
 
 
 ## loop through all variables to create maps and generate table linking maps to estimates
 
-## need a unique map for each variable and year, using the zone based estimates
+# General harvest estimates
 var_maps_a = a_tab %>% distinct(var,year,Description_En,Description_Fr) %>% 
   mutate(map_file = paste0(var,"_",year,".png"))
 
-for(j in 1:nrow(var_maps_a)){
+
+
+for(i in 1:nrow(var_maps_a)){
   vv = as.character(var_maps_a[i,"var"])
+  
+  rng <- a_tab %>% filter(var == vv,
+                         !is.na(zone)) %>%
+    ungroup() %>% 
+    select(mean)
+  
+  bbkst <- round(quantile(unlist(rng),
+                          probs = c(seqs),
+                          na.rm = T,
+                          names = F))
+  om <- min(nchar(bbkst))-1
+  
+  bbks <- round(bbkst/(10^om))*10^om
+  ss <- 1
+  
+  while(any(duplicated(bbks))){
+    bbks <- round((bbkst/(10^(om-ss)))*10^(om-ss))
+    ss = ss+1
+  }
+  bks <- c(0,
+           bbks,
+           round(max(rng,na.rm = T)+1))
+  
+
+  
   yy = as.integer(var_maps_a[i,"year"])
   ft =  as.character(var_maps_a[i,"map_file"])
   
   tmp <- a_tab %>% filter(var == vv,
                           year == yy,
-                          !is.na(zone))
+                          !is.na(zone)) %>% 
+    mutate(plot_cat = cut(mean,breaks = bks))
+  
+  colscale1b = c(colscale1,"white")
+  names(colscale1b) <- c(levels(tmp$plot_cat),NA)
+  
+  labs = c(paste0("1 - ",bks[2]),
+           paste(bks[2:(length(bks)-2)],
+                 bks[3:(length(bks)-1)],
+                 sep = " - "),
+           paste0("> ",bks[length(bks)-1]),
+           "no estimate / aucune estimation") 
+  names(labs) <- c(levels(tmp$plot_cat),NA)
   
   tmpm = left_join(base_map,tmp,by = c("PROV" = "prov",
                                        "ZONE" = "zone"))
   
+  tmap = ggplot()+
+    geom_sf(data = tmpm,aes(fill = plot_cat),colour = grey(0.25))+
+    theme_no_axes()+
+    theme(legend.position = "bottom",
+          legend.text = element_text(size = 12))+
+    scale_fill_manual(values = colscale1b,
+                      labels = labs,
+                      name = "",
+                      drop = FALSE)
+
+  png(filename = paste0("website/maps/",ft),
+      res = 300,
+      height = 8,
+      width = 8,
+      units = "in")
+  print(tmap)
+  dev.off()
+  
+  } 
+
+
+
+## species harvest estimates
+
+
+# General harvest estimates
+sp_maps_b = b_tab %>% distinct(AOU,year,English_Name,French_Name_New,Scientific_Name) %>% 
+  mutate(map_file = paste0(AOU,"_",year,".png"))
+
+
+
+for(i in 1:nrow(sp_maps_b)){
+  vv = as.character(sp_maps_b[i,"AOU"])
+  
+  rng <- b_tab %>% filter(AOU == vv,
+                          !is.na(zone),
+                          is.na(Age),
+                          is.na(Sex)) %>%
+    ungroup() %>% 
+    select(mean)
+  
+  bbkst <- round(quantile(unlist(rng),
+                          probs = c(seqs),
+                          na.rm = T,
+                          names = F))
+  om <- min(nchar(bbkst))-1
+  
+  bbks <- round(bbkst/(10^om))*10^om
+  ss <- 1
+  
+  while(any(duplicated(bbks))){
+    bbks <- round((bbkst/(10^(om-ss)))*10^(om-ss))
+    ss = ss+1
+  }
+  bks <- c(0,
+           bbks,
+           round(max(rng,na.rm = T)+1))
+  
+  
+  
+  yy = as.integer(sp_maps_b[i,"year"])
+  ft =  as.character(sp_maps_b[i,"map_file"])
+  
+  tmp <- b_tab %>% filter(AOU == vv,
+                          year == yy,
+                          !is.na(zone),
+                          is.na(Age),
+                          is.na(Sex)) %>% 
+    mutate(plot_cat = cut(mean,breaks = bks))
+  
+  colscale1b = c(colscale1,"white")
+  names(colscale1b) <- c(levels(tmp$plot_cat),NA)
+  
+  labs = c(paste0("1 - ",bks[2]),
+           paste(bks[2:(length(bks)-2)],
+                 bks[3:(length(bks)-1)],
+                 sep = " - "),
+           paste0("> ",bks[length(bks)-1]),
+           "no estimate / aucune estimation") 
+  names(labs) <- c(levels(tmp$plot_cat),NA)
+  
+  tmpm = left_join(base_map,tmp,by = c("PROV" = "prov",
+                                       "ZONE" = "zone"))
+  
+  tmap = ggplot()+
+    geom_sf(data = tmpm,aes(fill = plot_cat),colour = grey(0.25))+
+    theme_no_axes()+
+    theme(legend.position = "bottom",
+          legend.text = element_text(size = 12))+
+    scale_fill_manual(values = colscale1b,
+                      labels = labs,
+                      name = "",
+                      drop = FALSE)
+  
+  png(filename = paste0("website/maps/",ft),
+      res = 300,
+      height = 8,
+      width = 8,
+      units = "in")
+  print(tmap)
+  dev.off()
   
 } 
-
-
 
 
 
