@@ -8,6 +8,7 @@ library(RColorBrewer)
 ## load the output tidy output files
 
 
+
 load("data/Posterior_summaries.RData")
 prov_trans <- read.csv("data/Province_names_EN_FR.csv")
 
@@ -40,12 +41,12 @@ a_tab <- bind_rows(nat_sums_b,prov_sums_b,zone_sums_b) %>%
   arrange(prov,zone,var,desc(year)) %>% 
   filter(var != "SNIPK" | (var== "SNIPK" & year > 1991)) %>% 
   filter(var != "SUSNIP" | (var== "SUSNIP" & year > 1991)) %>% 
-  left_join(.,prov_trans[,c("prov","Prov_name_e","Prov_name_f")],by = "prov") %>% 
+  left_join(.,prov_trans[,c("prov","Prov_En","Prov_Fr")],by = "prov") %>% 
   relocate(var,prov,zone,year,
            mean,lci,uci,
            Description_En,
            Description_Fr,
-           Prov_name_e,Prov_name_f)
+           Prov_En,Prov_Fr)
 
 miss_var = avars[-which(avars %in% unique(a_tab$var))]
 print(paste("Data missing for variables",paste(miss_var,collapse = " ")))
@@ -54,7 +55,7 @@ write.csv(a_tab,"website/General_harvest_table.csv",row.names = FALSE)
 
 a_tab <- a_tab %>% relocate(Description_Fr,
                   Description_En,
-                  Prov_name_f,Prov_name_e,zone,year,
+                  Prov_Fr,Prov_En,zone,year,
                   mean,lci,uci,
                   var,prov)
 
@@ -77,7 +78,7 @@ b_tab <- bind_rows(nat_sums_a,prov_sums_a,zone_sums_a) %>%
          uci = as.integer(ceiling(uci)),
          prov = factor(prov,levels = prov_sort,ordered = TRUE))%>% 
   arrange(prov,zone,AOU,desc(year)) %>% 
-  left_join(.,prov_trans[,c("prov","Prov_name_e","Prov_name_f")],by = "prov") 
+  left_join(.,prov_trans[,c("prov","Prov_En","Prov_Fr")],by = "prov") 
 
 # Add the species demographic harvest estimates to same file
 
@@ -97,13 +98,13 @@ asxy_tab <- bind_rows(nat_sums_ag,prov_sums_ag,zone_sums_ag,
          uci = as.integer(ceiling(uci)),
          prov = factor(prov,levels = prov_sort,ordered = TRUE)) %>% 
   arrange(prov,zone,AOU,BAGE,BSEX,desc(year)) %>% 
-  left_join(.,prov_trans[,c("prov","Prov_name_e","Prov_name_f")],by = "prov")
+  left_join(.,prov_trans[,c("prov","Prov_En","Prov_Fr")],by = "prov")
 
 b_tab <- bind_rows(b_tab,asxy_tab) %>% 
   relocate(AOU,BAGE,BSEX,prov,zone,year,
            mean,lci,uci,
            English_Name,French_Name_New,French_Name_Old,Scientific_Name,
-           Prov_name_e,Prov_name_f) %>% 
+           Prov_En,Prov_Fr) %>% 
   rename(Age = BAGE,
          Sex = BSEX)
 
@@ -113,10 +114,14 @@ write.csv(b_tab,"website/species_harvest_table_incl_age_sex.csv",row.names = FAL
 b_tab <- b_tab %>% relocate(French_Name_New,
                             English_Name,
                             Scientific_Name,
-                            Prov_name_f,Prov_name_e,
+                            Prov_Fr,Prov_En,
                             zone,year,
                             mean,lci,uci,
-                            French_Name_Old)
+                            French_Name_Old) %>% 
+  rename(espece = French_Name_New,
+         species = English_Name,
+         Scientific = Scientific_Name,
+         espece_alt = French_Name_Old)
 
 write.csv(b_tab,paste0("GoogleDrive/Species_Harvest_Estimates_incl_age_sex_",FY,"-",Y,".csv"),row.names = FALSE)
 
@@ -139,11 +144,11 @@ c_tab <- bind_rows(nat_sums_c,prov_sums_c,zone_sums_c) %>%
          uci = round(uci,2),
          prov = factor(prov,levels = prov_sort,ordered = TRUE)) %>% 
   arrange(prov,zone,AOU,desc(year)) %>% 
-  left_join(.,prov_trans[,c("prov","Prov_name_e","Prov_name_f")],by = "prov") %>% 
+  left_join(.,prov_trans[,c("prov","Prov_En","Prov_Fr")],by = "prov") %>% 
   relocate(AOU,prov,zone,year,
            mean,lci,uci,
            English_Name,French_Name_New,French_Name_Old,Scientific_Name,
-           Prov_name_e,Prov_name_f)
+           Prov_En,Prov_Fr)
 
 
 write.csv(c_tab,"website/species_age_ratios.csv",row.names = FALSE)
@@ -151,10 +156,14 @@ write.csv(c_tab,"website/species_age_ratios.csv",row.names = FALSE)
 c_tab <- c_tab %>% relocate(French_Name_New,
                             English_Name,
                             Scientific_Name,
-                            Prov_name_f,Prov_name_e,
+                            Prov_Fr,Prov_En,
                             zone,year,
                             mean,lci,uci,
-                            French_Name_Old)
+                            French_Name_Old) %>% 
+  rename(espece = French_Name_New,
+         species = English_Name,
+         Scientific = Scientific_Name,
+         espece_alt = French_Name_Old)
 
 write.csv(c_tab,paste0("GoogleDrive/Species_Age_Ratios_",FY,"-",Y,".csv"),row.names = FALSE)
 
@@ -163,11 +172,45 @@ write.csv(c_tab,paste0("GoogleDrive/Species_Age_Ratios_",FY,"-",Y,".csv"),row.na
 
 # Graphing of each set of estimates by region ---------------------------------------
 
+source("functions/palettes.R")
+
 ## one pdf for each region with all estimates for that region
 
 ### in English and French
 
 
+# Graphing of each set of estimates by variable ---------------------------------------
+
+## one pdf for each group of variables with all regions (page with all zones and page with all prov plus national)
+## pdfs
+## general estimates
+## species harvest
+## species harvest by age group
+## species harvest by sex
+## species harvest by sex-age group
+## age ratios
+
+
+for(l in c("Fr","En")){
+  
+  tmpeng <- general_plot_a(dat = a_tab,
+                 startYear = FY,
+                 endYear = Y,
+                 lang = l,
+                 type = "A")
+  
+  pdf(paste0("GoogleDrive/Graphs/General_Estimates_",l,".pdf"),
+      width = 11,
+      height = 8.5)
+  for(i in 1:length(tmpeng)){
+    print(tmpeng[[i]])
+  }
+  
+  dev.off()#end general harvest estimates
+  
+}# end language loop
+
+### in English and French
 
 
 
@@ -180,7 +223,7 @@ base_map = st_read(dsn = "input_map",
 plot(base_map)
 
 #colours for ratios (split at 1.0)
-colscale2 <- brewer.pal(11,"RdBu")[-c(5,7)] #removes the middle lightest colour leaves 5 red (1:5), 5 blue (6:10)
+colscale2 <- brewer.pal(11,"RdBu")[-c(5,7)] #removes the middle lightest colour leaves 4 red (1:5), 4 blue (6:10)
 
 
 ## colour palette (different than one used in 2017 version)
