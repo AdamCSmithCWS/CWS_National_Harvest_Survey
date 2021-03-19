@@ -95,22 +95,24 @@ general_plot_b<- function(dat = b_tab,
                           startYear = FY,
                           endYear = Y,
                           lang = "En",
-                          type = "Age_Sex"){
+                          type = "Age_Sex",
+                          add_points = FALSE){
   
 
   
   
 
-if(type == "Full_species"){
+if(type == "Full"){
   dat <- filter(dat,
                 year >= startYear & year <= endYear,
                 is.na(Age) & is.na(Sex)) %>% 
     mutate(gr = "Species")
   lg_pos <- "none"
+  add_points <- TRUE
 }
 
 
-if(type == "Age_only"){
+if(type == "Age"){
   dat <- filter(dat,
                 year >= startYear & year <= endYear,
                 !is.na(Age) & is.na(Sex)) %>% 
@@ -118,7 +120,7 @@ if(type == "Age_only"){
   lg_pos <- "right"
 }
 
-if(type == "Sex_only"){
+if(type == "Sex"){
   dat <- filter(dat,
                 year >= startYear & year <= endYear,
                 is.na(Age) & !is.na(Sex)) %>% 
@@ -163,10 +165,19 @@ if(type == "Age_Sex"){
   for(vv in unique(dat$V)){
     tmp = dat %>% filter(V == vv,
                          is.na(zone))
+    if(add_points){
+      pp <- geom_point(aes(colour = gr),size = 1)
+      ppe <- geom_errorbar(aes(ymin = lci,ymax = uci,fill = gr),alpha = 0.5,width = 0)
+      ppl <- geom_line(alpha = 0.3,aes(colour = gr))
+    }else{
+      pp <- geom_point(aes(colour = gr),size = 1,alpha = 0)
+      ppe <- geom_ribbon(aes(ymin = lci,ymax = uci,fill = gr),alpha = 0.3)
+      ppl <- geom_line(alpha = 1,aes(colour = gr))
+    }
     outgg[[i]] = ggplot(data = tmp,aes(x = year,y = mean))+
-      #geom_point(aes(colour = gr),size = 1)+
-      geom_ribbon(aes(ymin = lci,ymax = uci,fill = gr),alpha = 0.3)+
-      geom_line(alpha = 1,aes(colour = gr))+
+      pp+
+      ppe+
+      ppl+
       ylab(vv)+
       xlab("")+
       labs(title = paste(vv,"Canada - Province"))+
@@ -187,9 +198,9 @@ if(type == "Age_Sex"){
     tmp = dat %>% filter(V == vv,
                          !is.na(zone))
     outgg[[i]] = ggplot(data = tmp,aes(x = year,y = mean))+
-      #geom_point(aes(colour = gr),size = 1)+
-      geom_ribbon(aes(ymin = lci,ymax = uci,fill = gr),alpha = 0.3)+
-      geom_line(alpha = 1,aes(colour = gr))+
+      pp+
+      ppe+
+      ppl+
       ylab(vv)+
       xlab("")+
       labs(title = paste(vv,"Canada - Province"))+

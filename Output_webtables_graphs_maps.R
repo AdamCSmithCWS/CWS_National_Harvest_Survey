@@ -6,7 +6,8 @@ library(sf)
 library(RColorBrewer)
 
 ## load the output tidy output files
-
+source("functions/palettes.R")
+source("functions/general_plot_function.R")
 
 
 load("data/Posterior_summaries.RData")
@@ -172,7 +173,6 @@ write.csv(c_tab,paste0("GoogleDrive/Species_Age_Ratios_",FY,"-",Y,".csv"),row.na
 
 # Graphing of each set of estimates by region ---------------------------------------
 
-source("functions/palettes.R")
 
 ## one pdf for each region with all estimates for that region
 
@@ -193,20 +193,47 @@ source("functions/palettes.R")
 
 for(l in c("Fr","En")){
   
-  tmpeng <- general_plot_a(dat = a_tab,
+  tmpp <- general_plot_a(dat = a_tab,
                  startYear = FY,
                  endYear = Y,
-                 lang = l,
-                 type = "A")
+                 lang = l)
   
   pdf(paste0("GoogleDrive/Graphs/General_Estimates_",l,".pdf"),
       width = 11,
       height = 8.5)
-  for(i in 1:length(tmpeng)){
-    print(tmpeng[[i]])
+  for(i in 1:length(tmpp)){
+    print(tmpp[[i]])
   }
   
   dev.off()#end general harvest estimates
+  
+  
+  for(tty in c("Full",
+               "Age",
+               "Sex",
+               "Age_Sex")){
+    
+  tmpp <- general_plot_b(dat = b_tab,
+                         startYear = FY,
+                         endYear = Y,
+                         lang = l,
+                         type = tty)
+ 
+  if(tty == "Full"){
+    pdf(paste0("GoogleDrive/Graphs/Species_Harvest_Estimates_",l,".pdf"),
+        width = 11,
+        height = 8.5)
+  }else{
+  pdf(paste0("GoogleDrive/Graphs/Species_Harvest_by_",tty,"_Estimates_",l,".pdf"),
+      width = 11,
+      height = 8.5)
+  }
+  for(i in 1:length(tmpp)){
+    print(tmpp[[i]])
+  }
+  
+  dev.off()#end species harvest estimates
+  }#end tty loop
   
 }# end language loop
 
