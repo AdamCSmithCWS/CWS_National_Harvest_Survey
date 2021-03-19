@@ -171,12 +171,7 @@ write.csv(c_tab,paste0("GoogleDrive/Species_Age_Ratios_",FY,"-",Y,".csv"),row.na
 
 
 
-# Graphing of each set of estimates by region ---------------------------------------
 
-
-## one pdf for each region with all estimates for that region
-
-### in English and French
 
 
 # Graphing of each set of estimates by variable ---------------------------------------
@@ -191,14 +186,65 @@ write.csv(c_tab,paste0("GoogleDrive/Species_Age_Ratios_",FY,"-",Y,".csv"),row.na
 ## age ratios
 
 
+### in English and French
+
+### in English and French
+
+# Full time-series and last 10-year graphs -----------------------------------------------------
+
+for(sy in c(FY,Y-9)){
+
 for(l in c("Fr","En")){
   
-  tmpp <- general_plot_a(dat = a_tab,
-                 startYear = FY,
-                 endYear = Y,
-                 lang = l)
+  # tmpp <- general_plot_a(dat = a_tab,
+  #                        startYear = sy,
+  #                        endYear = Y,
+  #                        lang = l)
+  # 
+  # pdf(paste0("GoogleDrive/Graphs/General_Estimates_",sy,"-",Y,"_",l,".pdf"),
+  #     width = 11,
+  #     height = 8.5)
+  # for(i in 1:length(tmpp)){
+  #   print(tmpp[[i]])
+  # }
+  # 
+  # dev.off()#end general harvest estimates
+  # 
+  # 
+  # for(tty in c("Full",
+  #              "Age",
+  #              "Sex",
+  #              "Age_Sex")){
+  #   
+  #   tmpp <- general_plot_b(dat = b_tab,
+  #                          startYear = sy,
+  #                          endYear = Y,
+  #                          lang = l,
+  #                          type = tty)
+  #   
+  #   if(tty == "Full"){
+  #     pdf(paste0("GoogleDrive/Graphs/Species_Harvest_Estimates_",sy,"-",Y,"_",l,".pdf"),
+  #         width = 11,
+  #         height = 8.5)
+  #   }else{
+  #     pdf(paste0("GoogleDrive/Graphs/Species_Harvest_by_",tty,"_Estimates_",sy,"-",Y,"_",l,".pdf"),
+  #         width = 11,
+  #         height = 8.5)
+  #   }
+  #   for(i in 1:length(tmpp)){
+  #     print(tmpp[[i]])
+  #   }
+  #   
+  #   dev.off()#end species harvest estimates
+  # }#end tty loop
   
-  pdf(paste0("GoogleDrive/Graphs/General_Estimates_",l,".pdf"),
+  
+  tmpp <- general_plot_c(dat = c_tab,
+                         startYear = sy,
+                         endYear = Y,
+                         lang = l)
+  
+  pdf(paste0("GoogleDrive/Graphs/Age_Ratios_",sy,"-",Y,"_",l,".pdf"),
       width = 11,
       height = 8.5)
   for(i in 1:length(tmpp)){
@@ -208,38 +254,9 @@ for(l in c("Fr","En")){
   dev.off()#end general harvest estimates
   
   
-  for(tty in c("Full",
-               "Age",
-               "Sex",
-               "Age_Sex")){
-    
-  tmpp <- general_plot_b(dat = b_tab,
-                         startYear = FY,
-                         endYear = Y,
-                         lang = l,
-                         type = tty)
- 
-  if(tty == "Full"){
-    pdf(paste0("GoogleDrive/Graphs/Species_Harvest_Estimates_",l,".pdf"),
-        width = 11,
-        height = 8.5)
-  }else{
-  pdf(paste0("GoogleDrive/Graphs/Species_Harvest_by_",tty,"_Estimates_",l,".pdf"),
-      width = 11,
-      height = 8.5)
-  }
-  for(i in 1:length(tmpp)){
-    print(tmpp[[i]])
-  }
-  
-  dev.off()#end species harvest estimates
-  }#end tty loop
-  
 }# end language loop
 
-### in English and French
-
-
+}# end long-term and 10-year plot loops
 
 # mapping of estimates ----------------------------------------------------
 
