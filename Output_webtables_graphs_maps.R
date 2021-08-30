@@ -54,13 +54,27 @@ print(paste("Data missing for variables",paste(miss_var,collapse = " ")))
 
 write.csv(a_tab,"website/General_harvest_table.csv",row.names = FALSE)
 
-a_tab <- a_tab %>% relocate(Description_Fr,
+a_tab1 <- a_tab %>% relocate(Description_Fr,
                   Description_En,
                   Prov_Fr,Prov_En,zone,year,
                   mean,lci,uci,
                   var,prov)
 
-write.csv(a_tab,paste0("GoogleDrive/General_Estimates_",FY,"-",Y,".csv"),row.names = FALSE)
+
+a_tab_out <- a_tab1 %>%  
+  rename(region_En = Prov_En,
+         region_Fr = Prov_Fr,
+         year_an = year,
+         mean_moyen = mean,
+         lci_2.5 = lci,
+         uci_97.5 = uci)
+
+
+write.csv(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_comma_",FY,"-",Y,".csv"),row.names = FALSE)
+write.csv2(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_point_virgule_",FY,"-",Y,".csv"),row.names = FALSE)
+
+
+
 
 
 # Species Harvest Estimates Table -----------------------------------------------------------------
@@ -112,7 +126,7 @@ b_tab <- bind_rows(b_tab,asxy_tab) %>%
 write.csv(b_tab,"website/species_harvest_table_incl_age_sex.csv",row.names = FALSE)
 
 
-b_tab <- b_tab %>% relocate(French_Name_New,
+b_tab1 <- b_tab %>% relocate(French_Name_New,
                             English_Name,
                             Scientific_Name,
                             Prov_Fr,Prov_En,
@@ -121,11 +135,22 @@ b_tab <- b_tab %>% relocate(French_Name_New,
                             French_Name_Old) %>% 
   rename(espece = French_Name_New,
          species = English_Name,
-         Scientific = Scientific_Name,
+         scientific = Scientific_Name,
          espece_alt = French_Name_Old)
 
-write.csv(b_tab,paste0("GoogleDrive/Species_Harvest_Estimates_incl_age_sex_",FY,"-",Y,".csv"),row.names = FALSE)
 
+
+b_tab_out <- b_tab1 %>%  
+  rename(region_En = Prov_En,
+         region_Fr = Prov_Fr,
+         year_an = year,
+         mean_moyen = mean,
+         lci_2.5 = lci,
+         uci_97.5 = uci)
+
+write.csv(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_comma_",FY,"-",Y,".csv"),row.names = FALSE)
+
+write.csv2(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_point_virgule_",FY,"-",Y,".csv"),row.names = FALSE)
 
 
 
@@ -154,19 +179,31 @@ c_tab <- bind_rows(nat_sums_c,prov_sums_c,zone_sums_c) %>%
 
 write.csv(c_tab,"website/species_age_ratios.csv",row.names = FALSE)
 
-c_tab <- c_tab %>% relocate(French_Name_New,
-                            English_Name,
-                            Scientific_Name,
-                            Prov_Fr,Prov_En,
-                            zone,year,
-                            mean,lci,uci,
-                            French_Name_Old) %>% 
+
+c_tab1 <- c_tab %>% relocate(French_Name_New,
+                                English_Name,
+                                Scientific_Name,
+                                Prov_Fr,Prov_En,
+                                zone,year,
+                                mean,lci,uci,
+                                French_Name_Old) %>% 
   rename(espece = French_Name_New,
          species = English_Name,
-         Scientific = Scientific_Name,
+         scientific = Scientific_Name,
          espece_alt = French_Name_Old)
 
-write.csv(c_tab,paste0("GoogleDrive/Species_Age_Ratios_",FY,"-",Y,".csv"),row.names = FALSE)
+
+
+c_tab_out <- c_tab1 %>%  
+  rename(region_En = Prov_En,
+         region_Fr = Prov_Fr,
+         year_an = year,
+         mean_moyen = mean,
+         lci_2.5 = lci,
+         uci_97.5 = uci)
+
+write.csv(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_comma_",FY,"-",Y,".csv"),row.names = FALSE)
+write.csv2(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_point_virgule_",FY,"-",Y,".csv"),row.names = FALSE)
 
 
 
@@ -196,57 +233,81 @@ for(sy in c(FY,Y-9)){
 
 for(l in c("Fr","En")){
   
-  # tmpp <- general_plot_a(dat = a_tab,
-  #                        startYear = sy,
-  #                        endYear = Y,
-  #                        lang = l)
-  # 
-  # pdf(paste0("GoogleDrive/Graphs/General_Estimates_",sy,"-",Y,"_",l,".pdf"),
-  #     width = 11,
-  #     height = 8.5)
-  # for(i in 1:length(tmpp)){
-  #   print(tmpp[[i]])
-  # }
-  # 
-  # dev.off()#end general harvest estimates
-  # 
-  # 
-  # for(tty in c("Full",
-  #              "Age",
-  #              "Sex",
-  #              "Age_Sex")){
-  #   
-  #   tmpp <- general_plot_b(dat = b_tab,
-  #                          startYear = sy,
-  #                          endYear = Y,
-  #                          lang = l,
-  #                          type = tty)
-  #   
-  #   if(tty == "Full"){
-  #     pdf(paste0("GoogleDrive/Graphs/Species_Harvest_Estimates_",sy,"-",Y,"_",l,".pdf"),
-  #         width = 11,
-  #         height = 8.5)
-  #   }else{
-  #     pdf(paste0("GoogleDrive/Graphs/Species_Harvest_by_",tty,"_Estimates_",sy,"-",Y,"_",l,".pdf"),
-  #         width = 11,
-  #         height = 8.5)
-  #   }
-  #   for(i in 1:length(tmpp)){
-  #     print(tmpp[[i]])
-  #   }
-  #   
-  #   dev.off()#end species harvest estimates
-  # }#end tty loop
-  
-  
-  tmpp <- general_plot_c(dat = c_tab,
+  tmpp <- general_plot_a(dat = a_tab1,
                          startYear = sy,
                          endYear = Y,
                          lang = l)
-  
-  pdf(paste0("GoogleDrive/Graphs/Age_Ratios_",sy,"-",Y,"_",l,".pdf"),
+
+  if(l == "Fr"){
+    pdf(paste0("GoogleDrive/Graphs/Donnees_generales_",sy,"-",Y,"_",l,".pdf"),
+        width = 11,
+        height = 8.5)
+  }else{
+  pdf(paste0("GoogleDrive/Graphs/General_Estimates_",sy,"-",Y,"_",l,".pdf"),
       width = 11,
       height = 8.5)
+  }
+  for(i in 1:length(tmpp)){
+    print(tmpp[[i]])
+  }
+
+  dev.off()#end general harvest estimates
+
+
+  for(tty in c("Full",
+               "Age",
+               "Sex",
+               "Age_Sex")){
+
+    tmpp <- general_plot_b(dat = b_tab1,
+                           startYear = sy,
+                           endYear = Y,
+                           lang = l,
+                           type = tty)
+
+    if(l == "Fr"){
+    if(tty == "Full"){
+      pdf(paste0("GoogleDrive/Graphs/Prises_par_Espece_",sy,"-",Y,"_",l,".pdf"),
+          width = 11,
+          height = 8.5)
+    }else{
+      pdf(paste0("GoogleDrive/Graphs/Prises_par_Espece_par_",tty,"_",sy,"-",Y,"_",l,".pdf"),
+          width = 11,
+          height = 8.5)
+    }
+    }else{
+      if(tty == "Full"){
+        pdf(paste0("GoogleDrive/Graphs/Species_Harvest_",sy,"-",Y,"_",l,".pdf"),
+            width = 11,
+            height = 8.5)
+      }else{
+        pdf(paste0("GoogleDrive/Graphs/Species_Harvest_by_",tty,"_",sy,"-",Y,"_",l,".pdf"),
+            width = 11,
+            height = 8.5)
+      } 
+    }
+    for(i in 1:length(tmpp)){
+      print(tmpp[[i]])
+    }
+
+    dev.off()#end species harvest estimates
+  }#end tty loop
+  
+  
+  tmpp <- general_plot_c(dat = c_tab1,
+                         startYear = sy,
+                         endYear = Y,
+                         lang = l)
+ 
+  if(l == "Fr"){ 
+  pdf(paste0("GoogleDrive/Graphs/Ratio_dAge_",sy,"-",Y,"_",l,".pdf"),
+      width = 11,
+      height = 8.5)
+  }else{
+    pdf(paste0("GoogleDrive/Graphs/Age_Ratios_",sy,"-",Y,"_",l,".pdf"),
+        width = 11,
+        height = 8.5) 
+  }
   for(i in 1:length(tmpp)){
     print(tmpp[[i]])
   }
@@ -257,6 +318,20 @@ for(l in c("Fr","En")){
 }# end language loop
 
 }# end long-term and 10-year plot loops
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # mapping of estimates ----------------------------------------------------
 
@@ -302,9 +377,21 @@ for(i in 1:nrow(var_maps_a)){
   bbks <- round(bbkst/(10^om))*10^om
   ss <- 1
   
-  while(any(duplicated(bbks))){
+  while(any(duplicated(bbks)) & ss < 6){
     bbks <- round((bbkst/(10^(om-ss)))*10^(om-ss))
     ss = ss+1
+  }
+  if(any(duplicated(bbks)) | bbks[1] == 0){
+    rng <- unlist(rng)
+    bbkst <- round(quantile(rng[which(rng > 0)],
+                            probs = c(seqs),
+                            na.rm = T,
+                            names = F))
+    om <- min(nchar(bbkst))-1
+    
+    bbks <- round(bbkst/(10^om))*10^om
+    bbks[1] <- 1
+    
   }
   bks <- c(0,
            bbks,
@@ -323,6 +410,14 @@ for(i in 1:nrow(var_maps_a)){
   colscale1b = c(colscale1,"white")
   names(colscale1b) <- c(levels(tmp$plot_cat),NA)
   
+  if(bks[2] == 1){
+    labs = c(paste0("0"),
+             paste(bks[2:(length(bks)-2)],
+                   bks[3:(length(bks)-1)],
+                   sep = " - "),
+             paste0("> ",bks[length(bks)-1]),
+             "no estimate / aucune estimation") 
+  }else{
   labs = c(paste0("1 - ",bks[2]),
            paste(bks[2:(length(bks)-2)],
                  bks[3:(length(bks)-1)],
@@ -330,6 +425,7 @@ for(i in 1:nrow(var_maps_a)){
            paste0("> ",bks[length(bks)-1]),
            "no estimate / aucune estimation") 
   names(labs) <- c(levels(tmp$plot_cat),NA)
+  }
   
   tmpm = left_join(base_map,tmp,by = c("PROV" = "prov",
                                        "ZONE" = "zone"))
@@ -359,7 +455,7 @@ for(i in 1:nrow(var_maps_a)){
 ## species harvest estimates
 
 
-# General harvest estimates
+
 sp_maps_b = b_tab %>% distinct(AOU,year,English_Name,French_Name_New,Scientific_Name) %>% 
   mutate(map_file = paste0(AOU,"_",year,".png"))
 
