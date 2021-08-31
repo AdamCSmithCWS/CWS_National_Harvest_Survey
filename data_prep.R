@@ -34,7 +34,7 @@ home.fold <- getwd()
 library(foreign)
 library(runjags)
 library(rjags)
-
+library(tidyverse)
 
 sashome <- "C:\\Program Files\\SASHome\\SASFoundation\\9.4"
 provs = c("AB","BC","SK","MB","ON","PQ","NS","PE","NB","NF","NT","YT")#,"NU") #All prov
@@ -64,10 +64,10 @@ zone <- T           ### change to false, if provincial summaries are desired
 provzone = read.csv("data/province and zone table.csv",stringsAsFactors = F)
 casteslist = read.csv("data/caste table.csv",stringsAsFactors = F)
 
-
-
-#
-#
+# 
+# 
+# #
+# #
 harvw <- list()
 length(harvw) <- length(years)
 names(harvw) <- as.character(years)
@@ -197,14 +197,17 @@ load("data/stored_SAS_download.RData")
 #if(any(calm[[as.character(2019)]]$YEAR != 2019)){stop("ERROR murre calendar info for 2019 is wrong")}
 for(y in years){
   
-if(any(cald[[as.character(y)]]$YEAR != y)){print(paste("ERROR duck calendar info for",y," is wrong"))
+if(any(cald[[as.character(y)]]$YEAR != y)){print(paste("ERROR duck calendar info for",y," is wrong == ",unique(cald[[as.character(y)]]$YEAR)))
   cald[[as.character(y)]]$YEAR <- y}
-  if(any(calm[[as.character(y)]]$YEAR != y)){print(paste("ERROR murre calendar info for",y," is wrong"))
+  if(any(calm[[as.character(y)]]$YEAR != y)){print(paste("ERROR murre calendar info for",y," is wrong == ",unique(calm[[as.character(y)]]$YEAR)))
     calm[[as.character(y)]]$YEAR <- y}
-  if(any(calg[[as.character(y)]]$YEAR != y)){print(paste("ERROR goose calendar info for",y," is wrong"))
+  if(any(calg[[as.character(y)]]$YEAR != y)){print(paste("ERROR goose calendar info for",y," is wrong == ",unique(calg[[as.character(y)]]$YEAR)))
     calg[[as.character(y)]]$YEAR <- y}
   
 }
+
+save(list = c("calg","cald","calm"),
+     file = "data/calendars.RData")
 # Fix species AOU values incl Eiders, CANG, SNGO, etc. --------------------------------------
 
 for(i in 1:nrow(aou_rec)){
@@ -249,6 +252,192 @@ outscse[wy,"WEEK"] = as.integer(ceiling((outscse[wy,"date"]-(min_day_y-1))/7))
 # 
 tof <- which(outscse$WEEK < 1) #small % of parts have negative weeks because the dates indicate hunting in August (range from -5 to -1)
 if(length(tof) > 0){stop("some parts have non-positive weeks = hunting pre September 1")}
+
+
+outscse[which(outscse$PAGE != ""),"BAGE"] <- outscse[which(outscse$PAGE != ""),"PAGE"]
+# outscse[which(outscse$BAGE %in% c("2")),"BAGE"] <- "I"
+# outscse[which(outscse$BAGE %in% c("3")),"BAGE"] <- "U"
+# outscse[which(outscse$BAGE %in% c("")),"BAGE"] <- "U"
+
+
+
+outscse[which(outscse$BAGE %in% c("1","S","T")),"BAGE"] <- "A"
+outscse[which(outscse$BAGE %in% c("2")),"BAGE"] <- "I"
+outscse[which(outscse$BAGE %in% c("3")),"BAGE"] <- "U"
+outscse[which(outscse$BAGE %in% c("")),"BAGE"] <- "U"
+
+outscse[which(outscse$BSEX %in% c("1")),"BSEX"] <- "M"
+outscse[which(outscse$BSEX %in% c("2")),"BSEX"] <- "F"
+outscse[which(outscse$BSEX %in% c("3")),"BSEX"] <- "U"
+outscse[which(outscse$BSEX %in% c("")),"BSEX"] <- "U"
+
+#outscse$BAGE = factor(outscse$BAGE)
+#round(prop.table(table(outscse$BAGE,outscse$AOU),2),2)
+
+#outscse$BSEX = factor(outscse$BSEX)
+#round(prop.table(table(outscse$BSEX,outscse$AOU),2),2)
+
+
+
+cls = c("PERMIT",
+        "CASTE",
+        "YEAR",
+        "SELYEAR",
+        "PRHUNT",
+        "ZOHUNT",
+        "LATD",
+        "LOND",
+        "TODUK",
+        "TOGOK",
+        "COOTK",
+        "WOODK",
+        "SNIPK",
+        "DOVEK",
+        "PIGEK",
+        "CRANK",
+        "RAILK",
+        "MURRK",
+        "RNDMURK",
+        "DAYWF",
+        "DAYOT",
+        "DAYM",
+        "PRHUNTG",
+        "ZOHUNTG",
+        "LATG",
+        "LONG",
+        "PRHUNTM",
+        "ZOHUNTM",
+        "LATM",
+        "LONM",
+        "SUCCWF",
+        "SUTODU",
+        "SUTOGO",
+        "SUCCOT",
+        "SUCCM",
+        "ACTIVEOT",
+        "ACTIVE",
+        "ACTIVEWF",
+        "ACTIVEM",
+        "POTNTL",
+        "PRSALE",
+        "ZOSALE",
+        "PRSAMP",
+        "ZOSAMP")
+allkill <- NULL
+
+for(y in years){
+  tmp1 <- harvw[[as.character(y)]]
+  tmp <- tmp1[,which(names(tmp1) %in% cls)]
+  #tmp = tmp1
+  
+  if(y == years[1]){
+    allkill <- tmp
+  }else{
+    allkill <- bind_rows(allkill,tmp)
+  }
+}
+
+trem = which(allkill$CASTE %in% c("C","F","H"))
+if(length(trem)>0){
+  allkill = allkill[-trem,]
+}### removing the unused castes; there are permits that have this caste designation across all years
+
+
+tkp = which(allkill$POTNTL == "Y")
+# if(length(tkp)>0){
+allkill = allkill[tkp,]
+#}### removing the hunters sampled from last year's permit file who indicated they didn't buy a permit this year
+### and are therefore not potential hunters
+
+
+trem = which(allkill$PERMIT == 0)
+if(length(trem)>0){
+  allkill = allkill[-trem,]
+}### removes a single permit from 1985 with no permit number
+
+
+
+allkill$uniperm = allkill$PERMIT + allkill$SELYEAR*1000000 + allkill$YEAR*10000000000
+dupuni = allkill$uniperm[duplicated(allkill$uniperm)]
+## there are no duplicates.
+# dupdf = allkill[which(allkill$uniperm %in% dupuni),]
+# dupdf = dupdf[order(dupdf$uniperm),]
+
+wmigoo <- which(allkill$PRHUNTG == "")
+allkill$PRHUNTG = as.character(allkill$PRHUNTG)
+allkill[wmigoo,"PRHUNTG"] <- as.character(allkill[wmigoo,"PRHUNT"])
+allkill[wmigoo,"ZOHUNTG"] <- allkill[wmigoo,"ZOHUNT"]
+
+
+
+wsud = which(allkill$TODUK > 0)
+allkill$SUTODU <- "N"
+allkill[wsud,"SUTODU"] <- "Y"
+
+
+wsud = which(allkill$TOGOK > 0)
+allkill$SUTOGO <- "N"
+allkill[wsud,"SUTOGO"] <- "Y"
+
+
+
+tkeepP = which(allkill$PRSAMP %in% provs) #keeps only permits sampled in primary provinces. drops NU
+
+allkill = allkill[tkeepP,]
+
+
+
+nrow(allkill) == length(unique(allkill$uniperm))
+allkill$year = allkill$YEAR-(min(allkill$YEAR)-1)
+allkill$caste = factor(allkill$CASTE,
+                       ordered = T,
+                       levels = c("D","B","A","E"))
+
+
+
+
+
+######## sampling population sizes
+popsiz_s = merge(popsiz,provzone[,c("prov","provn")],by.x = "PRSAMP",by.y = "provn",all.x = T)
+popsiz_s = unique(popsiz_s)
+
+
+
+#### total number of permits in each year
+
+popsiz_perm = merge(perms,provzone[,c("prov","provn")],by.x = "PRSALE",by.y = "provn",all.x = T)
+popsiz_perm = unique(popsiz_perm)
+
+
+### total number of permits by zone and year
+
+z_pops <- popsiz_perm %>%
+  select(-PRSALE) %>% 
+  rename(PRSAMP = prov,ZOSAMP = ZOSALE) %>% 
+  group_by(PRSAMP,ZOSAMP,YEAR) %>% 
+  summarise(TOTSALE = sum(TOTSALE))
+
+# popsiz_perm$yr = str_sub(popsiz_perm$YEAR,start = 3,end = 4)
+# tmp = left_join(popsiz_perm,popsiz_s[,c("zone","caste","TOTPERM","yr","prov")])
+
+
+
+
+
+
+
+
+
+# correcting the age and sex indicators -----------------------------------
+
+save(list = c("allkill",
+              "outscse",
+              "z_pops",
+              "popsiz_s",
+              "popsiz_perm",
+              "sps"),
+     file = "data/allkill.RData")
+
 
 ######################
 #define periods across all years
@@ -458,60 +647,11 @@ write.csv(period.murre,"data/period.murre.csv",row.names = F)
 
 
 
-save.image(file = paste0("data/parts and harvest survey info",Y,".RData"))
+#save.image(file = paste0("data/parts and harvest survey info",Y,".RData"))
 
 
 
-
-# # compile harsum info -----------------------------------------------------
-# harsums <- list()
-# length(harsums) <- length(years)
-# names(harsums) <- names(years)
-# specieslevel = FALSE
-# zone = TRUE
-# 
-#   for (y in names(years)) {
-#     tmp <- read.fwf(paste("m:/My Documents/Harvest Survey A146/HARSUM/HARSUM",y,".txt",sep = ""),widths = c(4,2,-1,1,1,6,7,7), col.names = c("year","prov","zone","caste","species","harvest","se"), colClasses = c("integer","character","integer","character","character","numeric","numeric"), na.strings = ".",strip.white = T)
-#     if (specieslevel) {
-#       spcl <- "specieslevelenglish"
-#       tmp <- merge(tmp,sps[,c("specieslevelenglish","AOU")],by.x = "species",by.y = "AOU")
-#       tmp2 <- tmp[which(tmp$prov %in% provs & tmp$species %in% sps[which(sps$specieslevelenglish %in% species),"AOU"]),] 
-#       }else{
-#         spcl <- "species"
-#         tmp2 <- tmp
-#       }
-#     tmp2[,"var"] <- tmp2[,"se"]^2
-#     tmp2 <- tmp2[which(!is.na(tmp2[,spcl])),]
-#     
-#     # if (zone == T) {tmphse <- unique(tmp2[,c("prov","zone",spcl)])}else{
-#     #   tmphse <- unique(tmp2[,c("prov",spcl)])}
-#     # for (sp in unique(tmp2[,spcl])) {
-#     #   tmp3 <- tmp2[which(tmp2[,spcl] == sp),]
-#     #   for (p in unique(tmp3$prov)) {
-#     #     tmp4a <- tmp3[which(tmp3$prov == p),]
-#     #     if (zone == T) {
-#     #       for (z in unique(tmp4a$zone)) {
-#     #         tmp4 <- tmp4a[which(tmp4a$zone == z),]
-#     #         
-#     #         tmphse[which(tmphse$prov == p & tmphse$zone == z & tmphse[,spcl] == sp),"harvest"] <-  sum(tmp4[,"harvest"],na.rm = T)
-#     #         tmphse[which(tmphse$prov == p & tmphse$zone == z & tmphse[,spcl] == sp),"se"] <-  sqrt(sum(tmp4[,"var"],na.rm = T))
-#     #       }#z
-#     #     }else{
-#     #       tmp4 <- tmp4a
-#     #       tmphse[which(tmphse$prov == p & tmphse[,spcl] == sp),"harvest"] <-  sum(tmp4[,"harvest"],na.rm = T)
-#     #       tmphse[which(tmphse$prov == p & tmphse[,spcl] == sp),"se"] <-  sqrt(sum(tmp4[,"var"],na.rm = T))
-#     #       
-#     #     }
-#     #     
-#     #   }#p
-#     # }#sp
-#     tmp2[,"year"] <- as.integer(y)
-#     harsums[[y]] <-  tmp2
-#     if (as.integer(y) == min(years)) {harsumdt <- tmp2} else {harsumdt <- rbind(harsumdt,tmp2)}
-#   }#y
-# write.csv(harsumdt,"data/harsum76_18.csv",row.names = FALSE)  
-#   
-#  
+ 
 #  
 
 

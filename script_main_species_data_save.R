@@ -44,11 +44,12 @@
 #   The ratio corresponds to the number of males per female bird in the sample. Ratios were calculated if the total sample equals or exceeds 20 parts.
 
 
-Y <- 2019
+Y <- 2020
 FY = 1976
 years <- FY:Y
 
 names(years) <- paste(years)
+nyears = length(years)
 
 library(foreign)
 library(runjags)
@@ -68,203 +69,20 @@ library(ggforce)
 # load output from data_prep.R --------------------------------------------
 
 
-load(paste0("data/parts and harvest survey info",Y,".RData"))
+#load(paste0("data/parts and harvest survey info",Y,".RData"))
 
 provzone <- read.csv("data/Province and zone table.csv")
-
+provs = unique(provzone$prov)
+load("data/allkill.RData")
+load("data/calendars.RData")
 
 # compile total harvest estimates into a dataframe ------------------------
 
 ### compile total harvest estimates into a dataframe of
 #### permit, year, caste, totalkill
 
-cls = c("PERMIT",
-        "CASTE",
-        "YEAR",
-        "SELYEAR",
-        "PRHUNT",
-        "ZOHUNT",
-        "LATD",
-        "LOND",
-        "TODUK",
-        "TOGOK",
-        "COOTK",
-        "WOODK",
-        "SNIPK",
-        "DOVEK",
-        "PIGEK",
-        "CRANK",
-        "RAILK",
-        "MURRK",
-        "RNDMURK",
-        "DAYWF",
-        "DAYOT",
-        "DAYM",
-        "PRHUNTG",
-        "ZOHUNTG",
-        "LATG",
-        "LONG",
-        "PRHUNTM",
-        "ZOHUNTM",
-        "LATM",
-        "LONM",
-        "SUCCWF",
-        "SUTODU",
-        "SUTOGO",
-        "SUCCOT",
-        "SUCCM",
-        "ACTIVEOT",
-        "ACTIVE",
-        "ACTIVEWF",
-        "ACTIVEM",
-        "POTNTL",
-        "PRSALE",
-        "ZOSALE",
-        "PRSAMP",
-        "ZOSAMP")
-allkill <- NULL
-
-for(y in years){
-  tmp1 <- harvw[[as.character(y)]]
-  tmp <- tmp1[,which(names(tmp1) %in% cls)]
-  #tmp = tmp1
-  
-  if(y == years[1]){
-    allkill <- tmp
-  }else{
-    allkill <- bind_rows(allkill,tmp)
-  }
-}
-
-trem = which(allkill$CASTE %in% c("C","F","H"))
-if(length(trem)>0){
-  allkill = allkill[-trem,]
-}### removing the unused castes; there are permits that have this caste designation across all years
-
-
-tkp = which(allkill$POTNTL == "Y")
-# if(length(tkp)>0){
-allkill = allkill[tkp,]
-#}### removing the hunters sampled from last year's permit file who indicated they didn't buy a permit this year
-### and are therefore not potential hunters
-
-
-trem = which(allkill$PERMIT == 0)
-if(length(trem)>0){
-  allkill = allkill[-trem,]
-}### removes a single permit from 1985 with no permit number
-
-
-
-allkill$uniperm = allkill$PERMIT + allkill$SELYEAR*1000000 + allkill$YEAR*10000000000
-dupuni = allkill$uniperm[duplicated(allkill$uniperm)]
-## there are no duplicates.
-# dupdf = allkill[which(allkill$uniperm %in% dupuni),]
-# dupdf = dupdf[order(dupdf$uniperm),]
-
-wmigoo <- which(allkill$PRHUNTG == "")
-allkill$PRHUNTG = as.character(allkill$PRHUNTG)
-allkill[wmigoo,"PRHUNTG"] <- as.character(allkill[wmigoo,"PRHUNT"])
-allkill[wmigoo,"ZOHUNTG"] <- allkill[wmigoo,"ZOHUNT"]
-
-
-
-wsud = which(allkill$TODUK > 0)
-allkill$SUTODU <- "N"
-allkill[wsud,"SUTODU"] <- "Y"
-
-
-wsud = which(allkill$TOGOK > 0)
-allkill$SUTOGO <- "N"
-allkill[wsud,"SUTOGO"] <- "Y"
-
-
-
-tkeepP = which(allkill$PRSAMP %in% provs) #keeps only permits sampled in primary provinces. drops NU
-
-allkill = allkill[tkeepP,]
-
-
-
-nrow(allkill) == length(unique(allkill$uniperm))
-allkill$year = allkill$YEAR-(min(allkill$YEAR)-1)
-allkill$caste = factor(allkill$CASTE,
-                       ordered = T,
-                       levels = c("D","B","A","E"))
-
-
-
-
-
-######## sampling population sizes
-popsiz_s = merge(popsiz,provzone[,c("prov","provn")],by.x = "PRSAMP",by.y = "provn",all.x = T)
-popsiz_s = unique(popsiz_s)
-
-
-
-#### total number of permits in each year
-
-popsiz_perm = merge(perms,provzone[,c("prov","provn")],by.x = "PRSALE",by.y = "provn",all.x = T)
-popsiz_perm = unique(popsiz_perm)
-
-
-### total number of permits by zone and year
-
-z_pops <- popsiz_perm %>%
-  select(-PRSALE) %>% 
-  rename(PRSAMP = prov,ZOSAMP = ZOSALE) %>% 
-  group_by(PRSAMP,ZOSAMP,YEAR) %>% 
-  summarise(TOTSALE = sum(TOTSALE))
-
-# popsiz_perm$yr = str_sub(popsiz_perm$YEAR,start = 3,end = 4)
-# tmp = left_join(popsiz_perm,popsiz_s[,c("zone","caste","TOTPERM","yr","prov")])
-
-
-
-
-
-
-
-
-
-# correcting the age and sex indicators -----------------------------------
-
-outscse[which(outscse$PAGE != ""),"BAGE"] <- outscse[which(outscse$PAGE != ""),"PAGE"]
-# outscse[which(outscse$BAGE %in% c("2")),"BAGE"] <- "I"
-# outscse[which(outscse$BAGE %in% c("3")),"BAGE"] <- "U"
-# outscse[which(outscse$BAGE %in% c("")),"BAGE"] <- "U"
-
-
-
-outscse[which(outscse$BAGE %in% c("1","S","T")),"BAGE"] <- "A"
-outscse[which(outscse$BAGE %in% c("2")),"BAGE"] <- "I"
-outscse[which(outscse$BAGE %in% c("3")),"BAGE"] <- "U"
-outscse[which(outscse$BAGE %in% c("")),"BAGE"] <- "U"
-
-outscse[which(outscse$BSEX %in% c("1")),"BSEX"] <- "M"
-outscse[which(outscse$BSEX %in% c("2")),"BSEX"] <- "F"
-outscse[which(outscse$BSEX %in% c("3")),"BSEX"] <- "U"
-outscse[which(outscse$BSEX %in% c("")),"BSEX"] <- "U"
-
-#outscse$BAGE = factor(outscse$BAGE)
-#round(prop.table(table(outscse$BAGE,outscse$AOU),2),2)
-
-#outscse$BSEX = factor(outscse$BSEX)
-#round(prop.table(table(outscse$BSEX,outscse$AOU),2),2)
-
-save(list = c("allkill",
-              "outscse",
-              "z_pops",
-              "popsiz_s",
-              "popsiz_perm"),
-     file = "data/allkill.RData")
-
-
 ### species lists
 
-aou.ducks <- sps[which(sps$group == "duck"),"AOU"]
-aou.goose <- sps[which(sps$group == "goose"),"AOU"]
-aou.murre <- sps[which(sps$group == "murre"),"AOU"]
 
 for(spgp in c("duck","goose","murre")){
 ### begining of loop through provinces only engage this loop if running the full analysis
@@ -273,27 +91,26 @@ for(spgp in c("duck","goose","murre")){
 
 # group data set up -------------------------------------------------------
 
+  period = read.csv(paste0("data/period.",spgp,".csv"))
+  aou.spgp <- sps[which(sps$group == spgp),"AOU"]
   
   
   if(spgp == "goose"){
     
-    Y <- 2019
-    FY = 1976
-    years <- FY:Y
-    
-    names(years) <- paste(years)
-    
-    aou.spgp = aou.goose
-    period = period.goose
+    # Y <- 2019
+    # FY = 1976
+    # years <- FY:Y
+    # 
+    # names(years) <- paste(years)
+    # 
     cal.spgp = calg
-    allkill = allkill
+    #allkill = allkill
     phunt = "PRHUNTG"
     zhunt = "ZOHUNTG"
     wkill = "TOGOK"
     wact = "ACTIVEWF"
     wsucc = "SUTOGO"
     wday = "DAYWF"
-    nyears = length(years)
     demog = data.frame(BSEX = rep(c("U","U"),each = 1),
                        BAGE = rep(c("A","I"),times = 1),
                        stringsAsFactors = F)
@@ -305,15 +122,12 @@ for(spgp in c("duck","goose","murre")){
   }
   if(spgp == "duck"){
     
-    Y <- 2019
-    FY = 1976
-    years <- FY:Y
+   
     
-    names(years) <- paste(years)
-    aou.spgp = aou.ducks
-    period = period.duck
+    aou.spgp <- sps[which(sps$group == spgp),"AOU"]
+    
     cal.spgp = cald
-    allkill = allkill
+    
     phunt = "PRHUNT"
     zhunt = "ZOHUNT"
     wkill = "TODUK"
@@ -321,7 +135,7 @@ for(spgp in c("duck","goose","murre")){
     wsucc = "SUTODU"
     wday = "DAYWF"
     
-    nyears = length(years)
+    
     demog = data.frame(BSEX = rep(c("F","M"),each = 2),
                        BAGE = rep(c("A","I"),times = 2),
                        stringsAsFactors = F)
@@ -335,29 +149,29 @@ for(spgp in c("duck","goose","murre")){
   
   if(spgp == "murre"){
     
-    Y <- 2019
     FY = 2014#### previous years Murre harvest was calculated differently, pre 2013 only total MURRK, and in 2013 it was a mix of infor from DAYOT and calendars and species composition
     years <- FY:Y
     
     names(years) <- paste(years)
+    nyears = length(years)
     
-    aou.spgp = aou.murre
-    period = period.murre
+    aou.spgp <- sps[which(sps$group == spgp),"AOU"]
+    
     cal.spgp = calm
-    allkill = allkill
+    
     phunt = "PRHUNTM"
     zhunt = "ZOHUNTM"
     wkill = "MURRK"
     wact = "ACTIVEM"
     wsucc = "SUCCM"
     wday = "DAYM" #?
-    nyears = length(years)
+    
     demog = data.frame(BSEX = rep(c("U","U"),each = 1),
                        BAGE = rep(c("A","I"),times = 1),
                        stringsAsFactors = F)
     minyr <- FY
     provs2 = "NF"
-        non_res_combine = c("NF 1","NF 2","PE 1","NS 1","NS 2","BC 2","NT 1","YT 1")
+        non_res_combine = c("NF 1","NF 2")
     
   }
   
@@ -372,7 +186,7 @@ for(spgp in c("duck","goose","murre")){
   
 
   for(z in zns){
-    
+    if(z == 2 & spgp == "murre"){next}
     
     # periods -----------------------------------------------------------------
     
