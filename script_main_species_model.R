@@ -44,21 +44,19 @@
 #   The ratio corresponds to the number of males per female bird in the sample. Ratios were calculated if the total sample equals or exceeds 20 parts.
 
 
-Y <- 2019
+Y <- 2020
 FY = 1976
 years <- FY:Y
 
 names(years) <- paste(years)
 
-library(foreign)
-library(runjags)
-library(rjags)
+
 library(jagsUI)
 library(tidyverse)
-library(ggmcmc)
-library(tidybayes)
-library(ggrepel)
-library(ggforce)
+# library(ggmcmc)
+# library(tidybayes)
+# library(ggrepel)
+# library(ggforce)
 library(doParallel)
 library(foreach)
 
@@ -69,7 +67,6 @@ library(foreach)
 # load output from data_prep.R --------------------------------------------
 
 
-load(paste0("data/parts and harvest survey info",Y,".RData"))
 
 provzone <- read.csv("data/Province and zone table.csv")
 
@@ -77,13 +74,13 @@ provzone <- read.csv("data/Province and zone table.csv")
 
 
 
-load("data/allkill.RData")
-### species lists
-
-aou.ducks <- sps[which(sps$group == "duck"),"AOU"]
-aou.goose <- sps[which(sps$group == "goose"),"AOU"]
-aou.murre <- sps[which(sps$group == "murre"),"AOU"]
-
+# load("data/allkill.RData")
+# ### species lists
+# 
+# aou.ducks <- sps[which(sps$group == "duck"),"AOU"]
+# aou.goose <- sps[which(sps$group == "goose"),"AOU"]
+# aou.murre <- sps[which(sps$group == "murre"),"AOU"]
+# 
 
 
 for(spgp in c("murre","duck","goose")){
@@ -93,101 +90,92 @@ for(spgp in c("murre","duck","goose")){
 
 # group data set up -------------------------------------------------------
 
+  period = read.csv(paste0("data/period.",spgp,".csv"))
+  aou.spgp <- sps[which(sps$group == spgp),"AOU"]
+  provs2 <- provs
+  mod.file = "models/species_harvest_model.R" # 
   
-  
-  if(spgp == "goose"){
-    
-    Y <- 2019
-    FY = 1976
-    years <- FY:Y
-    
-    names(years) <- paste(years)
-    
-    aou.spgp = aou.goose
-    period = period.goose
-    cal.spgp = calg
-    allkill = allkill
-    phunt = "PRHUNTG"
-    zhunt = "ZOHUNTG"
-    wkill = "TOGOK"
-    wact = "ACTIVEWF"
-    wsucc = "SUTOGO"
-    wday = "DAYWF"
-    nyears = length(years)
-    demog = data.frame(BSEX = rep(c("U","U"),each = 1),
-                       BAGE = rep(c("A","I"),times = 1),
-                       stringsAsFactors = F)
-    minyr <- min(years)
-    provs2 <- provs
-    mod.file = "models/species_harvest_model.R" # 
-    non_res_combine = c("NF 1","NF 2","PE 1","NS 1","NS 2","BC 2","NT 1","YT 1","NB 1")
-    
-    
-  }
-  
-  if(spgp == "duck"){
-    
-    Y <- 2019
-    FY = 1976
-    years <- FY:Y
-    
-    names(years) <- paste(years)
-    aou.spgp = aou.ducks
-    period = period.duck
-    cal.spgp = cald
-    allkill = allkill
-    phunt = "PRHUNT"
-    zhunt = "ZOHUNT"
-    wkill = "TODUK"
-    wact = "ACTIVEWF"
-    wsucc = "SUTODU"
-    wday = "DAYWF"
-
-    nyears = length(years)
-    demog = data.frame(BSEX = rep(c("F","M"),each = 2),
-                       BAGE = rep(c("A","I"),times = 2),
-                       stringsAsFactors = F)
-    minyr <- min(years)
-    provs2 <- provs
-    mod.file = "models/species_harvest_model.R" #
-    non_res_combine = c("NF 1","NF 2","PE 1","NS 1","NS 2","BC 2","NT 1","YT 1")
-    
-  }
-  
-  
-  
-  if(spgp == "murre"){
-    
-    Y <- 2019
-    FY = 2014#### previous years Murre harvest was calculated differently, pre 2013 only total MURRK, and in 2013 it was a mix of infor from DAYOT and calendars and species composition
-    years <- FY:Y
-    
-    names(years) <- paste(years)
-    
-    aou.spgp = aou.murre
-    period = period.murre
-    cal.spgp = calm
-    allkill = allkill
-    phunt = "PRHUNTM"
-    zhunt = "ZOHUNTM"
-    wkill = "MURRK"
-    wact = "ACTIVEM"
-    wsucc = "SUCCM"
-    wday = "DAYM" #?
-     nyears = length(years)
-    demog = data.frame(BSEX = rep(c("U","U"),each = 1),
-                       BAGE = rep(c("A","I"),times = 1),
-                       stringsAsFactors = F)
-    minyr <- FY
-    provs2 = "NF"
-    mod.file = "models/species_harvest_model.R" # I think this should work for murres too
- 
-    
-    non_res_combine = c("NF 1","NF 2","PE 1","NS 1","NS 2","BC 2","NT 1","YT 1")
-    
-  }
-
-  
+  # 
+  # if(spgp == "goose"){
+  #   
+  #  
+  #   
+  #   # cal.spgp = calg
+  #   # allkill = allkill
+  #   # phunt = "PRHUNTG"
+  #   # zhunt = "ZOHUNTG"
+  #   # wkill = "TOGOK"
+  #   # wact = "ACTIVEWF"
+  #   # wsucc = "SUTOGO"
+  #   # wday = "DAYWF"
+  #   # nyears = length(years)
+  #   # demog = data.frame(BSEX = rep(c("U","U"),each = 1),
+  #   #                    BAGE = rep(c("A","I"),times = 1),
+  #   #                    stringsAsFactors = F)
+  #   # minyr <- min(years)
+  #   non_res_combine = c("NF 1","NF 2","PE 1","NS 1","NS 2","BC 2","NT 1","YT 1","NB 1")
+  #   
+  #   
+  # }
+  # 
+  # if(spgp == "duck"){
+  #   
+  #   # Y <- 2019
+  #   # FY = 1976
+  #   # years <- FY:Y
+  #   # 
+  #   # names(years) <- paste(years)
+  #   # aou.spgp = aou.ducks
+  #   # period = period.duck
+  #   # cal.spgp = cald
+  #   # allkill = allkill
+  #   # phunt = "PRHUNT"
+  #   # zhunt = "ZOHUNT"
+  #   # wkill = "TODUK"
+  #   # wact = "ACTIVEWF"
+  #   # wsucc = "SUTODU"
+  #   # wday = "DAYWF"
+  #   # 
+  #   # nyears = length(years)
+  #   # demog = data.frame(BSEX = rep(c("F","M"),each = 2),
+  #   #                    BAGE = rep(c("A","I"),times = 2),
+  #   #                    stringsAsFactors = F)
+  #   # minyr <- min(years)
+  #   # provs2 <- provs
+  #   # mod.file = "models/species_harvest_model.R" #
+  #   
+  # }
+  # 
+  # 
+  # 
+   if(spgp == "murre"){
+  #   
+  #   FY = 2014#### previous years Murre harvest was calculated differently, pre 2013 only total MURRK, and in 2013 it was a mix of infor from DAYOT and calendars and species composition
+  #   years <- FY:Y
+  #   
+  #   names(years) <- paste(years)
+  #   
+  #   # aou.spgp = aou.murre
+  #   # period = period.murre
+  #   # cal.spgp = calm
+  #   # allkill = allkill
+  #   # phunt = "PRHUNTM"
+  #   # zhunt = "ZOHUNTM"
+  #   # wkill = "MURRK"
+  #   # wact = "ACTIVEM"
+  #   # wsucc = "SUCCM"
+  #   # wday = "DAYM" #?
+  #   #  nyears = length(years)
+  #   # demog = data.frame(BSEX = rep(c("U","U"),each = 1),
+  #   #                    BAGE = rep(c("A","I"),times = 1),
+  #   #                    stringsAsFactors = F)
+  #   # minyr <- FY
+     provs2 = "NF"
+  #   
+  #   
+       }
+  # 
+  # 
 
 # Province and Zone loop --------------------------------------------------
   # n_cores <- length(provs2)
