@@ -22,7 +22,7 @@
 
 
 
-Y <- 2019
+Y <- 2020
 years <- 1976:Y
 
 names(years) <- paste(years)
@@ -36,162 +36,160 @@ library(runjags)
 library(rjags)
 
 
-# sashome <- "C:\\Program Files\\SASHome\\SASFoundation\\9.4"
-# provs = c("AB","BC","SK","MB","ON","PQ","NS","PE","NB","NF","NT","YT")#,"NU") #All prov
-# #ignoring territories above
-# 
-# sps <- read.csv(paste(home.fold,"/data/Bird_names_2019.csv", sep = ""))
-# aou_rec <- read.csv("data/Reconcile_AOU_codes_2019.csv")
-# 
-# 
-# species <- unique(sps[which(sps$group %in% c("duck","goose","murre")),"specieslevelenglish"])
-# 
-# 
-# species <- species[-which(species == "Hybrid Mallard/Northern Pintail")]
-# gnames <- unique(sps[which(sps$group == "goose"),"specieslevelenglish"])
-# dnames <- unique(sps[which(sps$group == "duck"),"specieslevelenglish"])
-#  dnames <- dnames[-which(dnames == "Hybrid Mallard/Northern Pintail")]
-# #
-# #
-# #
-# goose <- TRUE         ### change to false, if no goose species included (simplifies the PEF file extraction)
-# murre <- T      #change to fales if no murre species should be included
-# zone <- T           ### change to false, if provincial summaries are desired
-# # #
-# # #
-# # ############## extracting harvest survey data for all years
-# #
-# provzone = read.csv("data/province and zone table.csv",stringsAsFactors = F)
-# casteslist = read.csv("data/caste table.csv",stringsAsFactors = F)
-# 
-# 
-# 
-# #
-# #
-# harvw <- list()
-# length(harvw) <- length(years)
-# names(harvw) <- as.character(years)
-# cald = harvw
-# calg = cald
-# calm = cald
-# 
-# cls = c("PRHUNT",
-#         "ZOHUNT",
-#         "AOU",
-#         "MONH",
-#         "DAYH",
-#         "BAGE",
-#         "BSEX",
-#         "PAGE",
-#         "SAMPLE",
-#         "PERMIT",
-#         "YEAR",
-#         #"FOLYEAR",
-#         #"JDLWA",
-#         "YRHUNT",
-#         #"JDHUN",
-#        "WEEK")
-# #
-# for (y in years){
-#   dir.yr <- paste0(home.fold1,y)
-# 
-#   fil.yr <- paste0("harv",substring(y,3,4),"w")
-#   harvw[[as.character(y)]] <- read.ssd(libname = dir.yr,
-#                                        sectionnames = fil.yr,
-#                                        sascmd = file.path(sashome, "sas.exe"))
-#   fil.yr <- paste0("dcal",substring(y,3,4))
-#   cald[[as.character(y)]] <- read.ssd(libname = dir.yr,
-#                                         sectionnames = fil.yr,
-#                                         sascmd = file.path(sashome, "sas.exe"))
-#   fil.yr <- paste0("gcal",substring(y,3,4))
-#   calg[[as.character(y)]] <- read.ssd(libname = dir.yr,
-#                                         sectionnames = fil.yr,
-#                                         sascmd = file.path(sashome, "sas.exe"))
-# 
-#    if(y > 2012){
-#    fil.yr <- paste0("mcal",substring(y,3,4))
-#    calm[[as.character(y)]] <- read.ssd(libname = dir.yr,
-#                                        sectionnames = fil.yr,
-#                                        sascmd = file.path(sashome, "sas.exe"))
-#  }
-#  fil.yr = paste0("persal",substring(y,3,4))
-#  tmpp <- read.ssd(libname = paste0(home.fold1,"/PermitSales"),
-#                                      sectionnames = fil.yr,
-#                                      sascmd = file.path(sashome, "sas.exe"))
-#  if(any(tmpp$YEAR > 50,na.rm = T) ){
-#    tmpp$YEAR = tmpp$YEAR+1900
-#  }else{
-#    tmpp$YEAR = tmpp$YEAR+2000
-# 
-#  }
-# 
-# 
-#  fil.yr = paste0("popsiz",substring(y,3,4))
-#  tmppop <- read.ssd(libname = paste0(home.fold1,"/PopulationSize"),
-#                   sectionnames = fil.yr,
-#                   sascmd = file.path(sashome, "sas.exe"))
-# 
-# 
-#  ### if desired to swap BAGE for PAGE (geese), then scsYY is required, instead of scsYYe
-#  ### but then additional changes are needed to align with old data
-#   fil.yr <- paste0("scs",substring(y,3,4),"e")
-#   tmp <- read.ssd(libname = dir.yr,
-#                                       sectionnames = fil.yr,
-#                                       sascmd = file.path(sashome, "sas.exe"))
-#   # fil.yr <- paste0("scs",substring(y,3,4))
-#   # tmp2 <- read.ssd(libname = dir.yr,
-#   #                  sectionnames = fil.yr,
-#   #                  sascmd = file.path(sashome, "sas.exe"))
-#   #
-#   # tmp2u <- unique(tmp2[,c("PRHUNT","ZOHUNT","AOU","MONH","DAYH","BAGE","BSEX","PAGE","PERMIT")])
-# 
-#   tmp[which(tmp$PRHUNT == ""),"PRHUNT"] <- tmp[which(tmp$PRHUNT == ""),"PRSALE"]
-#   tmp[which(tmp$PRHUNT == ""),"ZOHUNT"] <- tmp[which(tmp$PRHUNT == ""),"ZOSALE"]
-# 
-#   ## fixing a handful of years in which column names varied and years were recorded as 2 digits
-#   if(c("YHUN") %in% names(tmp)){
-#     names(tmp)[which(names(tmp) == "YHUN")] <- "YRHUNT"
-#   }
-#   if(any(tmp$YEAR < min(years),na.rm = T)){
-#     tmp[which(tmp$YEAR < min(years)),"YEAR"] <- tmp[which(tmp$YEAR < min(years)),"YEAR"]+1900
-#   }
-#   if(any(tmp$YRHUNT < min(years),na.rm = T)){
-#     tmp[which(tmp$YRHUNT < min(years)),"YRHUNT"] <- tmp[which(tmp$YRHUNT < min(years)),"YRHUNT"]+1900
-#   }
-#   # if(any(tmp$JDHUN < 1000)){
-#   #   tmp[which(tmp$JDHUN < 1000),"JDHUN"] <- tmp[which(tmp$JDHUN < 1000),"JDHUN"]+((y-1900)*10)
-#   # }
-# 
-#   miscls = cls[-which(cls %in% names(tmp))]
-# 
-#   if(length(miscls) > 0){
-# 
-#   if(miscls == "PAGE"){
-#     tmp$PAGE <- ""
-#   }
-#   }
-# 
-#   tmp = tmp[,cls]
-# 
-#   if(y == years[1]) {
-#     outscse <- tmp
-#     perms = tmpp
-#     popsiz = tmppop
-#   }else{
-#     outscse <- rbind(outscse,tmp)
-#     perms = rbind(perms,tmpp)
-#     popsiz = rbind(popsiz,tmppop)
-#     }
-#   #
-# 
-# print(y)
-# 
-#   }#y
-# 
-# 
-# save.image(file = "data/stored_SAS_download.RData")
+sashome <- "C:\\Program Files\\SASHome\\SASFoundation\\9.4"
+provs = c("AB","BC","SK","MB","ON","PQ","NS","PE","NB","NF","NT","YT")#,"NU") #All prov
+#ignoring territories above
 
-# calm[[as.character(2019)]]$YEAR <- 2019### one off temporary fix, should never be necessary again
+sps <- read.csv(paste(home.fold,"/data/Bird_names_2019.csv", sep = ""))
+aou_rec <- read.csv("data/Reconcile_AOU_codes_2019.csv")
+
+
+species <- unique(sps[which(sps$group %in% c("duck","goose","murre")),"specieslevelenglish"])
+
+
+species <- species[-which(species == "Hybrid Mallard/Northern Pintail")]
+gnames <- unique(sps[which(sps$group == "goose"),"specieslevelenglish"])
+dnames <- unique(sps[which(sps$group == "duck"),"specieslevelenglish"])
+ dnames <- dnames[-which(dnames == "Hybrid Mallard/Northern Pintail")]
+#
+#
+#
+goose <- TRUE         ### change to false, if no goose species included (simplifies the PEF file extraction)
+murre <- T      #change to fales if no murre species should be included
+zone <- T           ### change to false, if provincial summaries are desired
+# #
+# #
+# ############## extracting harvest survey data for all years
+#
+provzone = read.csv("data/province and zone table.csv",stringsAsFactors = F)
+casteslist = read.csv("data/caste table.csv",stringsAsFactors = F)
+
+
+
+#
+#
+harvw <- list()
+length(harvw) <- length(years)
+names(harvw) <- as.character(years)
+cald = harvw
+calg = cald
+calm = cald
+
+cls = c("PRHUNT",
+        "ZOHUNT",
+        "AOU",
+        "MONH",
+        "DAYH",
+        "BAGE",
+        "BSEX",
+        "PAGE",
+        "SAMPLE",
+        "PERMIT",
+        "YEAR",
+        #"FOLYEAR",
+        #"JDLWA",
+        "YRHUNT",
+        #"JDHUN",
+       "WEEK")
+#
+for (y in years){
+  dir.yr <- paste0(home.fold1,y)
+
+  fil.yr <- paste0("harv",substring(y,3,4),"w")
+  harvw[[as.character(y)]] <- read.ssd(libname = dir.yr,
+                                       sectionnames = fil.yr,
+                                       sascmd = file.path(sashome, "sas.exe"))
+  fil.yr <- paste0("dcal",substring(y,3,4))
+  cald[[as.character(y)]] <- read.ssd(libname = dir.yr,
+                                        sectionnames = fil.yr,
+                                        sascmd = file.path(sashome, "sas.exe"))
+  fil.yr <- paste0("gcal",substring(y,3,4))
+  calg[[as.character(y)]] <- read.ssd(libname = dir.yr,
+                                        sectionnames = fil.yr,
+                                        sascmd = file.path(sashome, "sas.exe"))
+
+   if(y > 2012){
+   fil.yr <- paste0("mcal",substring(y,3,4))
+   calm[[as.character(y)]] <- read.ssd(libname = dir.yr,
+                                       sectionnames = fil.yr,
+                                       sascmd = file.path(sashome, "sas.exe"))
+ }
+ fil.yr = paste0("persal",substring(y,3,4))
+ tmpp <- read.ssd(libname = paste0(home.fold1,"/PermitSales"),
+                                     sectionnames = fil.yr,
+                                     sascmd = file.path(sashome, "sas.exe"))
+ if(any(tmpp$YEAR > 50,na.rm = T) ){
+   tmpp$YEAR = tmpp$YEAR+1900
+ }else{
+   tmpp$YEAR = tmpp$YEAR+2000
+
+ }
+
+
+ fil.yr = paste0("popsiz",substring(y,3,4))
+ tmppop <- read.ssd(libname = paste0(home.fold1,"/PopulationSize"),
+                  sectionnames = fil.yr,
+                  sascmd = file.path(sashome, "sas.exe"))
+
+
+ ### if desired to swap BAGE for PAGE (geese), then scsYY is required, instead of scsYYe
+ ### but then additional changes are needed to align with old data
+  fil.yr <- paste0("scs",substring(y,3,4),"e")
+  tmp <- read.ssd(libname = dir.yr,
+                                      sectionnames = fil.yr,
+                                      sascmd = file.path(sashome, "sas.exe"))
+  # fil.yr <- paste0("scs",substring(y,3,4))
+  # tmp2 <- read.ssd(libname = dir.yr,
+  #                  sectionnames = fil.yr,
+  #                  sascmd = file.path(sashome, "sas.exe"))
+  #
+  # tmp2u <- unique(tmp2[,c("PRHUNT","ZOHUNT","AOU","MONH","DAYH","BAGE","BSEX","PAGE","PERMIT")])
+
+  tmp[which(tmp$PRHUNT == ""),"PRHUNT"] <- tmp[which(tmp$PRHUNT == ""),"PRSALE"]
+  tmp[which(tmp$PRHUNT == ""),"ZOHUNT"] <- tmp[which(tmp$PRHUNT == ""),"ZOSALE"]
+
+  ## fixing a handful of years in which column names varied and years were recorded as 2 digits
+  if(c("YHUN") %in% names(tmp)){
+    names(tmp)[which(names(tmp) == "YHUN")] <- "YRHUNT"
+  }
+  if(any(tmp$YEAR < min(years),na.rm = T)){
+    tmp[which(tmp$YEAR < min(years)),"YEAR"] <- tmp[which(tmp$YEAR < min(years)),"YEAR"]+1900
+  }
+  if(any(tmp$YRHUNT < min(years),na.rm = T)){
+    tmp[which(tmp$YRHUNT < min(years)),"YRHUNT"] <- tmp[which(tmp$YRHUNT < min(years)),"YRHUNT"]+1900
+  }
+  # if(any(tmp$JDHUN < 1000)){
+  #   tmp[which(tmp$JDHUN < 1000),"JDHUN"] <- tmp[which(tmp$JDHUN < 1000),"JDHUN"]+((y-1900)*10)
+  # }
+
+  miscls = cls[-which(cls %in% names(tmp))]
+
+  if(length(miscls) > 0){
+
+  if(miscls == "PAGE"){
+    tmp$PAGE <- ""
+  }
+  }
+
+  tmp = tmp[,cls]
+
+  if(y == years[1]) {
+    outscse <- tmp
+    perms = tmpp
+    popsiz = tmppop
+  }else{
+    outscse <- rbind(outscse,tmp)
+    perms = rbind(perms,tmpp)
+    popsiz = rbind(popsiz,tmppop)
+    }
+  #
+
+print(y)
+
+  }#y
+
+
+save.image(file = "data/stored_SAS_download.RData")
 
 
 load("data/stored_SAS_download.RData")
