@@ -50,9 +50,6 @@ years <- FY:Y
 
 names(years) <- paste(years)
 
-library(foreign)
-library(runjags)
-library(rjags)
 library(jagsUI)
 library(tidyverse)
 library(ggmcmc)
@@ -69,20 +66,21 @@ library(foreach)
 # load output from data_prep.R --------------------------------------------
 
 
-load(paste0("data/parts and harvest survey info",Y,".RData"))
+#load(paste0("data/parts and harvest survey info",Y,".RData"))
 
 provzone <- read.csv("data/Province and zone table.csv")
 
+provs = unique(provzone$prov)
 
 
 
 
-load("data/allkill.RData")
+#load("data/allkill.RData")
 ### species lists
 
-aou.ducks <- sps[which(sps$group == "duck"),"AOU"]
-aou.goose <- sps[which(sps$group == "goose"),"AOU"]
-aou.murre <- sps[which(sps$group == "murre"),"AOU"]
+# aou.ducks <- sps[which(sps$group == "duck"),"AOU"]
+# aou.goose <- sps[which(sps$group == "goose"),"AOU"]
+# aou.murre <- sps[which(sps$group == "murre"),"AOU"]
 
 
 
@@ -94,63 +92,22 @@ for(spgp in c("murre","duck","goose")){
 # group data set up -------------------------------------------------------
 
   
+
+  mod.file = "models/species_harvest_model.R" # I think this should work for murres too
   
   if(spgp == "goose"){
     
-    Y <- 2019
-    FY = 1976
-    years <- FY:Y
+   non_res_combine = c("NF 1","NF 2","PE 1","NS 1","NS 2","BC 2","NT 1","YT 1","NB 1")
     
-    names(years) <- paste(years)
-    
-    aou.spgp = aou.goose
-    period = period.goose
-    cal.spgp = calg
-    allkill = allkill
-    phunt = "PRHUNTG"
-    zhunt = "ZOHUNTG"
-    wkill = "TOGOK"
-    wact = "ACTIVEWF"
-    wsucc = "SUTOGO"
-    wday = "DAYWF"
-    nyears = length(years)
-    demog = data.frame(BSEX = rep(c("U","U"),each = 1),
-                       BAGE = rep(c("A","I"),times = 1),
-                       stringsAsFactors = F)
-    minyr <- min(years)
-    provs2 <- provs
-    mod.file = "models/species_harvest_model.R" # 
-    non_res_combine = c("NF 1","NF 2","PE 1","NS 1","NS 2","BC 2","NT 1","YT 1","NB 1")
-    
-    
+   provs2 = provs
+   
   }
   
   if(spgp == "duck"){
     
-    Y <- 2019
-    FY = 1976
-    years <- FY:Y
-    
-    names(years) <- paste(years)
-    aou.spgp = aou.ducks
-    period = period.duck
-    cal.spgp = cald
-    allkill = allkill
-    phunt = "PRHUNT"
-    zhunt = "ZOHUNT"
-    wkill = "TODUK"
-    wact = "ACTIVEWF"
-    wsucc = "SUTODU"
-    wday = "DAYWF"
 
-    nyears = length(years)
-    demog = data.frame(BSEX = rep(c("F","M"),each = 2),
-                       BAGE = rep(c("A","I"),times = 2),
-                       stringsAsFactors = F)
-    minyr <- min(years)
-    provs2 <- provs
-    mod.file = "models/species_harvest_model.R" #
     non_res_combine = c("NF 1","NF 2","PE 1","NS 1","NS 2","BC 2","NT 1","YT 1")
+    provs2 = provs
     
   }
   
@@ -164,31 +121,15 @@ for(spgp in c("murre","duck","goose")){
     
     names(years) <- paste(years)
     
-    aou.spgp = aou.murre
-    period = period.murre
-    cal.spgp = calm
-    allkill = allkill
-    phunt = "PRHUNTM"
-    zhunt = "ZOHUNTM"
-    wkill = "MURRK"
-    wact = "ACTIVEM"
-    wsucc = "SUCCM"
-    wday = "DAYM" #?
-     nyears = length(years)
-    demog = data.frame(BSEX = rep(c("U","U"),each = 1),
-                       BAGE = rep(c("A","I"),times = 1),
-                       stringsAsFactors = F)
-    minyr <- FY
     provs2 = "NF"
-    mod.file = "models/species_harvest_model.R" # I think this should work for murres too
- 
     
-    non_res_combine = c("NF 1","NF 2","PE 1","NS 1","NS 2","BC 2","NT 1","YT 1")
+    
+    non_res_combine = c("NF 1","NF 2")
     
   }
 
   
-
+period = read.csv(paste0("data/period.",spgp,".csv"))
 # Province and Zone loop --------------------------------------------------
   # n_cores <- length(provs2)
   # cluster <- makeCluster(n_cores, type = "PSOCK")
@@ -205,7 +146,7 @@ for(spgp in c("murre","duck","goose")){
   for(pr in provs2){
   zns <- unique(period[which(period$pr == pr),"zo"])
   
-  # Set up parallel stuff
+  # Set up parallel stuff if using
    
   for(z in zns){
 
