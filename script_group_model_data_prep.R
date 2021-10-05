@@ -143,6 +143,7 @@ for(pr in provs){
   
   regs <- regf$regs
   ngroups <- regf$ngroups
+  grps <- regf$grps
   
   reg_mat <- as.matrix(regs[,grps]) #to enter model as data ensuring that group-level annual estimates are never > 0 in years with no season.
   grps_f <- factor(grps,levels = grps,ordered = TRUE) #ensures consistent ordering of the harvested groups
