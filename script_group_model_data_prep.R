@@ -103,6 +103,7 @@ names(tmp)[which(names(tmp) == "YK")] <- "YT"
 regs_other[[spgp]] <- tmp
 }
 
+save(list = c("regs_other","others"),file = "data/regs_other.RData")
 
 non_res_combine = paste(rep(provs,each = 3),rep(c(1,2,3),times = length(provs)))
 #this above just ensures all non-resident hunters are combined with resident hunters for these groups, separating out caste E is rarely feasible (even caste B is sketchy)
@@ -111,7 +112,7 @@ keep_E <- paste(rep(c("MB","NB","SK"),each = 3),rep(c(1,2,3),times = 3))
 non_res_combine <- non_res_combine[-which(non_res_combine %in% keep_E)]
 
 provs = provs[-which(provs == "NF")]##removing NF because definition of other has changed over time (including then excluding murres)
-
+source("functions/other_reg_setup.R")
 
 for(pr in provs){
   
@@ -136,38 +137,11 @@ for(pr in provs){
   nyears = length(years)
   minyr <- min(years)
   # 
-  for(spgp in others){ 
-    tmp <- regs_other[[spgp]][,c("YEAR",pr)]
-    tmp[which(tmp[,pr] > 0),pr] <- 1
-    names(tmp) <- c("YEAR",spgp)
-    if(spgp == others[[1]]){
-      regs <- tmp
-      }else{
-        regs <- merge(regs,tmp,by = "YEAR")
-      }
-    
-  }
   
-  if(max(regs$YEAR) < Y){
-    for(YN in c((max(regs$YEAR)+1):Y)){
-    regs[nrow(regs)+1,] <- regs[nrow(regs),]
-    regs[nrow(regs),"YEAR"] <- YN
-    }
-  }
+  regf <- other_reg_setup()
   
-  regs <- regs[which(regs$YEAR >= FY),]
-  regs <- regs[,which(colSums(regs) > 0)]
-  grps <- names(regs)[-1] #the -1 removes the column called
-  ngroups <- length(grps) #to enter model as data
-  if("SNIPK" %in% grps){
-    regs[which(regs$YEAR < 1992), "SNIPK"] <- 0
-  }### remove Snipe hunt pre 1991
-  if("MURRK" %in% grps){
-   # regs[which(regs$YEAR >2012 | regs$YEAR < 2001), "MURRK"] <- 0
-
-    regs[, "MURRK"] <- 0
-  }### remove Murre hunts need to reconcile historical database
-  
+  regs <- regf$regs
+  ngroups <- regf$ngroups
   
   reg_mat <- as.matrix(regs[,grps]) #to enter model as data ensuring that group-level annual estimates are never > 0 in years with no season.
   grps_f <- factor(grps,levels = grps,ordered = TRUE) #ensures consistent ordering of the harvested groups

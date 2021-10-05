@@ -7,14 +7,14 @@ library(ggmcmc)
 library(tidybayes)
 library(ggrepel)
 library(ggforce)
-
+source("functions/other_reg_setup.R")
 ### caste level summaries
 ### full summaries
 ### harvest, activity, total group-level and species-level
 ### age-sex summaries
 ### age-sex raw data for website - 
 
-Y <- 2019
+Y <- 2020
 FY = 1976
 years <- FY:Y
 
@@ -28,79 +28,62 @@ names(years) <- paste(years)
 
 # load published estimates by zone prov and national ----------------------------------------
 
-for(rr in c("by_zone","by_province","canada-wide")){
-  tmp = read.csv(paste0("data/enp_nhs_a_",rr,"_20200805.csv"),stringsAsFactors = F)
-  tmp1 = read.csv(paste0("data/enp_nhs_b_",rr,"_20200805.csv"),stringsAsFactors = F)
-  tmp2 = read.csv(paste0("data/enp_nhs_c_",rr,"_20200805.csv"),stringsAsFactors = F)
-  # names(tmp) <- c("var","name","prov","zone","resid","year","mean","sd")
-  if(rr == "by_zone"){
-    pubEsts_simple_all <- tmp
-    pubEsts_species_all <- tmp1
-    pubEsts_age_sex_all <- tmp2
-  }else{
-      pubEsts_simple_all <- bind_rows(pubEsts_simple_all,tmp)
-      pubEsts_species_all <- bind_rows(pubEsts_species_all,tmp1)
-      pubEsts_age_sex_all <- bind_rows(pubEsts_age_sex_all,tmp2)
-  }
- 
-} 
-  
-  names(pubEsts_simple_all) <- c("var","name","prov","zone","resid","year","mean","sd")
-pubEsts_simple_all$lci = ceiling(pubEsts_simple_all$mean-(1.96*pubEsts_simple_all$sd))
-pubEsts_simple_all$uci = ceiling(pubEsts_simple_all$mean+(1.96*pubEsts_simple_all$sd))
-pubEsts_simple_all[which(pubEsts_simple_all$lci < 0),"lci"] <- 0
-pubEsts_simple_all[which(is.na(pubEsts_simple_all$prov)),"prov"] <- "Canada"
-
-names(pubEsts_species_all) <- c("sp","species","prov","zone","year","mean","sd")
-pubEsts_species_all$lci = ceiling(pubEsts_species_all$mean-(1.96*pubEsts_species_all$sd))
-pubEsts_species_all$uci = ceiling(pubEsts_species_all$mean+(1.96*pubEsts_species_all$sd))
-pubEsts_species_all[which(pubEsts_species_all$lci < 0),"lci"] <- 0
-pubEsts_species_all[which(is.na(pubEsts_species_all$prov)),"prov"] <- "Canada"
-
-
-names(pubEsts_age_sex_all) <- c("sp","species","prov","zone","year","age_ratio")
-pubEsts_age_sex_all[which(is.na(pubEsts_age_sex_all$prov)),"prov"] <- "Canada"
-
-pubEsts_age_sex_all <- pubEsts_age_sex_all[which(pubEsts_age_sex_all$year > 1975),]
-pubEsts_species_all <- pubEsts_species_all[which(pubEsts_species_all$year > 1975),]
-pubEsts_simple_all <- pubEsts_simple_all[which(pubEsts_simple_all$year > 1975),]
-
-
-species_web_names = unique(pubEsts_species_all[,c("sp","species")])
-
-var_names_sim <- unique(pubEsts_simple_all[,c("var","name")])
-# write.csv(var_names_sim,"data/website_variable_names.csv",row.names = F)
+# for(rr in c("by_zone","by_province","canada-wide")){
+#   tmp = read.csv(paste0("data/enp_nhs_a_",rr,"_20200805.csv"),stringsAsFactors = F)
+#   tmp1 = read.csv(paste0("data/enp_nhs_b_",rr,"_20200805.csv"),stringsAsFactors = F)
+#   tmp2 = read.csv(paste0("data/enp_nhs_c_",rr,"_20200805.csv"),stringsAsFactors = F)
+#   # names(tmp) <- c("var","name","prov","zone","resid","year","mean","sd")
+#   if(rr == "by_zone"){
+#     pubEsts_simple_all <- tmp
+#     pubEsts_species_all <- tmp1
+#     pubEsts_age_sex_all <- tmp2
+#   }else{
+#       pubEsts_simple_all <- bind_rows(pubEsts_simple_all,tmp)
+#       pubEsts_species_all <- bind_rows(pubEsts_species_all,tmp1)
+#       pubEsts_age_sex_all <- bind_rows(pubEsts_age_sex_all,tmp2)
+#   }
+#  
+# } 
+#   
+#   names(pubEsts_simple_all) <- c("var","name","prov","zone","resid","year","mean","sd")
+# pubEsts_simple_all$lci = ceiling(pubEsts_simple_all$mean-(1.96*pubEsts_simple_all$sd))
+# pubEsts_simple_all$uci = ceiling(pubEsts_simple_all$mean+(1.96*pubEsts_simple_all$sd))
+# pubEsts_simple_all[which(pubEsts_simple_all$lci < 0),"lci"] <- 0
+# pubEsts_simple_all[which(is.na(pubEsts_simple_all$prov)),"prov"] <- "Canada"
 # 
-# write.csv(species_web_names,"data/website_species_variable_names.csv",row.names = F)
+# names(pubEsts_species_all) <- c("sp","species","prov","zone","year","mean","sd")
+# pubEsts_species_all$lci = ceiling(pubEsts_species_all$mean-(1.96*pubEsts_species_all$sd))
+# pubEsts_species_all$uci = ceiling(pubEsts_species_all$mean+(1.96*pubEsts_species_all$sd))
+# pubEsts_species_all[which(pubEsts_species_all$lci < 0),"lci"] <- 0
+# pubEsts_species_all[which(is.na(pubEsts_species_all$prov)),"prov"] <- "Canada"
+# 
+# 
+# names(pubEsts_age_sex_all) <- c("sp","species","prov","zone","year","age_ratio")
+# pubEsts_age_sex_all[which(is.na(pubEsts_age_sex_all$prov)),"prov"] <- "Canada"
+# 
+# pubEsts_age_sex_all <- pubEsts_age_sex_all[which(pubEsts_age_sex_all$year > 1975),]
+# pubEsts_species_all <- pubEsts_species_all[which(pubEsts_species_all$year > 1975),]
+# pubEsts_simple_all <- pubEsts_simple_all[which(pubEsts_simple_all$year > 1975),]
+# 
+# 
+# species_web_names = unique(pubEsts_species_all[,c("sp","species")])
+# 
+# var_names_sim <- unique(pubEsts_simple_all[,c("var","name")])
+# # write.csv(var_names_sim,"data/website_variable_names.csv",row.names = F)
+# # 
+# # write.csv(species_web_names,"data/website_species_variable_names.csv",row.names = F)
+# 
+# # load all output from species models and other models --------------------------
 
-# load all output from species models and other models --------------------------
-
-load(paste0("data/parts and harvest survey info",Y,".RData"))
+#load(paste0("data/parts and harvest survey info",Y,".RData"))
 
 provzone <- read.csv("data/Province and zone table.csv")
+provs = unique(provzone$prov)
 
 
 # Load other harvest regulations ------------------------------------------
 
-others = c("COOTK","WOODK","SNIPK","DOVEK","PIGEK","CRANK") #"RAILK" ,"MURRK"
-#dropping Rails because the data need to be reconciled
-
-#prov_otherk <- read.csv(stringsAsFactors = F,"data/OTHERK_by_Prov.csv")
-
-
-
-# regulations compile -----------------------------------------------------
-
-regs_other <- list()
-length(regs_other) <- length(others)
-names(regs_other) <- others
-
-for(spgp in others){ 
-  tmp <- read.csv(file = paste0("data/reg_",spgp,".csv"))
-  names(tmp)[which(names(tmp) == "QC")] <- "PQ"
-  regs_other[[spgp]] <- tmp
-}
-
+load("data/regs_other.RData")
 
 non_res_combine = paste(rep(provs,each = 3),rep(c(1,2,3),times = length(provs)))
 #this above just ensures all non-resident hunters are combined with resident hunters for these groups, separating out caste E is rarely feasible (even caste B is sketchy)
@@ -109,7 +92,7 @@ keep_E <- paste(rep(c("MB","NB","SK"),each = 3),rep(c(1,2,3),times = 3))
 non_res_combine <- non_res_combine[-which(non_res_combine %in% keep_E)]
 
 
-# compile website file b --------------------------------------------------
+# load website names --------------------------------------------------
 
 sim_vars <- read.csv("data/website_variable_names_in.csv")
 sp_vars <- read.csv("data/website_species_variable_names_in.csv")
@@ -121,6 +104,13 @@ gps <- c("duck",
            "other",
          "murre")
 
+
+ tmp_sim <- NULL
+  tmp_sp <- NULL
+  tmp_sp_demo <- NULL
+  
+
+  
 for(pr in provs){
   
 
@@ -129,32 +119,11 @@ for(pr in provs){
   nyears = length(years)
   minyr <- min(years)
   
+  regf <- other_reg_setup()
   
-  
-  for(spgp in others){ 
-    if(pr == "YT"){pr2 = "YK"}else{pr2 = pr}
-    tmp <- regs_other[[spgp]][,c("YEAR",pr2)]
-    tmp[which(tmp[,pr2] > 0),pr2] <- 1
-    names(tmp) <- c("YEAR",spgp)
-    if(spgp == others[[1]]){
-      regs <- tmp
-    }else{
-      regs <- merge(regs,tmp,by = "YEAR")
-    }
-    
-  }
-  regs <- regs[which(regs$YEAR >= FY),]
-  regs <- regs[,which(colSums(regs) > 0)]
-  grps <- names(regs)[-1] #the -1 removes the column called
-  ngroups <- length(grps) #to enter model as data
-  if("SNIPK" %in% grps){
-    regs[which(regs$YEAR < 1992), "SNIPK"] <- 0
-  }### remove Snipe hunt pre 1991
-  if("MURRK" %in% grps){
-    # regs[which(regs$YEAR >2012 | regs$YEAR < 2001), "MURRK"] <- 0
-    
-    regs[, "MURRK"] <- 0
-  }### remove Murre hunts need to reconcile historical database
+  regs <- regf$regs
+  ngroups <- regf$ngroups
+  grps <- regf$grps
   
   reg_mat <- as.matrix(regs[,grps]) #to enter model as data ensuring that group-level annual estimates are never > 0 in years with no season.
   grps_f <- factor(grps,levels = grps,ordered = TRUE) #ensures consistent ordering of the harvested groups
@@ -228,17 +197,12 @@ for(pr in provs){
            
            
            
-           if(z == 1 & pr == "AB"){
-             tmp_sim <- tmp_duck
-             tmp_sp <- tmp_sp_duck
-             tmp_sp_demo <- tmp_sp_duck_demo
-             
-           }else{
+
              tmp_sim <- bind_rows(tmp_sim,tmp_duck)
              
              tmp_sp <- bind_rows(tmp_sp,tmp_sp_duck)
              tmp_sp_demo <- bind_rows(tmp_sp_demo,tmp_sp_duck_demo)
-           }
+           
            }
      
      if(file.exists(paste("output/full harvest zip",pr,z,"goose","alt mod.RData"))){
@@ -358,9 +322,7 @@ for(pr in provs){
        
        #harvests
        tmp_otherk <- out2$samples %>% gather_draws(NACTIVE_y[y],
-                                                  days_y[y],
-                                                  kill_y[y],
-                                                  NSUCC_y[y])
+                                                  days_y[y])
        
        tmp_otherk <- left_join(tmp_otherk,vnm,by = c(".variable" = "newvar"))
        
@@ -416,18 +378,14 @@ for(pr in provs){
        
     
    }
-   
+   print(pr)
 }
 
 
 
-# compile website file a --------------------------------------------------
 
 
-save(list = c("pubEsts_species_all",
-              "pubEsts_simple_all",
-              "pubEsts_age_sex_all",
-              "tmp_sim",
+save(list = c("tmp_sim",
               "tmp_sp",
               "tmp_sp_demo"),
      file = "national_provincial_summaries.RData")
