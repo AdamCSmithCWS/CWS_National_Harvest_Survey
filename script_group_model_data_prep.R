@@ -111,8 +111,9 @@ keep_E <- paste(rep(c("MB","NB","SK"),each = 3),rep(c(1,2,3),times = 3))
 # province and zone loops -------------------------------------------------
 non_res_combine <- non_res_combine[-which(non_res_combine %in% keep_E)]
 
-provs = provs[-which(provs == "NF")]##removing NF because definition of other has changed over time (including then excluding murres)
 source("functions/other_reg_setup.R")
+provs = provs[-which(provs %in% c("NF","NU"))]##removing NF because definition of other has changed over time (including then excluding murres)
+
 
 for(pr in provs){
   
