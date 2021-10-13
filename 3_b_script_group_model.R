@@ -107,12 +107,12 @@ provs = unique(provzone$prov)
 # # province and zone loops -------------------------------------------------
 # non_res_combine <- non_res_combine[-which(non_res_combine %in% keep_E)]
 
-provs = provs[-which(provs == "NF")]##removing NF because definition of other has changed over time (including then excluding murres)
+provs = provs[-which(provs %in% c("NF","NU"))]##removing NF because definition of other has changed over time (including then excluding murres)
 
 
 # MCMC loops --------------------------------------------------------------
 
-n_cores <- 6#length(provs)
+n_cores <- 3#length(provs)
 cluster <- makeCluster(n_cores, type = "PSOCK")
 registerDoParallel(cluster)
 

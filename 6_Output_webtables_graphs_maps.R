@@ -9,11 +9,17 @@ library(RColorBrewer)
 source("functions/palettes.R")
 source("functions/general_plot_function.R")
 
+#directory structure to hold output
+dir.create("GoogleDrive")
+dir.create("GoogleDrive/Graphs")
+dir.create("website")
+dir.create("website/maps")
+
 
 load("data/Posterior_summaries.RData")
 prov_trans <- read.csv("data/Province_names_EN_FR.csv")
 
-Y <- 2019
+Y <- 2020
 FY = 1976
 years <- FY:Y
 

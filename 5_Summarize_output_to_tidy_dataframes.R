@@ -431,8 +431,6 @@ save(list = c("nat_sums_a",
      file = "data/Posterior_summaries.RData")
 
 
-nat_sums_cF
-
 
 
 
