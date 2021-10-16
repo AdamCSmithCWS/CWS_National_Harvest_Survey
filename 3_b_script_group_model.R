@@ -58,6 +58,7 @@ library(tidyverse)
 # library(ggforce)
 library(doParallel)
 library(foreach)
+library(posterior)
 
 #load.module("glm") 
 
@@ -68,6 +69,7 @@ library(foreach)
 
 #load(paste0("data/parts and harvest survey info",Y,".RData"))
 
+source("functions/get_final_values.R")
 provzone <- read.csv("data/Province and zone table.csv")
 provs = unique(provzone$prov)
 
@@ -112,13 +114,13 @@ provs = provs[-which(provs %in% c("NF","NU"))]##removing NF because definition o
 
 # MCMC loops --------------------------------------------------------------
 
-n_cores <- 3#length(provs)
+n_cores <- length(provs)
 cluster <- makeCluster(n_cores, type = "PSOCK")
 registerDoParallel(cluster)
 
 
 fullrun <- foreach(pr = provs,
-                   .packages = c("jagsUI","tidyverse"),
+                   .packages = c("jagsUI","tidyverse","posterior"),
                    .inorder = FALSE,
                    .errorhandling = "pass") %dopar%
   {
@@ -160,17 +162,33 @@ parms = c("NACTIVE_y",
           "ann_day",
           "parrive",
           "pleave",
-          "psi")
+          "psi",
+          "tau_group")
+
+parm_check <- c("NACTIVE_y",
+  "NSUCC_yg",
+  "kill_yg",
+  "days_yg",
+  "days_y")
 
 
 #adaptSteps = 200              # Number of steps to "tune" the samplers.
-burnInSteps = 5000            # Number of steps to "burn-in" the samplers.
+burnInSteps = 5000           # Number of steps to "burn-in" the samplers.
+
 nChains = 3                   # Number of chains to run.
 numSavedSteps=1000          # Total number of steps in each chain to save.
 thinSteps=10                   # Number of steps to "thin" (1=keep every step).
+
+
+if(pr %in% c("YT","NT")){
+  burnInSteps = burnInSteps*5
+  thinSteps = thinSteps*5
+}
+
+
 nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
 
-t1 = Sys.time()
+
 
 
   
@@ -185,27 +203,60 @@ t1 = Sys.time()
                     model.file = mod.file),silent = F)
 
   
-  t2 = Sys.time()
+  
 if(class(out2) != "try-error"){
-# 
-#   pgg_psi = ggs(out2$samples,family = "psi")
-#   #pgg_sdhunter = ggs(out2$samples,family = "sdhunter")
-#   pgg_ann = ggs(out2$samples,family = "group")
-#   pgg_nu = ggs(out2$samples,family = "nu")
-#   #pgg_ky = ggs(out2$samples,family = "kill_y")
-#   #pgg_ky = filter(pgg_ky,!grepl(pattern = "alt",Parameter))
-# 
-#   pgg <- rbind(pgg_psi,pgg_nu)
-#   try(ggmcmc(pgg,file = paste0("output/conv/",pr,z,".pdf"),param_page = 5),silent = T)
-#   #
-# ggmcmc(pgg_ann,file = paste0("output/conv/ann_",pr,z,".pdf"),param_page = 5)
-#   
+ 
+  
+  out2sum <- posterior::as_draws_df(out2$samples) %>%
+    select(starts_with(parm_check)) %>% 
+    summarise_draws() %>% 
+    as.data.frame() %>% 
+    filter(!is.na(rhat))
+  
+  attempts <- 0
   
   
+  while(any(out2sum$rhat > 1.1) & attempts < 3){
+    attempts <- attempts+1
+    burnInSteps = 0
+    thinSteps = thinSteps*2
+  nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
   
-  #launch_shinystan(shinystan::as.shinystan(out2$samples, model_name = mod.file)) 
+  initls <- get_final_values(out2)
   
-  save(list = c("out2","jdat","grps"),
+  # initls <- vector(mode = "list",3)
+  # 
+  # for(cc in 1:3){
+  #   initls[[cc]] <- eval(parse(text = (paste0("as.list(out2$model$cluster",
+  #                                             cc,
+  #                                             "$state()[[1]])"))))
+  # 
+  # }
+  
+  
+  out2 = try(jagsUI(data = jdat,
+                    parameters.to.save = parms,
+                    n.chains = 3,
+                    n.burnin = burnInSteps,
+                    n.thin = thinSteps,
+                    n.iter = nIter,
+                    inits = initls,
+                    parallel = T,
+                    #modules = "glm",
+                    model.file = mod.file),silent = F)
+  out2sum <- posterior::as_draws_df(out2$samples) %>%
+    select(starts_with(parm_check)) %>% 
+    summarise_draws() %>% 
+    as.data.frame() %>% 
+    filter(!is.na(rhat))
+  
+  
+    
+  }
+  
+  #launch_shinystan(shinystan::as.shinystan(out2$samples, model_name = paste(pr,mod.file))) 
+  
+  save(list = c("out2","jdat","grps","out2sum","attempts"),
        file = paste("output/other harvest zip",pr,z,"alt mod.RData"))
   
 rm(list = "out2")
