@@ -2,7 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-allkill.RData
 data/**info2019.RData
 stored_SAS_download.RData
 output/
@@ -10,6 +9,7 @@ national_provincial_summaries.RData
 GoogleDrive/
 website/
 Figures/
+data/**info2020.RData
 
 
 

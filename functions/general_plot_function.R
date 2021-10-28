@@ -162,7 +162,7 @@ if(type == "Age_Sex"){
                          is.na(zone))
     if(add_points){
       pp <- geom_point(aes(colour = gr),size = 1)
-      ppe <- geom_errorbar(aes(ymin = lci,ymax = uci,fill = gr),alpha = 0.5,width = 0)
+      ppe <- geom_errorbar(aes(ymin = lci,ymax = uci,colour = gr),alpha = 0.5,width = 0)
       ppl <- geom_line(alpha = 0.3,aes(colour = gr))
     }else{
       pp <- geom_point(aes(colour = gr),size = 1,alpha = 0)

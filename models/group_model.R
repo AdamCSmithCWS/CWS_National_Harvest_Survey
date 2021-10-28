@@ -117,7 +117,7 @@ for(g in 1:ngroups){
     psi[g] ~ dbeta(alpha_psi[g],beta_psi[g])
    
     ### group-effects - these are the annual harvest-rate effects for each group, time-series from the first year that group is harvested.
-    tau_group[g] ~ dscaled.gamma(0.5,50)#time-series variance
+    tau_group[g] ~ dscaled.gamma(0.1,50) #implicit prior on sigma of a half-t dist: sigma = 0.1*t(df = 50) , i.e., 99% prob sd < 0.2#time-series variance
     for(y in 1:fyear[g]){
       group[y,g] ~ dnorm(0,1)
     }#y
