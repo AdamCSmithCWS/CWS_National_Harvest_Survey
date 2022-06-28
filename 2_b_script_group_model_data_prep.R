@@ -44,23 +44,16 @@
 #   The ratio corresponds to the number of males per female bird in the sample. Ratios were calculated if the total sample equals or exceeds 20 parts.
 
 
-Y <- 2020
+Y <- 2021
 FY = 1976
 years <- FY:Y
 
 names(years) <- paste(years)
 
-library(foreign)
-library(runjags)
+library(foreign)library(runjags)
 library(rjags)
 library(jagsUI)
 library(tidyverse)
-library(ggmcmc)
-library(tidybayes)
-library(ggrepel)
-library(ggforce)
-library(doParallel)
-library(foreach)
 
 #load.module("glm") 
 
@@ -69,7 +62,6 @@ library(foreach)
 # load output from data_prep.R --------------------------------------------
 
 
-#load(paste0("data/parts and harvest survey info",Y,".RData"))
 
 provzone <- read.csv("data/Province and zone table.csv")
 provs = unique(provzone$prov)
@@ -111,7 +103,8 @@ keep_E <- paste(rep(c("MB","NB","SK"),each = 3),rep(c(1,2,3),times = 3))
 # province and zone loops -------------------------------------------------
 non_res_combine <- non_res_combine[-which(non_res_combine %in% keep_E)]
 
-source("functions/other_reg_setup.R")
+source("functions/other_reg_setup.R") # this function removes all SNIPK pre-1991, by setting the allowable limits to 0
+
 provs = provs[-which(provs %in% c("NF","NU"))]##removing NF because definition of other has changed over time (including then excluding murres)
 
 

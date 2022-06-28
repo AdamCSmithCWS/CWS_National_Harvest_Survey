@@ -44,7 +44,7 @@
 #   The ratio corresponds to the number of males per female bird in the sample. Ratios were calculated if the total sample equals or exceeds 20 parts.
 
 
-Y <- 2020
+Y <- 2021
 FY = 1976
 years <- FY:Y
 
@@ -52,14 +52,11 @@ names(years) <- paste(years)
 nyears = length(years)
 
 library(foreign)
-library(runjags)
 library(rjags)
 library(jagsUI)
 library(tidyverse)
-library(ggmcmc)
 library(tidybayes)
 library(ggrepel)
-library(ggforce)
 
 
 #load.module("glm") 
@@ -97,14 +94,9 @@ for(spgp in c("duck","goose","murre")){
   
   if(spgp == "goose"){
     
-    # Y <- 2019
-    # FY = 1976
-    # years <- FY:Y
-    # 
-    # names(years) <- paste(years)
+ 
     # 
     cal.spgp = calg
-    #allkill = allkill
     phunt = "PRHUNTG"
     zhunt = "ZOHUNTG"
     wkill = "TOGOK"
@@ -312,21 +304,7 @@ for(spgp in c("duck","goose","murre")){
       nhunter_y[as.character(y)] <- length(unique(tmp1$PERMIT))
       
       
-      # ### identify earliest day in the hunting season across all years
-      # tmp1[which(tmp1$MONH >12),"MONH"] = tmp1[which(tmp1$MONH >12),"MONH"]-12
-      # tmp1[which(tmp1$MONH < 9),"MONH"] = NA
-      # tmp1$date = as.Date(paste(tmp1$MONH,
-      #                           tmp1$DAYH,sep = "-"),
-      #                     format = "%m-%d")
-      # 
-      # 
-      # 
-      # if(y == years[[1]]){
-      #   min_day = min(tmp1$date,na.rm = TRUE)
-      # }else{
-      #   min_day = min(c(min_day,min(tmp1$date,na.rm = TRUE)))
-      # }
-      # 
+      
     }
     min_day <- "09-01" ### No hunting in August, so all week definitions begin on September 1
               #substr(as.character(min_day),start = 6,stop = nchar(as.character(min_day)))

@@ -1,25 +1,25 @@
-prov,provn,zone,poprzo,combA,province,true_prov_code
-NF,1,1,11,TRUE,Newfoundland and Labrador,NL
-NF,1,2,12,TRUE,Newfoundland and Labrador,NL
-PE,2,1,21,TRUE,Prince Edward Island,PE
-NS,3,1,31,TRUE,Nova Scotia,NS
-NS,3,2,32,TRUE,Nova Scotia,NS
-NB,4,1,41,FALSE,New Brunswick,NB
-NB,4,2,42,FALSE,New Brunswick,NB
-PQ,5,1,51,FALSE,Quebec,QC
-PQ,5,2,52,FALSE,Quebec,QC
-ON,6,1,61,FALSE,Ontario,ON
-ON,6,2,62,FALSE,Ontario,ON
-ON,6,3,63,FALSE,Ontario,ON
-MB,7,1,71,FALSE,Manitoba,MB
-MB,7,2,72,FALSE,Manitoba,MB
-SK,8,1,81,FALSE,Saskatchewan,SK
-SK,8,2,82,FALSE,Saskatchewan,SK
-SK,8,3,83,FALSE,Saskatchewan,SK
-AB,9,1,91,FALSE,Alberta,AB
-AB,9,2,92,FALSE,Alberta,AB
-BC,10,1,101,FALSE,British Columbia,BC
-BC,10,2,102,TRUE,British Columbia,BC
-NT,11,1,111,TRUE,Northwest Territories,NT
-YT,12,1,121,TRUE,Yukon,YT
-NU,13,1,131,TRUE,Nunavut,NU
+prov,provn,zone,poprzo,combA,province,true_prov_code,national,region
+NF,1,1,11,TRUE,Newfoundland and Labrador,NL,Canada,Atlantic
+NF,1,2,12,TRUE,Newfoundland and Labrador,NL,Canada,Atlantic
+PE,2,1,21,TRUE,Prince Edward Island,PE,Canada,Atlantic
+NS,3,1,31,TRUE,Nova Scotia,NS,Canada,Atlantic
+NS,3,2,32,TRUE,Nova Scotia,NS,Canada,Atlantic
+NB,4,1,41,FALSE,New Brunswick,NB,Canada,Atlantic
+NB,4,2,42,FALSE,New Brunswick,NB,Canada,Atlantic
+PQ,5,1,51,FALSE,Quebec,QC,Canada,
+PQ,5,2,52,FALSE,Quebec,QC,Canada,
+ON,6,1,61,FALSE,Ontario,ON,Canada,
+ON,6,2,62,FALSE,Ontario,ON,Canada,
+ON,6,3,63,FALSE,Ontario,ON,Canada,
+MB,7,1,71,FALSE,Manitoba,MB,Canada,Prairies
+MB,7,2,72,FALSE,Manitoba,MB,Canada,Prairies
+SK,8,1,81,FALSE,Saskatchewan,SK,Canada,Prairies
+SK,8,2,82,FALSE,Saskatchewan,SK,Canada,Prairies
+SK,8,3,83,FALSE,Saskatchewan,SK,Canada,Prairies
+AB,9,1,91,FALSE,Alberta,AB,Canada,Prairies
+AB,9,2,92,FALSE,Alberta,AB,Canada,Prairies
+BC,10,1,101,FALSE,British Columbia,BC,Canada,
+BC,10,2,102,TRUE,British Columbia,BC,Canada,
+NT,11,1,111,TRUE,Northwest Territories,NT,Canada,
+YT,12,1,121,TRUE,Yukon,YT,Canada,
+NU,13,1,131,TRUE,Nunavut,NU,Canada,

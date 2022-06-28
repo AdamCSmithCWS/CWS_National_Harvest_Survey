@@ -22,7 +22,7 @@
 
 
 
-Y <- 2020
+Y <- 2021
 years <- 1976:Y
 
 names(years) <- paste(years)
@@ -32,7 +32,7 @@ home.fold <- getwd()
 # setwd(home.fold)
 
 library(foreign)
-library(runjags)
+#library(runjags)
 library(rjags)
 library(tidyverse)
 
@@ -197,11 +197,11 @@ load("data/stored_SAS_download.RData")
 #if(any(calm[[as.character(2019)]]$YEAR != 2019)){stop("ERROR murre calendar info for 2019 is wrong")}
 for(y in years){
   
-if(any(cald[[as.character(y)]]$YEAR != y)){print(paste("ERROR duck calendar info for",y," is wrong == ",unique(cald[[as.character(y)]]$YEAR)))
+if(any(cald[[as.character(y)]]$YEAR != y)){print(paste("Warning duck calendar info for",y," had to be corrected == ",unique(cald[[as.character(y)]]$YEAR)))
   cald[[as.character(y)]]$YEAR <- y}
-  if(any(calm[[as.character(y)]]$YEAR != y)){print(paste("ERROR murre calendar info for",y," is wrong == ",unique(calm[[as.character(y)]]$YEAR)))
+  if(any(calm[[as.character(y)]]$YEAR != y)){print(paste("Warning murre calendar info for",y," had to be corrected == ",unique(calm[[as.character(y)]]$YEAR)))
     calm[[as.character(y)]]$YEAR <- y}
-  if(any(calg[[as.character(y)]]$YEAR != y)){print(paste("ERROR goose calendar info for",y," is wrong == ",unique(calg[[as.character(y)]]$YEAR)))
+  if(any(calg[[as.character(y)]]$YEAR != y)){print(paste("Warning goose calendar info for",y," had to be corrected == ",unique(calg[[as.character(y)]]$YEAR)))
     calg[[as.character(y)]]$YEAR <- y}
   
 }
