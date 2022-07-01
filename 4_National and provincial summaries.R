@@ -14,7 +14,7 @@ source("functions/other_reg_setup.R")
 ### age-sex summaries
 ### age-sex raw data for website - 
 
-Y <- 2020
+Y <- 2021
 FY = 1976
 years <- FY:Y
 

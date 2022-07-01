@@ -19,7 +19,7 @@ dir.create("website/maps")
 load("data/Posterior_summaries.RData")
 prov_trans <- read.csv("data/Province_names_EN_FR.csv")
 
-Y <- 2020
+Y <- 2021
 FY = 1976
 years <- FY:Y
 
