@@ -39,6 +39,8 @@ a_var = read.csv("website/A_variable_names.csv")
 a_var = a_var[which(a_var$keep.in.new.database == TRUE),]
 a_var = a_var[,-which(names(a_var) == "keep.in.new.database")]
 avars = a_var$Variable_Code
+
+
 nat_sums_b$prov <- "CAN"
 a_tab <- bind_rows(nat_sums_b,prov_sums_b,zone_sums_b) %>% 
   filter(var %in% avars) %>% 
