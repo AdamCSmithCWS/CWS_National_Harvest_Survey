@@ -385,11 +385,36 @@ for(pr in provs){
 
 
 
-save(list = c("tmp_sim",
-              "tmp_sp",
-              "tmp_sp_demo"),
-     file = "national_provincial_summaries.RData")
-       
+save(list = c("tmp_sim"),
+     file = "national_provincial_summaries1.RData")
+save(list = c("tmp_sp"),
+     file = "national_provincial_summaries2.RData")
+save(list = c("tmp_sp_demo"),
+     file = "national_provincial_summaries3.RData")
+
+### split tmp_sp_demo in 3 to reduce memory requirements in next script
+tmp_sp_demo1 <- tmp_sp_demo %>% 
+  filter(prov %in% c("NF","NB",
+                   "NS","PE"))
+save(list = c("tmp_sp_demo1"),
+     file = "national_provincial_summaries3_a.RData")
+
+
+tmp_sp_demo1 <- tmp_sp_demo %>% 
+  filter(prov %in% c("ON","PQ"))
+save(list = c("tmp_sp_demo1"),
+     file = "national_provincial_summaries3_b.RData")
+
+
+tmp_sp_demo1 <- tmp_sp_demo %>% 
+  filter(prov %in% c("MB","SK",
+                   "AB","BC",
+                   "YT","NT",
+                   "NU"))
+save(list = c("tmp_sp_demo1"),
+     file = "national_provincial_summaries3_c.RData")
+
+
 
 
 

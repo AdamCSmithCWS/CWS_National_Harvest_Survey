@@ -16,7 +16,10 @@ dir.create("website")
 dir.create("website/maps")
 
 
-load("data/Posterior_summaries.RData")
+load("data/Posterior_summaries1.RData")
+load("data/Posterior_summaries2.RData")
+load("data/Posterior_summaries3.RData")
+
 prov_trans <- read.csv("data/Province_names_EN_FR.csv")
 
 Y <- 2021
