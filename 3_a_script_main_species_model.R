@@ -54,7 +54,7 @@ names(years) <- paste(years)
 library(jagsUI)
 library(tidyverse)
 # library(ggmcmc)
-# library(tidybayes)
+ library(tidybayes)
 # library(ggrepel)
 # library(ggforce)
 library(doParallel)
@@ -228,7 +228,20 @@ parms = c("NACTIVE_y",
           "pleave",
           "psi",
           "pkill_py",
-          "mut")
+          "mut",
+          "mu_ps",
+          "mu_s",
+          "alpha_s",
+          "alpha_ps",
+          "alpha_psy",
+          "alpha_sy",
+          #"alpha_psy1",
+          #"tau_alpha_psy",
+          "sd_alpha_psy",
+          "sd_alpha_s",
+          "sdalpha_perod_s",
+          "pcomp_sy"
+          )
 
 
 #adaptSteps = 200              # Number of steps to "tune" the samplers.
@@ -245,8 +258,9 @@ t1 = Sys.time()
 
 # MCMC sampling -----------------------------------------------------------
 
-
-  
+w_sy <- apply(jdat$w_psy,c(2,3),sum)
+jdat[["w_sy"]] <- w_sy
+jdat[["nparts_y"]] <- apply(jdat$nparts_py,2,sum)  
   out2 = try(jagsUI(data = jdat,
                     parameters.to.save = parms,
                     n.chains = 3,
@@ -254,14 +268,64 @@ t1 = Sys.time()
                     n.thin = thinSteps,
                     n.iter = nIter,
                     parallel = T,
-                    #modules = "glm",
-                    model.file = mod.file),silent = F)
+                    modules = "glm",
+                    # model.file = mod.file
+                    model.file = "models/species_harvest_model_alt4.R"
+  ),silent = F)
 
   
   t2 = Sys.time()
 if(class(out2) != "try-error"){
 
 
+  
+  
+  out2sum <- posterior::as_draws_df(out2$samples) %>%
+    summarise_draws() %>% 
+    as.data.frame() %>% 
+    filter(!is.na(rhat))
+  
+  attempts <- 0
+  
+  
+  while(any(out2sum$rhat > 1.1) & attempts < 3){
+    attempts <- attempts+1
+    burnInSteps = 0
+    thinSteps = thinSteps*2
+    nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
+    
+    initls <- get_final_values(out2)
+    
+    # initls <- vector(mode = "list",3)
+    # 
+    # for(cc in 1:3){
+    #   initls[[cc]] <- eval(parse(text = (paste0("as.list(out2$model$cluster",
+    #                                             cc,
+    #                                             "$state()[[1]])"))))
+    # 
+    # }
+    
+    
+    out2 = try(jagsUI(data = jdat,
+                      parameters.to.save = parms,
+                      n.chains = 3,
+                      n.burnin = burnInSteps,
+                      n.thin = thinSteps,
+                      n.iter = nIter,
+                      inits = initls,
+                      parallel = T,
+                      #modules = "glm",
+                      model.file = mod.file),silent = F)
+    
+    out2sum <- posterior::as_draws_df(out2$samples) %>%
+      summarise_draws() %>% 
+      as.data.frame() %>% 
+      filter(!is.na(rhat))
+    
+    
+    
+  }
+  
 
   save(list = c("out2","jdat","sp.save.out"),
        file = paste("output/full harvest zip",pr,z,spgp,"alt mod.RData"))

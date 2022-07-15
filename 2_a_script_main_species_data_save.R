@@ -205,9 +205,12 @@ for(spgp in c("duck","goose","murre")){
     }
     yrspersp <- tapply(prts1$YEAR,prts1$AOU,luni)
     
-    # removing species that only show up in 1 year --------------------
-    prts1 <- prts1[which(prts1$AOU %in% names(yrspersp)[which(yrspersp > 1)]),]
-    
+    #adding a line to skip zone if there isn't atleast one species that shows up in 75% of the years
+    if(max(yrspersp) < length(years)*0.75){next}
+    if(spgp != "murre"){
+    # removing species that only show up in 10 or more year --------------------
+    prts1 <- prts1[which(prts1$AOU %in% names(yrspersp)[which(yrspersp > 9)]),]
+    }
     
     for(per in periods$period){
       sy <- periods[which(periods$period == per),"startweek"]

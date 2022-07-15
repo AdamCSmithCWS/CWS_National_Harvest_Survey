@@ -52,6 +52,7 @@ names(years) <- paste(years)
 
 library(jagsUI)
 library(tidyverse)
+library(rjags)
 # library(ggmcmc)
 # library(tidybayes)
 # library(ggrepel)
@@ -146,9 +147,9 @@ parms = c("NACTIVE_y",
           "NSUCC_yg",
           "nu_day",
           "sdhunter_day",
-          # "mean_totkill_ycg",
+           "mean_totkill_ycg",
           # "mean_totdays_ycg",
-          # "mean_totkill_ycg_alt",
+           "mean_totkill_ycg_alt",
           # "mean_totdays_ycg_alt",
           #"kill_cyg",
           "kill_yg",
@@ -208,7 +209,6 @@ if(class(out2) != "try-error"){
  
   
   out2sum <- posterior::as_draws_df(out2$samples) %>%
-    select(starts_with(parm_check)) %>% 
     summarise_draws() %>% 
     as.data.frame() %>% 
     filter(!is.na(rhat))
@@ -222,16 +222,16 @@ if(class(out2) != "try-error"){
     thinSteps = thinSteps*2
   nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
   
-  initls <- get_final_values(out2)
+  #initls <- get_final_values(out2)
   
-  # initls <- vector(mode = "list",3)
-  # 
-  # for(cc in 1:3){
-  #   initls[[cc]] <- eval(parse(text = (paste0("as.list(out2$model$cluster",
-  #                                             cc,
-  #                                             "$state()[[1]])"))))
-  # 
-  # }
+  initls <- vector(mode = "list",3)
+
+  for(cc in 1:3){
+    initls[[cc]] <- eval(parse(text = (paste0("as.list(out2$model$cluster",
+                                              cc,
+                                              "$state()[[1]])"))))
+
+  }
   
   
   out2 = try(jagsUI(data = jdat,
@@ -245,7 +245,6 @@ if(class(out2) != "try-error"){
                     #modules = "glm",
                     model.file = mod.file),silent = F)
   out2sum <- posterior::as_draws_df(out2$samples) %>%
-    select(starts_with(parm_check)) %>% 
     summarise_draws() %>% 
     as.data.frame() %>% 
     filter(!is.na(rhat))
