@@ -467,7 +467,7 @@ model {
     #taualpha_psy1[p] ~ dscaled.gamma(0.5,50) # first-year, year-effect variance 
   #}
   for(s in 2:nspecies){
-    alpha_s[s] ~ dnorm(0,1)   # species mean proportional contribution across years and periods
+    alpha_s[s] ~ dnorm(0,4)   # species mean proportional contribution across years and periods
     #prior on the sd of alpha_psy[s] equal to the half-t distribution with sd = 2 and 4 degrees of freedom.  The density isflat for very small values (σS) and has a long flat tail for large values (σS).  Thesefeatures protect against mis-specification of the prior scaleS.  Choosing a largeSis harmlessas it simply makes the prior flatter, whereas ifSis too small then the long flat tail ensuresthat sufficient data will dominate the prior.  Gelman [2006] calls this a “weakly informative”prior.  For comparison, figure 10.1 also shows the density onσin the limit as the degrees offreedomdfincreases to infinity.  The distribution then becomes a half-normal with standarddeviationS.  The effect of increasing the degrees of freedom is to diminish the weight of thetail.
     alpha_sy[s,1] <- alpha_s[s]
     for(y in 2:nyears){
