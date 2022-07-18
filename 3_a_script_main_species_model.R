@@ -294,28 +294,28 @@ if(class(out2) != "try-error"){
     thinSteps = thinSteps*2
     nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
     
-    initls <- get_final_values(out2)
+   # initls <- get_final_values(out2)
     
-    # initls <- vector(mode = "list",3)
-    # 
-    # for(cc in 1:3){
-    #   initls[[cc]] <- eval(parse(text = (paste0("as.list(out2$model$cluster",
-    #                                             cc,
-    #                                             "$state()[[1]])"))))
-    # 
-    # }
+    initls <- vector(mode = "list",3)
+
+    for(cc in 1:3){
+      initls[[cc]] <- eval(parse(text = (paste0("as.list(out2$model$cluster",
+                                                cc,
+                                                "$state()[[1]])"))))
+
+    }
     
     
     out2 = try(jagsUI(data = jdat,
                       parameters.to.save = parms,
                       n.chains = 3,
                       n.burnin = burnInSteps,
-                      n.thin = thinSteps,
-                      n.iter = nIter,
+                      n.thin = thinSteps*3,
+                      n.iter = nIter*3,
                       inits = initls,
                       parallel = T,
-                      #modules = "glm",
-                      model.file = mod.file),silent = F)
+                      modules = "glm",
+                      model.file = "models/species_harvest_model_alt3.R"),silent = F)
     
     out2sum <- posterior::as_draws_df(out2$samples) %>%
       summarise_draws() %>% 
