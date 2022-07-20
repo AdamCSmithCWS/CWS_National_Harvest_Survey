@@ -346,7 +346,7 @@ model {
   for (p in 1:nperiods){
     for (y in 1:nyears){
       pkill_py[p,y] <- delta_py[p,y] / sum(delta_py[1:nperiods,y])
-      delta_py[p,y] ~ dgamma(exp_alpha_py[p,y], 1)
+      delta_py[p,y] <- exp_alpha_py[p,y]#~ dgamma(exp_alpha_py[p,y], 1)
       exp_alpha_py[p,y] <- exp(alpha_py[p,y])
       # alphat[p,y] <- mut[p]*kappat ### mut[p] is the mean proportion of the hunt occurring in period p across all years
       # 
@@ -354,25 +354,20 @@ model {
   }#p
 
   # exponential transformation to monitor the hyperparameter mean proportion in a given period
-  for(p in 1:nperiods){
-    mut[p] <- exp.termt[p]/sum(exp.termt[1:nperiods])
-    exp.termt[p] <- exp(alpha_p[p])
-  }#p
- 
+
   #### multinomial dirichlet-prior, time-series model for the distribution of harvest across periods
   #### fixed effects for the mean harvest across periods in the first year
   #### hyperparameter alpha_py[p] and tau_alpha_py[p], shrinking each period's estimate in a given year
   #### towards last years proportion of the hunt occurring within that period
   ### time-series first difference model through years on the period-specific parameters
-  alpha_p[1] <- 0 ## these are the log-scale intercepts of the proportions of the hunt in each period
   alpha_py[1,1] <- 0
   for(y in 2:nyears){
-    alpha_py[1,y] ~ dnorm(alpha_py[1,y-1],tau_alpha_py[1])
+    alpha_py[1,y] <- 0#~ dnorm(alpha_py[1,y-1],tau_alpha_py[1])
   }
   tau_alpha_py[1] ~ dscaled.gamma(0.5,50)
   for(p in 2:nperiods){
-    alpha_p[p] ~ dnorm(0,0.1) # fixed effect period-effects on total kill
-    alpha_py[p,1] <- alpha_p[p]
+    alpha_py[p,1] ~ dnorm(0,0.5) # fixed effect period-effects on total kill
+    #alpha_py[p,1] <- alpha_p[p]
      for(y in 2:nyears){
        alpha_py[p,y] ~ dnorm(alpha_py[p,y-1],tau_alpha_py[p]) # first difference model through time
      }
@@ -403,13 +398,46 @@ model {
   #   }#h
   # }#y
   
-  ##### species composition
-  ## nparts_py (nwings by period and year) and w_psy (nwings by period, species, and year) are data
+  
+  
+  for(y in 1:nyears){
+    w_sy[1:nspecies,y] ~ dmulti(pcomp_sy[1:nspecies,y], nparts_y[y])   # w_sy is the annual number of parts for each species (across all periods), nparts is the sum of the total parts for each year
+    
+  }
+  
+  
+  
+  ### extra data of parts by species and year may help estimate the various proportions
+  
+  for (s in 1:nspecies){
+    for (y in 1:nyears){
+      pcomp_sy[s,y] <- delta_sy[s,y] / sum(delta_sy[1:nspecies,y])
+      delta_sy[s,y] <- exp_alpha_sy[s,y] #~ dgamma(exp_alpha_sy[s,y], 1)
+      exp_alpha_sy[s,y] <- exp(alpha_sy[s,y])
+      
+    } #y
+    
+  }#s   
+  
   for (p in 1:nperiods){
     
+    w_ps[p,1:nspecies] ~ dmulti(pcomp_ps[p,1:nspecies], nparts_p[p])   # multinom distr vector responses
+    
+  }
+  ### period effects by species
+  for (s in 1:nspecies){
+    for (p in 1:nperiods){
+      pcomp_ps[p,s] <- delta_ps[p,s] / sum(delta_ps[p,1:nspecies])
+      delta_ps[p,s] <- exp_alpha_ps[p,s] #~ dgamma(exp_alpha_ps[p,s], 1)
+      exp_alpha_ps[p,s] <- exp(alpha_ps[p,s])
+      
+    } #p
+    
+  }#s
+  
+  for (p in 1:nperiods){
     for (y in 1:nyears) {
       w_psy[p,1:nspecies,y] ~ dmulti(pcomp_psy[p,1:nspecies,y], nparts_py[p,y])   # multinom distr vector responses
-      
     }
     
     ##### pcomp_psy[p,s,y] is the estimated proportion of the species composition in year-y, period-p, that is species-s
@@ -417,60 +445,64 @@ model {
     for (s in 1:nspecies){
       for (y in 1:nyears){
         pcomp_psy[p,s,y] <- delta_psy[p,s,y] / sum(delta_psy[p,1:nspecies,y])
-        delta_psy[p,s,y] ~ dgamma(exp_alpha_psy[p,s,y], 1)
+        delta_psy[p,s,y] <- exp_alpha_psy[p,s,y] # ~ dgamma(exp_alpha_psy[p,s,y], 1)
         exp_alpha_psy[p,s,y] <- exp(alpha_psy[p,s,y])
+        alpha_psy[p,s,y] <- alpha_sy[s,y] + alpha_ps[p,s]
         
       } #y
       
     }#s
     
-    # exponential transformation, just to monitor mean proportions by species
-    for( s in 1:nspecies ){
-      mu_ps[p,s] <- exp.alpha_ps[p,s]/sum(exp.alpha_ps[p,1:nspecies]) #mean proportional contribution of species during period
-      exp.alpha_ps[p,s] <- exp(alpha_ps[p,s])
-    }
-    
-    
   }#p
-
+  
   #### multinomial dirichlet-prior, time-series model for the species composition
   
-  alpha_s[1] <- 0
+  ### first species is the reference group in each year
+  for(y in 1:nyears){
+    alpha_sy[1,y] <- 0 #~ dnorm(alpha_sy[1,y-1],tau_alpha_s[s]) 
+  }
   
-  #for(p in 1:nperiods){
-    #taualpha_psy1[p] ~ dscaled.gamma(0.5,50) # first-year, year-effect variance 
-  #}
   for(s in 2:nspecies){
-    alpha_s[s] ~ dnorm(0,0.1)   # species mean proportional contribution across years and periods
-    #prior on the sd of alpha_psy[s] equal to the half-t distribution with sd = 2 and 4 degrees of freedom.  The density isflat for very small values (σS) and has a long flat tail for large values (σS).  Thesefeatures protect against mis-specification of the prior scaleS.  Choosing a largeSis harmlessas it simply makes the prior flatter, whereas ifSis too small then the long flat tail ensuresthat sufficient data will dominate the prior.  Gelman [2006] calls this a “weakly informative”prior.  For comparison, figure 10.1 also shows the density onσin the limit as the degrees offreedomdfincreases to infinity.  The distribution then becomes a half-normal with standarddeviationS.  The effect of increasing the degrees of freedom is to diminish the weight of thetail.
-    
+    alpha_sy[s,1] ~ dnorm(0,0.5) 
+    for(y in 2:nyears){
+      alpha_sy[s,y] ~ dnorm(alpha_sy[s,y-1],tau_alpha_s) 
+    }
   }#s
-  for(s in 1:nspecies){
-    mu_s[s] <- exp.alpha_s[s]/sum(exp.alpha_s[1:nspecies]) #mean proportional contribution of species during period
-    exp.alpha_s[s] <- exp(alpha_s[s])
+  
+  ###time series of species overall proportions in the parts
+  
+  
+  tau_alpha_s ~ dscaled.gamma(0.5,5) #time-series variance
+  taualpha_perod_s ~ dscaled.gamma(0.5,5) # period-series variance
+  sd_alpha_s <- 1/sqrt(tau_alpha_s)
+  sd_alpha_period_s <- 1/sqrt(taualpha_perod_s)
+  
+  
+  for(p in 1:nperiods){
     
+    alpha_ps[p,1] <- 0 # sets first species to the reference group in each period
+  }
+  
+  for(s in 2:nspecies){
+    alpha_ps[midperiod,s] ~ dnorm(0,0.5) #fixed effect for species 2:nspecies in middle period
+  }
+  
+  for(p in (midperiod+1):nperiods){
     
-    tau_alpha_psy[s] ~ dscaled.gamma(0.5,50) #year-effecct variance by species
-    taualpha_s[s] ~ dscaled.gamma(0.5,50) # period variance by species
-    sd_alpha_psy[s] <- 1/sqrt(tau_alpha_psy[s])
-    sd_alpha_s[s] <- 1/sqrt(taualpha_s[s])
-    
-    for(p in 1:nperiods){
-      alpha_ps[p,s] ~ dnorm(alpha_s[s],taualpha_s[s])
-      alpha_psy1[p,s,1] ~ dnorm(0,taualpha_psy[s])
-      alpha_psy[p,s,1] <- alpha_ps[p,s] + alpha_psy1[p,s,1]
+    for(s in 2:nspecies){
+      alpha_ps[p,s] ~ dnorm(alpha_ps[p-1,s],taualpha_perod_s) #species/period-specific effect
       
-      for(y in 2:nyears){
-        alpha_psy1[p,s,y] ~ dnorm(alpha_psy1[p,s,y-1],tau_alpha_psy[s]) 
-        alpha_psy[p,s,y] <- alpha_ps[p,s] + alpha_psy1[p,s,y]
-        
-      }
-      
-    }#p
+    }
+  }
+  
+  for(p in 1:(midperiod-1)){
     
-  }#s
- 
-
+    for(s in 2:nspecies){
+      alpha_ps[p,s] ~ dnorm(alpha_ps[p+1,s],taualpha_perod_s) #species/period-specific effect
+      
+    }
+  }
+  
   
   
   #####################################################################
@@ -491,7 +523,7 @@ model {
     for (d in 1:ndemog){
       for (y in 1:nyears){
         axcomp_axsy[d,s,y] <- delta_axsy[d,s,y] / sum(delta_axsy[1:ndemog,s,y])
-        delta_axsy[d,s,y] ~ dgamma(exp_alpha_axsy[d,s,y], 1)
+        delta_axsy[d,s,y] <- exp_alpha_axsy[d,s,y]#~ dgamma(exp_alpha_axsy[d,s,y], 1)
         exp_alpha_axsy[d,s,y] <- exp(alpha_axsy[d,s,y])
         
       } #y
