@@ -208,7 +208,7 @@ for(spgp in c("duck","goose","murre")){
     #adding a line to skip zone if there isn't atleast one species that shows up in 75% of the years
     if(max(yrspersp) < length(years)*0.75){next}
     if(spgp != "murre"){
-    # removing species that only show up in 10 or more year --------------------
+    # removing species that only show up in less than 9 years --------------------
     prts1 <- prts1[which(prts1$AOU %in% names(yrspersp)[which(yrspersp > 9)]),]
     }
     
