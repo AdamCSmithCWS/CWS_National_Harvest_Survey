@@ -439,6 +439,23 @@ save(list = c("allkill",
      file = "data/allkill.RData")
 
 
+
+
+# exporting the parts data as a readable csv file -------------------------
+parts_out <- outscse[,c("PRHUNT","ZOHUNT","AOU","YRHUNT","MONH","DAYH","BAGE","BSEX","WEEK")]
+names(parts_out) <- c("Province of hunt",
+                      "Zone of hunt",
+                      "AOU",
+                      "Year",
+                      "Month",
+                      "Day",
+                      "Age",
+                      "Sex",
+                      "Week of season")
+parts_out <- left_join(parts_out,sps,by = "AOU")
+write.csv(parts_out,paste0("GoogleDrive/All_raw_parts_data_",Y,".csv"))
+# tmp <- parts_out %>% filter(specieslevelenglish == "Mallard")
+# write.csv(tmp,paste0("output/Mallard_parts_all_years_through_",Y,".csv"))
 ######################
 #define periods across all years
 

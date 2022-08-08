@@ -290,10 +290,10 @@ model {
       kill_ys[y,s] <- sum(kill_cys[castes,y,s])
         for(d in 1:ndemog){
             ### kill_ysax = total harvest by age/sex species and year (e.g., number of adult female mallards killed)
-          kill_ysax[d,s,y] <- axcomp_axsy[d,s,y]*kill_ys[y,s]
+          kill_ysax[d,s,y] <- pcomp_axsy[d,s,y]*kill_ys[y,s]
         }#d
-      padult_sy[s,y] <- sum(axcomp_axsy[demoa,s,y])
-      pfemale_sy[s,y] <- sum(axcomp_axsy[demof,s,y])
+      padult_sy[s,y] <- sum(pcomp_axsy[demoa,s,y])
+      pfemale_sy[s,y] <- sum(pcomp_axsy[demof,s,y])
     }#s
     
     #### summed total harvest and activity (e.g., all ducks) across all species and castes in a given year
@@ -346,8 +346,7 @@ model {
   for (p in 1:nperiods){
     for (y in 1:nyears){
       pkill_py[p,y] <- delta_py[p,y] / sum(delta_py[1:nperiods,y])
-      delta_py[p,y] <- exp_alpha_py[p,y]#~ dgamma(exp_alpha_py[p,y], 1)
-      exp_alpha_py[p,y] <- exp(alpha_py[p,y])
+      delta_py[p,y] <- exp(alpha_py[p,y])
       # alphat[p,y] <- mut[p]*kappat ### mut[p] is the mean proportion of the hunt occurring in period p across all years
       # 
        } #y
@@ -355,7 +354,7 @@ model {
 
   # exponential transformation to monitor the hyperparameter mean proportion in a given period
 
-  #### multinomial dirichlet-prior, time-series model for the distribution of harvest across periods
+  #### multinomial log-ratios, time-series model for the distribution of harvest across periods
   #### fixed effects for the mean harvest across periods in the first year
   #### hyperparameter alpha_py[p] and tau_alpha_py[p], shrinking each period's estimate in a given year
   #### towards last years proportion of the hunt occurring within that period
@@ -412,8 +411,7 @@ model {
   for (s in 1:nspecies){
     for (y in 1:nyears){
       pcomp_sy[s,y] <- delta_sy[s,y] / sum(delta_sy[1:nspecies,y])
-      delta_sy[s,y] <- exp_alpha_sy[s,y] #~ dgamma(exp_alpha_sy[s,y], 1)
-      exp_alpha_sy[s,y] <- exp(alpha_sy[s,y])
+      delta_sy[s,y] <- exp(alpha_sy[s,y])
       
     } #y
     
@@ -428,8 +426,7 @@ model {
   for (s in 1:nspecies){
     for (p in 1:nperiods){
       pcomp_ps[p,s] <- delta_ps[p,s] / sum(delta_ps[p,1:nspecies])
-      delta_ps[p,s] <- exp_alpha_ps[p,s] #~ dgamma(exp_alpha_ps[p,s], 1)
-      exp_alpha_ps[p,s] <- exp(alpha_ps[p,s])
+      delta_ps[p,s] <- exp(alpha_ps[p,s])
       
     } #p
     
@@ -445,8 +442,7 @@ model {
     for (s in 1:nspecies){
       for (y in 1:nyears){
         pcomp_psy[p,s,y] <- delta_psy[p,s,y] / sum(delta_psy[p,1:nspecies,y])
-        delta_psy[p,s,y] <- exp_alpha_psy[p,s,y] # ~ dgamma(exp_alpha_psy[p,s,y], 1)
-        exp_alpha_psy[p,s,y] <- exp(alpha_psy[p,s,y])
+        delta_psy[p,s,y] <- exp(alpha_psy[p,s,y])
         alpha_psy[p,s,y] <- alpha_sy[s,y] + alpha_ps[p,s]
         
       } #y
@@ -455,7 +451,7 @@ model {
     
   }#p
   
-  #### multinomial dirichlet-prior, time-series model for the species composition
+  #### multinomial log-ratios, time-series model for the species composition
   
   ### first species is the reference group in each year
   for(y in 1:nyears){
@@ -507,24 +503,23 @@ model {
   
   #####################################################################
   #### proportional distribution of age and sex by species
-  #### axcomp_axsy[1:ndemog,s,y] = proportional distribution of age and sex classes by species and year
+  #### pcomp_axsy[1:ndemog,s,y] = proportional distribution of age and sex classes by species and year
   
-  ##### species composition
+  ##### demographic composition
   for (s in 1:nspecies){
     
     for (y in 1:nyears) {
-      w_axsy[1:ndemog,s,y] ~ dmulti(axcomp_axsy[1:ndemog,s,y], nparts_sy[s,y])   # multinom distr vector responses
+      w_axsy[1:ndemog,s,y] ~ dmulti(pcomp_axsy[1:ndemog,s,y], nparts_sy[s,y])   # multinom distr vector responses
       
     }
     
-    ##### axcomp_psy[d,s,y] is the estimated proportion of the species harvest that is category-d of age and sex in year-y
+    ##### pcomp_axsy[d,s,y] is the estimated proportion of the species harvest that is category-d of age and sex in year-y
     ### for ducks d is 1 for AF, 2 for IF, 3 for AM, and 4 for IM 
     
     for (d in 1:ndemog){
       for (y in 1:nyears){
-        axcomp_axsy[d,s,y] <- delta_axsy[d,s,y] / sum(delta_axsy[1:ndemog,s,y])
-        delta_axsy[d,s,y] <- exp_alpha_axsy[d,s,y]#~ dgamma(exp_alpha_axsy[d,s,y], 1)
-        exp_alpha_axsy[d,s,y] <- exp(alpha_axsy[d,s,y])
+        pcomp_axsy[d,s,y] <- delta_axsy[d,s,y] / sum(delta_axsy[1:ndemog,s,y])
+        delta_axsy[d,s,y] <- exp(alpha_axsy[d,s,y])
         
       } #y
       
@@ -541,7 +536,7 @@ model {
     
   }#s
   
-  #### multinomial dirichlet-prior, time-series model for the age and sex (ducks) or age (geese) composition
+  #### multinomial log-ratios, time-series model for the age and sex (ducks) or age (geese) composition
   # 
   # 
      tau_alpha_ax ~ dscaled.gamma(0.5,50) #variance among species on the first-year parameter for demography

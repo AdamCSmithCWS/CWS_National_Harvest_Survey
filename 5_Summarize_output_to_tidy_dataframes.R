@@ -155,7 +155,7 @@ save(list = c("nat_sums_a",
               "reg_sums_a",
               "zone_sums_a"),
      file = "data/Posterior_summaries2.RData")
-rm(file = c("tmp_sp",
+rm(list = c("tmp_sp",
             "nat_sums_a",
             "prov_sums_a",
             "reg_sums_a",

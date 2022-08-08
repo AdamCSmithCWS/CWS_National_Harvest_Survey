@@ -115,7 +115,7 @@ provs = provs[-which(provs %in% c("NF","NU"))]##removing NF because definition o
 
 # MCMC loops --------------------------------------------------------------
 
-n_cores <- length(provs)
+n_cores <- 4#length(provs)
 cluster <- makeCluster(n_cores, type = "PSOCK")
 registerDoParallel(cluster)
 
@@ -200,7 +200,7 @@ nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
                     n.thin = thinSteps,
                     n.iter = nIter,
                     parallel = T,
-                    #modules = "glm",
+                    modules = "glm",
                     model.file = mod.file),silent = F)
 
   
@@ -242,7 +242,7 @@ if(class(out2) != "try-error"){
                     n.iter = nIter,
                     inits = initls,
                     parallel = T,
-                    #modules = "glm",
+                    modules = "glm",
                     model.file = mod.file),silent = F)
   out2sum <- posterior::as_draws_df(out2$samples) %>%
     summarise_draws() %>% 
@@ -268,222 +268,6 @@ rm(list = "out2")
 stopCluster(cl = cluster)
 
 
-# 
-# 
-# # # plotting comparisons to published estimates -----------------------------
-# 
-# source("functions/comparison_plotting_function_other.R")
-# 
-# source("functions/utility_functions.R")
-# 
-# 
-# 
-# 
-# # regulations compile -----------------------------------------------------
-# 
-# regs_other <- list()
-# length(regs_other) <- length(others)
-# names(regs_other) <- others
-# 
-# for(spgp in others){ 
-#   tmp <- read.csv(file = paste0("data/reg_",spgp,".csv"))
-#   names(tmp)[which(names(tmp) == "QC")] <- "PQ"
-#   regs_other[[spgp]] <- tmp
-# }
-# 
-# 
-# non_res_combine = paste(rep(provs,each = 3),rep(c(1,2,3),times = length(provs)))
-# #this above just ensures all non-resident hunters are combined with resident hunters for these groups, separating out caste E is rarely feasible (even caste B is sketchy)
-# keep_E <- paste(rep(c("MB","NB","SK"),each = 3),rep(c(1,2,3),times = 3))
-# # province and zone loops -------------------------------------------------
-# non_res_combine <- non_res_combine[-which(non_res_combine %in% keep_E)]
-# 
-# 
-# 
-# 
-# 
-# 
-# jjsimcomp = 1
-# simcomp_list <-  list() 
-# 
-# 
-# 
-# for(pr in provs){
-#   
-#   
-# 
-#   # 
-#   nyears = length(years)
-#   minyr <- min(years)
-#   # 
-#   for(spgp in others){ 
-#     tmp <- regs_other[[spgp]][,c("YEAR",pr)]
-#     tmp[which(tmp[,pr] > 0),pr] <- 1
-#     names(tmp) <- c("YEAR",spgp)
-#     if(spgp == others[[1]]){
-#       regs <- tmp
-#     }else{
-#       regs <- merge(regs,tmp,by = "YEAR")
-#     }
-#     
-#   }
-#   regs <- regs[which(regs$YEAR >= FY),]
-#   regs <- regs[,which(colSums(regs) > 0)]
-#   grps <- names(regs)[-1] #the -1 removes the column called
-#   ngroups <- length(grps) #to enter model as data
-#   if("SNIPK" %in% grps){
-#     regs[which(regs$YEAR < 1992), "SNIPK"] <- 0
-#   }### remove Snipe hunt per 1991
-#   reg_mat <- as.matrix(regs[,grps]) #to enter model as data ensuring that group-level annual estimates are never > 0 in years with no season.
-#   grps_f <- factor(grps,levels = grps,ordered = TRUE) #ensures consistent ordering of the harvested groups
-#   
-#   fyear = NA
-#   for(g in 1:ngroups){
-#     fyear[g] <- min(which(regs[,g+1] > 0))
-#   }
-#   
-#   # data set up -------------------------------------------------------
-#   
-#   allkill = allkill
-#   phunt = "PRHUNT"
-#   zhunt = "ZOHUNT"
-#   wkill = grps
-#   wact = "ACTIVEOT"
-#   wsucc = paste0("SU",gsub("K",replacement = "",x = grps)) 
-#   wday = "DAYOT"
-#   
-#   
-#   
-#   mod.file = "models/group_model_zip23.R" # 
-#   
-#   
-#   
-#   
-#   zns <- as.integer(unique(allkill[which(allkill[,phunt] == pr),zhunt]))
-#   zns <- zns[which(zns > 0)]
-#   for(z in zns){
-#     
-#     
-#   
-#   
-#   
-#  
-#              mod.saved = paste("output/other harvest zip",pr,z,"alt mod.RData")
-# 
-#       
-#       #mod.saved = paste("output/full harvest time sdhunter",pr,z,spgp,"alt mod.RData") #paste("output/full harvest",pr,z,spgp,"alt mod.RData")
-#         if(file.exists(mod.saved)){
-#           load(mod.saved) #load(paste("output/full harvest",pr,z,spgp,"alt mod.RData"))#        load(paste("output/full harvest caste time",pr,z,spgp,"mod.RData"))
-# 
-#          
-# 
-#           
-#           var_pair = list(new = list("NACTIVE_y",
-#                               "NSUCC_yg",
-#                               "kill_yg",
-#                               "days_y",
-#                               "days_yg"),
-#                       old = list("ACTIOT",
-#                                wsucc,
-#                                wkill,
-#                                "DAYOT",
-#                                NA),
-#                       newgrps = list(NA,
-#                                      wsucc,
-#                                      wkill,
-#                                      NA,
-#                                      gsub(grps,pattern = "K",replacement = "Days"))) 
-# 
-#          
-# 
-#           
-#           
-#           
-#           
-# 
-#   
-#   simcomp_list[[jjsimcomp]] <- comp_plot_simple_other(prov = pr,
-#                                                       zone = z,
-#                                                       M = out2)
-#  
-#   
-#   jjsimcomp <- jjsimcomp + 1  
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# }#end if jags output exists 
-# 
-# 
-# 
-#  }#z
-# 
-# }#pr
-# 
-#   
-# ########## add a time-series plot of hte sd hunter values across castes (maybe possible to have a single sdhunter for all but caste 4)
-# # plotting hunter effects -------------------------------------------------
-# 
-# # 
-# #  
-# #   
-# #   jjhunter = 1
-# #   hunter_list <- list()
-# #   
-# #   
-# #   for(pr in provs2){
-# #     zns <- unique(period[which(period$pr == pr),"zo"])
-# #     for(z in zns){
-# #       #       if(file.exists(paste("output/full harvest",pr,z,spgp,"mod.RData"))){
-# #       # load(paste("output/full harvest",pr,z,spgp,"mod.RData"))
-# #         if(file.exists(paste("output/hunter_effects",pr,z,spgp,"alt mod.RData"))){
-# #           
-# #           load(paste("output/hunter_effects",pr,z,spgp,"alt mod.RData"))#        load(paste("output/full harvest caste time",pr,z,spgp,"mod.RData"))
-# #           
-# #           
-# #           
-# #           
-# #           
-# #           
-# #           hunter_list[[jjhunter]] <- comp_plot_hunter(prov = pr,zone = z)
-# #           
-# #           jjhunter = 1+jjhunter      
-# #         }
-# #         
-# #       rm(out3)   
-# #     
-# #     }
-# #   }
-# # 
-# #   
-# #   # plotting pdfs -----------------------------------------------------------
-#   
-#   
-#   
-#   asuf <- c("ZIP")
-#   
-# 
-#   
-#   pdf(paste("output/comparison graphs simple other",asuf," ",".pdf"),
-#       width = 10,
-#       height = 7.5)
-#   
-#   for(pp in 1:length(simcomp_list)){
-#     plt = simcomp_list[[pp]]
-#     for(j in 1:length(plt)){
-#       print(plt[[j]])
-#     }}
-#   dev.off()
-#   
-#   
-  
-  
+
   
 

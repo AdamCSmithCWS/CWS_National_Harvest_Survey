@@ -242,7 +242,7 @@ write.csv2(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_po
 
 for(sy in c(FY,Y-9)){
 
-for(l in c("Fr","En")){
+for(l in c("En","Fr")){
   
   tmpp <- general_plot_a(dat = a_tab1,
                          startYear = sy,

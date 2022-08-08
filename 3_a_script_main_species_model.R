@@ -71,136 +71,44 @@ library(foreach)
 provzone <- read.csv("data/Province and zone table.csv")
 provs = unique(provzone$prov)
 
+nfmurre <- data.frame(prov = "NF",
+                      zone = 1,
+                      spgp = "murre")
+fit_table <- provzone %>% 
+  select(prov,zone) %>% 
+  expand_grid(.,spgp = c("duck","goose")) %>% 
+  bind_rows(.,nfmurre)
 
 
-
-# load("data/allkill.RData")
-# ### species lists
-# 
-# aou.ducks <- sps[which(sps$group == "duck"),"AOU"]
-# aou.goose <- sps[which(sps$group == "goose"),"AOU"]
-# aou.murre <- sps[which(sps$group == "murre"),"AOU"]
-# 
+#fit_table <- fit_table %>% filter(spgp %in% c("goose","murre") | (spgp == "duck" & prov == "ON" & zone == 3))
 
 
-for(spgp in c("duck","goose","murre")){
-### begining of loop through provinces only engage this loop if running the full analysis
-### for a single province and zone, skip the next 4 lines
-### and enter something like the following (e.g., to run Ontario-zone 3)
-
-# group data set up -------------------------------------------------------
-
-  period = read.csv(paste0("data/period.",spgp,".csv"))
-  #aou.spgp <- sps[which(sps$group == spgp),"AOU"]
-  provs2 <- provs
-  mod.file = "models/species_harvest_model.R" # 
-  
-  # 
-  # if(spgp == "goose"){
-  #   
-  #  
-  #   
-  #   # cal.spgp = calg
-  #   # allkill = allkill
-  #   # phunt = "PRHUNTG"
-  #   # zhunt = "ZOHUNTG"
-  #   # wkill = "TOGOK"
-  #   # wact = "ACTIVEWF"
-  #   # wsucc = "SUTOGO"
-  #   # wday = "DAYWF"
-  #   # nyears = length(years)
-  #   # demog = data.frame(BSEX = rep(c("U","U"),each = 1),
-  #   #                    BAGE = rep(c("A","I"),times = 1),
-  #   #                    stringsAsFactors = F)
-  #   # minyr <- min(years)
-  #   non_res_combine = c("NF 1","NF 2","PE 1","NS 1","NS 2","BC 2","NT 1","YT 1","NB 1")
-  #   
-  #   
-  # }
-  # 
-  # if(spgp == "duck"){
-  #   
-  #   # Y <- 2019
-  #   # FY = 1976
-  #   # years <- FY:Y
-  #   # 
-  #   # names(years) <- paste(years)
-  #   # aou.spgp = aou.ducks
-  #   # period = period.duck
-  #   # cal.spgp = cald
-  #   # allkill = allkill
-  #   # phunt = "PRHUNT"
-  #   # zhunt = "ZOHUNT"
-  #   # wkill = "TODUK"
-  #   # wact = "ACTIVEWF"
-  #   # wsucc = "SUTODU"
-  #   # wday = "DAYWF"
-  #   # 
-  #   # nyears = length(years)
-  #   # demog = data.frame(BSEX = rep(c("F","M"),each = 2),
-  #   #                    BAGE = rep(c("A","I"),times = 2),
-  #   #                    stringsAsFactors = F)
-  #   # minyr <- min(years)
-  #   # provs2 <- provs
-  #   # mod.file = "models/species_harvest_model.R" #
-  #   
-  # }
-  # 
-  # 
-  # 
-   if(spgp == "murre"){
-  #   
-  #   FY = 2014#### previous years Murre harvest was calculated differently, pre 2013 only total MURRK, and in 2013 it was a mix of infor from DAYOT and calendars and species composition
-  #   years <- FY:Y
-  #   
-  #   names(years) <- paste(years)
-  #   
-  #   # aou.spgp = aou.murre
-  #   # period = period.murre
-  #   # cal.spgp = calm
-  #   # allkill = allkill
-  #   # phunt = "PRHUNTM"
-  #   # zhunt = "ZOHUNTM"
-  #   # wkill = "MURRK"
-  #   # wact = "ACTIVEM"
-  #   # wsucc = "SUCCM"
-  #   # wday = "DAYM" #?
-  #   #  nyears = length(years)
-  #   # demog = data.frame(BSEX = rep(c("U","U"),each = 1),
-  #   #                    BAGE = rep(c("A","I"),times = 1),
-  #   #                    stringsAsFactors = F)
-  #   # minyr <- FY
-     provs2 = "NF"
-  #   
-  #   
-       }
-  # 
-  # 
 
 # Province and Zone loop --------------------------------------------------
-  n_cores <- length(provs2)
+  n_cores <- 16
   cluster <- makeCluster(n_cores, type = "PSOCK")
   registerDoParallel(cluster)
 
 
 
-  fullrun <- foreach(pr = provs2,
-                     .packages = c("jagsUI","tidyverse"),
+  fullrun <- foreach(i = c(1:nrow(fit_table)),
+                     .packages = c("jagsUI","tidyverse","posterior"),
                      .inorder = FALSE,
                      .errorhandling = "pass") %dopar%
     {
 
-  #for(pr in provs2){
-  zns <- unique(period[which(period$pr == pr),"zo"])
-  
-  # Set up parallel stuff
-   
-  for(z in zns){
+      spgp <- fit_table[i,"spgp"]
+      pr <- fit_table[i,"prov"]
+      z <- fit_table[i,"zone"]
+      
+      period = read.csv(paste0("data/period.",spgp,".csv"))
+      
 
 if(file.exists(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))){
 load(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
 
-
+  mod.file = "models/species_harvest_model_alt.R" # 
+  
 
 
 parms = c("NACTIVE_y",
@@ -212,21 +120,19 @@ parms = c("NACTIVE_y",
           "kill_cy",
           "kill_ys",
           "kill_y",
+          "kill_ysax",
           "days_y",
           "nu",
+          "psi",
           "sdhunter",
           "cst",
           "cst_day",
           "ann",
-          "axcomp_axsy",
           "ann_day",
           "padult_sy",
           "pfemale_sy",
-          "kill_ysax",
-          "pcomp_psy",
           "parrive",
           "pleave",
-          "psi",
           "pkill_py",
           "mut",
           "mu_ps",
@@ -235,12 +141,17 @@ parms = c("NACTIVE_y",
           "alpha_ps",
           "alpha_psy",
           "alpha_sy",
+          #"alpha_axsy",
+          "alpha_py",
           #"alpha_psy1",
           #"tau_alpha_psy",
           "sd_alpha_psy",
           "sd_alpha_s",
           "sdalpha_perod_s",
-          "pcomp_sy"
+          "pcomp_sy",
+          "pcomp_sy",
+          "pcomp_psy",
+          "pcomp_axsy"
           )
 
 
@@ -259,8 +170,17 @@ t1 = Sys.time()
 # MCMC sampling -----------------------------------------------------------
 
 w_sy <- apply(jdat$w_psy,c(2,3),sum)
+w_ps <- apply(jdat$w_psy,c(1,2),sum)
+
+
 jdat[["w_sy"]] <- w_sy
 jdat[["nparts_y"]] <- apply(jdat$nparts_py,2,sum)  
+
+jdat[["w_ps"]] <- w_ps
+jdat[["nparts_p"]] <- apply(jdat$nparts_py,1,sum)  
+
+jdat[["midperiod"]] <- as.integer(floor(jdat$nperiods/2))
+
   out2 = try(jagsUI(data = jdat,
                     parameters.to.save = parms,
                     n.chains = 3,
@@ -269,8 +189,8 @@ jdat[["nparts_y"]] <- apply(jdat$nparts_py,2,sum)
                     n.iter = nIter,
                     parallel = T,
                     modules = "glm",
-                    # model.file = mod.file
-                    model.file = "models/species_harvest_model_alt4.R"
+                    model.file = mod.file
+                    #model.file = "models/species_harvest_model_alt4.R"
   ),silent = F)
 
   
@@ -288,10 +208,10 @@ if(class(out2) != "try-error"){
   attempts <- 0
   
   
-  while(any(out2sum$rhat > 1.1) & attempts < 3){
+  while(any(out2sum$rhat > 1.1) & attempts < 1){
     attempts <- attempts+1
     burnInSteps = 0
-    thinSteps = thinSteps*2
+    thinSteps = thinSteps*3
     nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
     
    # initls <- get_final_values(out2)
@@ -310,13 +230,13 @@ if(class(out2) != "try-error"){
                       parameters.to.save = parms,
                       n.chains = 3,
                       n.burnin = burnInSteps,
-                      n.thin = thinSteps*3,
-                      n.iter = nIter*3,
+                      n.thin = thinSteps,
+                      n.iter = nIter,
                       inits = initls,
                       parallel = T,
                       modules = "glm",
-                      model.file = "models/species_harvest_model_alt3.R"),silent = F)
-    
+                      model.file = mod.file))
+                      
     out2sum <- posterior::as_draws_df(out2$samples) %>%
       summarise_draws() %>% 
       as.data.frame() %>% 
@@ -327,22 +247,18 @@ if(class(out2) != "try-error"){
   }
   
 
-  save(list = c("out2","jdat","sp.save.out"),
+  save(list = c("out2","jdat","sp.save.out","out2sum"),
        file = paste("output/full harvest zip",pr,z,spgp,"alt mod.RData"))
   
 
 
 }
 }
-  }#z
+      
+    }#end parallele cluster run
 
-}#pr
   stopCluster(cl = cluster)
   
-
-
-}#spgp
-# plotting comparisons to published estimates -----------------------------
 
 
 
