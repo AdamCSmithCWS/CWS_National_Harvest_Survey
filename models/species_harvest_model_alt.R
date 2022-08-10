@@ -365,16 +365,21 @@ model {
   }
   tau_alpha_py[1] ~ dscaled.gamma(0.5,50)
   for(p in 2:nperiods){
-    alpha_py[p,1] ~ dnorm(0,0.5) # fixed effect period-effects on total kill
+    alpha_py[p,midyear] ~ dnorm(0,0.5) # fixed effect period-effects on total kill
     #alpha_py[p,1] <- alpha_p[p]
-     for(y in 2:nyears){
+    for(y in (midyear+1):nyears){
+      
        alpha_py[p,y] ~ dnorm(alpha_py[p,y-1],tau_alpha_py[p]) # first difference model through time
-     }
+    }
+    for(y in 1:(midyear-1)){
+      alpha_py[p,y] ~ dnorm(alpha_py[p,y+1],tau_alpha_py[p]) # first difference model through time
+    }
+    
     tau_alpha_py[p] ~ dscaled.gamma(0.5,50)
   }#p
   
   
-  
+
 
   
   
@@ -397,54 +402,87 @@ model {
   #   }#h
   # }#y
   
+ w_s[1:nspecies] ~ dmulti(pcomp_s[1:nspecies], nparts)   # w_s is the total number of parts for each species (across all years), nparts is the sum of the total parts
   
-  
-  for(y in 1:nyears){
-    w_sy[1:nspecies,y] ~ dmulti(pcomp_sy[1:nspecies,y], nparts_y[y])   # w_sy is the annual number of parts for each species (across all periods), nparts is the sum of the total parts for each year
+ 
+   for (s in 1:nspecies){
+   pcomp_s[s] <- delta_s[s] / sum(delta_s[1:nspecies])
+     delta_s[s] <- exp(alpha_s[s])
+   }   
     
-  }
+    
+   for(y in 1:nyears){
+     w_sy[1:nspecies,y] ~ dmulti(pcomp_sy[1:nspecies,y], nparts_y[y])   # w_sy is the annual number of parts for each species (across all periods), nparts_y is the sum of the total parts for each year
+     
+   }
   
   
   
   ### extra data of parts by species and year may help estimate the various proportions
   
-  for (s in 1:nspecies){
-    for (y in 1:nyears){
-      pcomp_sy[s,y] <- delta_sy[s,y] / sum(delta_sy[1:nspecies,y])
-      delta_sy[s,y] <- exp(alpha_sy[s,y])
-      
-    } #y
-    
-  }#s   
+   for (s in 1:nspecies){
   
-  for (p in 1:nperiods){
-    
-    w_ps[p,1:nspecies] ~ dmulti(pcomp_ps[p,1:nspecies], nparts_p[p])   # multinom distr vector responses
-    
+     for (y in 1:nyears){
+       pcomp_sy[s,y] <- delta_sy[s,y] / sum(delta_sy[1:nspecies,y])
+       delta_sy[s,y] <- exp(alpha_sy[s,y])
+       
+     } #y
+     
+   }#s   
+  
+   for (p in 1:nperiods){
+     
+     w_ps[p,1:nspecies] ~ dmulti(pcomp_ps[p,1:nspecies], nparts_p[p])   # multinom distr vector responses
+     
+   }
+  
+   # period effects by species
+   for (s in 1:nspecies){
+   for (p in 1:nperiods){
+       pcomp_ps[p,s] <- delta_ps[p,s] / sum(delta_ps[p,1:nspecies])
+       delta_ps[p,s] <- exp(alpha_ps[p,s])
+       
+     } #p
+     
+   }#s
+  
+  tau_psy ~ dscaled.gamma(0.1,50) #extra variance
+  sd_psy <- 1/sqrt(tau_psy)
+  
+  tau_beta_sy ~ dscaled.gamma(0.1,50) #extra variance
+  sd_beta_sy <- 1/sqrt(tau_beta_sy)
+  
+  tau_beta_ps ~ dscaled.gamma(0.1,50) #extra variance
+  sd_beta_ps <- 1/sqrt(tau_beta_ps)
+  
+  
+  for(p in 1:nperiods){
+  beta_sy[p] ~ dnorm(1,tau_beta_sy)# coefficient controlling the influence of the species by year component
   }
-  ### period effects by species
-  for (s in 1:nspecies){
-    for (p in 1:nperiods){
-      pcomp_ps[p,s] <- delta_ps[p,s] / sum(delta_ps[p,1:nspecies])
-      delta_ps[p,s] <- exp(alpha_ps[p,s])
-      
-    } #p
-    
-  }#s
+  for(y in 1:nyears){
+    beta_ps[y] ~ dnorm(1,tau_beta_ps)# coefficient controlling the influence of the period-specific pattern
+  }
   
-  for (p in 1:nperiods){
-    for (y in 1:nyears) {
-      w_psy[p,1:nspecies,y] ~ dmulti(pcomp_psy[p,1:nspecies,y], nparts_py[p,y])   # multinom distr vector responses
-    }
+   for (p in 1:nperiods){
+     for (y in 1:nyears) {
+        w_psy[p,1:nspecies,y] ~ dmulti(pcomp_psy[p,1:nspecies,y], nparts_py[p,y])   # multinom distr vector responses
+       }
     
     ##### pcomp_psy[p,s,y] is the estimated proportion of the species composition in year-y, period-p, that is species-s
     
     for (s in 1:nspecies){
       for (y in 1:nyears){
-        pcomp_psy[p,s,y] <- delta_psy[p,s,y] / sum(delta_psy[p,1:nspecies,y])
-        delta_psy[p,s,y] <- exp(alpha_psy[p,s,y])
-        alpha_psy[p,s,y] <- alpha_sy[s,y] + alpha_ps[p,s]
-        
+        pcomp_psy[p,s,y] <- delta_psy[p,s,y] / sum(delta_psy[p,1:nspecies,y]) # softmax regression 
+        #delta_psy[p,s,y] ~ dgamma(exp_alpha_psy[p,s,y], 1)
+        #exp_alpha_psy[p,s,y] <- exp(mu_psy[p,s,y])
+         delta_psy[p,s,y] <- exp(alpha_psy[p,s,y])
+         #alpha_psy[p,s,y] ~ dnorm(beta_sy*alpha_sy[s,y] + beta_ps*alpha_ps[p,s],sd_psy) # combination of species effect, species-year effect, species period effect
+         alpha_psy[p,s,y] <- beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s] # combination of species effect, species-year effect, species period effect
+         #alpha_psy[p,s,y] <- alpha_sy[s,y] + alpha_ps[p,s] # combination of species effect, species-year effect, species period effect
+         
+         # find out why this is so hard to estimate, but the period by year is so easy...
+         # also integrate the midyear structyre into teh period by year time-series and 
+         # integreat the midyear structure into the demographic analysis
       } #y
       
     }#s
@@ -452,24 +490,34 @@ model {
   }#p
   
   #### multinomial log-ratios, time-series model for the species composition
-  
+
+ alpha_s[1] <- 0
+
+for(s in 2:nspecies){
+  alpha_s[s] ~ dnorm(0,0.5)
+}
+
   ### first species is the reference group in each year
   for(y in 1:nyears){
     alpha_sy[1,y] <- 0 #~ dnorm(alpha_sy[1,y-1],tau_alpha_s[s]) 
   }
   
   for(s in 2:nspecies){
-    alpha_sy[s,1] ~ dnorm(0,0.5) 
-    for(y in 2:nyears){
+    alpha_sy[s,midyear] <- alpha_s[s] # ~ dnorm(0,0.5) 
+    for(y in (midyear+1):nyears){
+      
       alpha_sy[s,y] ~ dnorm(alpha_sy[s,y-1],tau_alpha_s) 
+    }
+    for(y in 1:(midyear-1)){
+      alpha_sy[s,y] ~ dnorm(alpha_sy[s,y+1],tau_alpha_s) 
     }
   }#s
   
   ###time series of species overall proportions in the parts
   
   
-  tau_alpha_s ~ dscaled.gamma(0.5,5) #time-series variance
-  taualpha_perod_s ~ dscaled.gamma(0.5,5) # period-series variance
+  tau_alpha_s ~ dscaled.gamma(0.1,50) #time-series variance
+  taualpha_perod_s ~ dscaled.gamma(0.1,50) # period-series variance
   sd_alpha_s <- 1/sqrt(tau_alpha_s)
   sd_alpha_period_s <- 1/sqrt(taualpha_perod_s)
   
@@ -480,7 +528,7 @@ model {
   }
   
   for(s in 2:nspecies){
-    alpha_ps[midperiod,s] ~ dnorm(0,0.5) #fixed effect for species 2:nspecies in middle period
+    alpha_ps[midperiod,s] <- 0#~ dnorm(0,0.5) #fixed effect for species 2:nspecies in middle period
   }
   
   for(p in (midperiod+1):nperiods){
@@ -506,7 +554,21 @@ model {
   #### pcomp_axsy[1:ndemog,s,y] = proportional distribution of age and sex classes by species and year
   
   ##### demographic composition
+  
+  tau_beta_axsy ~ dscaled.gamma(0.1,50) #extra variance
+  sd_beta_axsy <- 1/sqrt(tau_beta_axsy)
+  
+  
+  for(s in 1:nspecies){
+    beta_axsy[s] ~ dnorm(1,tau_beta_axsy)# coefficient controlling the influence of the species by year component
+  }
+
+  
+  
   for (s in 1:nspecies){
+    
+    w_axs[1:ndemog,s] ~ dmulti(pcomp_axs[1:ndemog,s], nparts_s[s])   # multinom distr vector responses
+    
     
     for (y in 1:nyears) {
       w_axsy[1:ndemog,s,y] ~ dmulti(pcomp_axsy[1:ndemog,s,y], nparts_sy[s,y])   # multinom distr vector responses
@@ -517,21 +579,28 @@ model {
     ### for ducks d is 1 for AF, 2 for IF, 3 for AM, and 4 for IM 
     
     for (d in 1:ndemog){
+      # ## species mean demographic proportions across all years
+      pcomp_axs[d,s] <- delta_axs[d,s] / sum(delta_axs[1:ndemog,s])
+      delta_axs[d,s] ~ dgamma(exp_alpha_axs[d,s], 1)
+      exp_alpha_axs[d,s] <- exp(alpha_axs[d,s])
+      # 
       for (y in 1:nyears){
         pcomp_axsy[d,s,y] <- delta_axsy[d,s,y] / sum(delta_axsy[1:ndemog,s,y])
-        delta_axsy[d,s,y] <- exp(alpha_axsy[d,s,y])
+        
+        #delta_axsy[d,s,y] ~ dgamma(exp_alpha_axsy[d,s,y], 1)
+        #exp_alpha_axsy[d,s,y] <- exp(alpha_axsy[d,s,y])
+        # mu_axsy[d,s,y] <- alpha_axsy[d,s,y]
+        
+        delta_axsy[d,s,y] <- exp(beta_axsy[s]*alpha_axsy[d,s,y])
+        #alpha_axsy[d,s,y] ~ dnorm(mu_axsy[d,s,y],sd_axsy) # combination of species effect, species-year effect, species period effect
+        
         
       } #y
       
     }#d
     
     #### monitoring the mean demographic splits across all years for a given species
-    # exponential transformation
-    ## mu_axs = mean across years of the species age-sex composition
-    for( d in 1:ndemog ){
-      mu_axs[d,s] <- exp.alpha_axs[d,s]/sum(exp.alpha_axs[1:ndemog,s]) #
-      exp.alpha_axs[d,s] <- exp(alpha_axs[d,s])
-    }#d
+
     
     
   }#s
@@ -540,10 +609,12 @@ model {
   # 
   # 
      tau_alpha_ax ~ dscaled.gamma(0.5,50) #variance among species on the first-year parameter for demography
+     sd_alpha_ax <- 1/sqrt(tau_alpha_ax)
      
 
   for(s in 1:nspecies){
     tau_alpha_axsy[s] ~ dscaled.gamma(0.5,50) #variance of year-effects for the demographic parameters by species
+    sd_alpha_axsy[s] <- 1/sqrt(tau_alpha_axsy[s])
     
     alpha_axs[1,s] <- 0 #fixed first demographic category = 0
  
@@ -553,12 +624,16 @@ model {
     
     for(d in 2:ndemog){
      
-      alpha_axs[d,s] ~ dnorm(0,tau_alpha_ax)
-      alpha_axsy[d,s,1] <- alpha_axs[d,s] # first year
+      alpha_axs[d,s] ~ dnorm(0,0.1)#tau_alpha_ax)
+      alpha_axsy[d,s,midyear] <- alpha_axs[d,s] # first year
       
-      
-      for(y in 2:nyears){
-        alpha_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y-1],tau_alpha_axsy[s]) 
+      for(y in (midyear+1):nyears){
+        
+        alpha_axsy[d,s,y]  ~ dnorm(alpha_axsy[d,s,y-1],tau_alpha_axsy[s]) 
+      }
+      for(y in 1:(midyear-1)){
+        alpha_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y+1],tau_alpha_axsy[s]) 
+
       }#y
     }#d
     

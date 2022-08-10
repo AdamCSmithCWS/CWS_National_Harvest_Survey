@@ -208,8 +208,8 @@ for(spgp in c("duck","goose","murre")){
     #adding a line to skip zone if there isn't atleast one species that shows up in 75% of the years
     if(max(yrspersp) < length(years)*0.75){next}
     if(spgp != "murre"){
-    # removing species that only show up in less than 9 years --------------------
-    prts1 <- prts1[which(prts1$AOU %in% names(yrspersp)[which(yrspersp > 9)]),]
+    # retaining species that show up in at least 2 years --------------------
+    prts1 <- prts1[which(prts1$AOU %in% names(yrspersp)[which(yrspersp > 1)]),]
     }
     
     for(per in periods$period){
@@ -223,7 +223,10 @@ for(spgp in c("duck","goose","murre")){
     # that only appear in very few periods
     #prts1 <- prts1[which(prts1$AOU %in% names(prdspersp)[which(prdspersp > 4)]),]
     
-    prts1$spfact = factor(prts1$AOU)
+    prtsbysp <- rev(sort(table(prts1$AOU)))
+    #number of periods a species has been observed
+    
+    prts1$spfact = factor(prts1$AOU,levels = names(prtsbysp),ordered = TRUE)
     prts1$spn = as.integer(prts1$spfact)
     nspecies <- max(prts1$spn)
     
@@ -232,7 +235,7 @@ for(spgp in c("duck","goose","murre")){
     ndemog = nrow(demog)
     
     agesexarray <- array(data = 0,dim = c(ndemog,nspecies,nyears))
-    
+    agesexperiodarray <- array(data = 0,dim = c(ndemog,nperiods,nspecies,nyears))  #[dg,per,sp,y]
     
     sp.save = unique(prts1[,c("PRHUNT","ZOHUNT","AOU","spfact","spn")])
     sp.save[,"PRHUNT"] <- as.character(sp.save[,"PRHUNT"])
@@ -257,6 +260,14 @@ for(spgp in c("duck","goose","murre")){
             sx <- demog[dg,"BSEX"]
             
             agesexarray[dg,sp,y] <- nrow(prts1[which(prts1$BAGE == ag & prts1$BSEX == sx & prts1$spn == sp & prts1$YEAR == yr),])
+            
+            for(per in 1:nperiods){
+              
+              agesexperiodarray[dg,per,sp,y] <- nrow(prts1[which(prts1$period == per & prts1$spn == sp & prts1$YEAR == yr & prts1$BAGE == ag & prts1$BSEX == sx ),])
+              
+              
+            }#per
+            
           }#dg
         }
         if(spgp %in% c("murre","goose")){ ### lumps all sexes including unknowns just tracks ages
@@ -733,6 +744,9 @@ for(spgp in c("duck","goose","murre")){
     
     save(list = c("jdat","sp.save.out"),
          file = paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
+    
+    save(list = c("agesexperiodarray","sp.save.out"),
+         file = paste("data/data",pr,z,spgp,"additional_save.RData",sep = "_"))
     
     
   }#z

@@ -107,6 +107,7 @@ fit_table <- provzone %>%
 if(file.exists(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))){
 load(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
 
+  
   mod.file = "models/species_harvest_model_alt.R" # 
   
 
@@ -147,11 +148,20 @@ parms = c("NACTIVE_y",
           #"tau_alpha_psy",
           "sd_alpha_psy",
           "sd_alpha_s",
-          "sdalpha_perod_s",
-          "pcomp_sy",
+          "sd_alpha_period_s",
+          "sd_psy",
           "pcomp_sy",
           "pcomp_psy",
-          "pcomp_axsy"
+          "pcomp_axsy",
+          "pcomp_s",
+          "pcomp_ps",
+          "mu_psy",
+          "beta_sy",
+          "beta_ps",
+          "sd_beta_sy",
+          "sd_beta_ps",
+          "sd_beta_axsy",
+          "beta_axsy"
           )
 
 
@@ -171,6 +181,14 @@ t1 = Sys.time()
 
 w_sy <- apply(jdat$w_psy,c(2,3),sum)
 w_ps <- apply(jdat$w_psy,c(1,2),sum)
+w_s <- apply(jdat$w_psy,c(2),sum)
+
+w_axs <- apply(jdat$w_axsy,c(1,2),sum)
+jdat[["w_axs"]] <- w_axs
+jdat[["nparts_s"]] <- apply(jdat$w_axsy,2,sum)  
+
+jdat[["w_s"]] <- w_s
+jdat[["nparts"]] <- sum(jdat$nparts_py)  
 
 
 jdat[["w_sy"]] <- w_sy
@@ -180,6 +198,7 @@ jdat[["w_ps"]] <- w_ps
 jdat[["nparts_p"]] <- apply(jdat$nparts_py,1,sum)  
 
 jdat[["midperiod"]] <- as.integer(floor(jdat$nperiods/2))
+jdat[["midyear"]] <- as.integer(floor(jdat$nyears/2))
 
   out2 = try(jagsUI(data = jdat,
                     parameters.to.save = parms,
@@ -188,7 +207,7 @@ jdat[["midperiod"]] <- as.integer(floor(jdat$nperiods/2))
                     n.thin = thinSteps,
                     n.iter = nIter,
                     parallel = T,
-                    modules = "glm",
+                    #modules = NULL,#"glm",
                     model.file = mod.file
                     #model.file = "models/species_harvest_model_alt4.R"
   ),silent = F)
@@ -204,10 +223,58 @@ if(class(out2) != "try-error"){
     summarise_draws() %>% 
     as.data.frame() %>% 
     filter(!is.na(rhat))
+
+  sum_pcomp_axsy <- out2sum %>% filter(grepl("pcomp_axsy[",variable,fixed = TRUE))%>% 
+        mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies*jdat$ndemog),
+              species = rep(rep(c(1:jdat$nspecies),each = jdat$ndemog),times = jdat$nyears),
+              demog = rep(c(1:jdat$ndemog),times = jdat$nyears*jdat$nspecies))
   
-  attempts <- 0
+  fail_axsy <- sum_pcomp_axsy %>% 
+    mutate(fail_rh = ifelse(rhat > 1.1,TRUE,FALSE)) %>% 
+    group_by(species,fail_rh) %>% 
+    summarise(n_fail = n())
   
-  
+  sum_beta_axsy <- out2sum %>% filter(grepl("beta_axsy",variable))
+ #  sum_sd <- out2sum %>% filter(grepl("sd",variable,fixed = TRUE))
+ #  
+ #  sum_alpha_s <- out2sum %>% filter(grepl("alpha_s[",variable,fixed = TRUE))
+ #  sum_alpha_sy <- out2sum %>% filter(grepl("alpha_sy[",variable,fixed = TRUE))
+ #  sum_alpha_ps <- out2sum %>% filter(grepl("alpha_ps[",variable,fixed = TRUE))
+ #  
+ #  sum_pcomp_s <- out2sum %>% filter(grepl("pcomp_s[",variable,fixed = TRUE))
+ #  sum_pcomp_s %>% filter(rhat > 1.1) %>% summarise(n_fail = n()/nrow(sum_pcomp_s))
+ #  
+ #  sum_pkill_py <- out2sum %>% filter(grepl("pkill_py[",variable,fixed = TRUE))
+ #  
+ #  
+ #  sum_pcomp_psy <- out2sum %>% filter(grepl("pcomp_psy[",variable,fixed = TRUE))
+ #  sum_pcomp_psy %>% filter(rhat > 1.1) %>% summarise(n_fail = n()/nrow(sum_pcomp_psy))
+ #  
+ #  sum_pcomp_sy <- out2sum %>% filter(grepl("pcomp_sy[",variable,fixed = TRUE)) %>% 
+ #    mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies),
+ #           species = rep(c(1:jdat$nspecies),times = jdat$nyears))
+ #  tst = sum_pcomp_sy %>% filter(rhat > 1.1) %>% group_by(year) %>% summarise(n_fail = n()/jdat$nspecies)
+ #  wh_fail <- ggplot(data = sum_pcomp_sy,aes(x = year,y = rhat,group = species,colour = species))+
+ #    geom_line()
+ #  print(wh_fail)
+ #  
+ #  attempts <- 0
+ #  
+ #  shinystan::launch_shinystan(shinystan::as.shinystan(out2$samples))
+ #  
+ #  
+ #  sum_kill_ys <- out2sum %>% filter(grepl("kill_ys[",variable,fixed = TRUE))%>% 
+ #    mutate(year = rep(c(1:jdat$nyears),times = jdat$nspecies),
+ #           species = rep(c(1:jdat$nspecies),each = jdat$nyears)) %>% 
+ #    left_join(.,sp.save.out,by = c("species" = "spn"))
+ #   
+ # kill_plot <- ggplot(data = sum_kill_ys,aes(x = year,y = mean,group = species,colour = species))+
+ #    geom_ribbon(aes(x = year,y = mean,ymin = q5,ymax = q95,fill = species),alpha = 0.2, inherit.aes = FALSE)+
+ #   geom_line()+
+ #   facet_wrap(vars(AOU),scales = "free")
+ #  print(kill_plot)
+ #   
+    
   while(any(out2sum$rhat > 1.1) & attempts < 1){
     attempts <- attempts+1
     burnInSteps = 0
@@ -234,7 +301,7 @@ if(class(out2) != "try-error"){
                       n.iter = nIter,
                       inits = initls,
                       parallel = T,
-                      modules = "glm",
+                      #modules = "glm",
                       model.file = mod.file))
                       
     out2sum <- posterior::as_draws_df(out2$samples) %>%
