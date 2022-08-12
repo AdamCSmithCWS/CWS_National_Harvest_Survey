@@ -275,6 +275,14 @@ for(spgp in c("duck","goose","murre")){
             ag <- demog[dg,"BAGE"]
             
             agesexarray[dg,sp,y] <- nrow(prts1[which(prts1$BAGE == ag & prts1$spn == sp & prts1$YEAR == yr),])
+            
+            for(per in 1:nperiods){
+              
+              agesexperiodarray[dg,per,sp,y] <- nrow(prts1[which(prts1$period == per & prts1$spn == sp & prts1$YEAR == yr & prts1$BAGE == ag),])
+              
+              
+            }#per
+            
           }#dg
         }
         
