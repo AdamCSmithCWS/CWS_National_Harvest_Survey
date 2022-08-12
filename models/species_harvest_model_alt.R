@@ -581,8 +581,8 @@ for(s in 2:nspecies){
     for (d in 1:ndemog){
       # ## species mean demographic proportions across all years
       pcomp_axs[d,s] <- delta_axs[d,s] / sum(delta_axs[1:ndemog,s])
-      delta_axs[d,s] ~ dgamma(exp_alpha_axs[d,s], 1)
-      exp_alpha_axs[d,s] <- exp(alpha_axs[d,s])
+      delta_axs[d,s] <- exp(alpha_axs[d,s])# ~ dgamma(exp_alpha_axs[d,s], 1)
+      #exp_alpha_axs[d,s]
       # 
       for (y in 1:nyears){
         pcomp_axsy[d,s,y] <- delta_axsy[d,s,y] / sum(delta_axsy[1:ndemog,s,y])

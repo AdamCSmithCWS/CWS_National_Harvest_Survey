@@ -224,17 +224,17 @@ if(class(out2) != "try-error"){
     as.data.frame() %>% 
     filter(!is.na(rhat))
 
-  sum_pcomp_axsy <- out2sum %>% filter(grepl("pcomp_axsy[",variable,fixed = TRUE))%>% 
-        mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies*jdat$ndemog),
-              species = rep(rep(c(1:jdat$nspecies),each = jdat$ndemog),times = jdat$nyears),
-              demog = rep(c(1:jdat$ndemog),times = jdat$nyears*jdat$nspecies))
-  
-  fail_axsy <- sum_pcomp_axsy %>% 
-    mutate(fail_rh = ifelse(rhat > 1.1,TRUE,FALSE)) %>% 
-    group_by(species,fail_rh) %>% 
-    summarise(n_fail = n())
-  
-  sum_beta_axsy <- out2sum %>% filter(grepl("beta_axsy",variable))
+  # sum_pcomp_axsy <- out2sum %>% filter(grepl("pcomp_axsy[",variable,fixed = TRUE))%>% 
+  #       mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies*jdat$ndemog),
+  #             species = rep(rep(c(1:jdat$nspecies),each = jdat$ndemog),times = jdat$nyears),
+  #             demog = rep(c(1:jdat$ndemog),times = jdat$nyears*jdat$nspecies))
+  # 
+  # fail_axsy <- sum_pcomp_axsy %>% 
+  #   mutate(fail_rh = ifelse(rhat > 1.1,TRUE,FALSE)) %>% 
+  #   group_by(species,fail_rh) %>% 
+  #   summarise(n_fail = n())
+  # 
+  # sum_beta_axsy <- out2sum %>% filter(grepl("beta_axsy",variable))
  #  sum_sd <- out2sum %>% filter(grepl("sd",variable,fixed = TRUE))
  #  
  #  sum_alpha_s <- out2sum %>% filter(grepl("alpha_s[",variable,fixed = TRUE))
@@ -258,7 +258,7 @@ if(class(out2) != "try-error"){
  #    geom_line()
  #  print(wh_fail)
  #  
- #  attempts <- 0
+   attempts <- 0
  #  
  #  shinystan::launch_shinystan(shinystan::as.shinystan(out2$samples))
  #  
@@ -275,7 +275,8 @@ if(class(out2) != "try-error"){
  #  print(kill_plot)
  #   
     
-  while(any(out2sum$rhat > 1.1) & attempts < 1){
+  out2test <- out2sum %>% filter(!grepl("axs",variable))
+  while(any(out2test$rhat > 1.1) & attempts < 1){
     attempts <- attempts+1
     burnInSteps = 0
     thinSteps = thinSteps*3
