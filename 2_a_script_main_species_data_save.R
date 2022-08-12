@@ -744,8 +744,8 @@ for(spgp in c("duck","goose","murre")){
     
     save(list = c("jdat","sp.save.out"),
          file = paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
-    
-    save(list = c("agesexperiodarray","sp.save.out"),
+
+    save(list = c("agesexperiodarray","sp.save.out","demog"),
          file = paste("data/data",pr,z,spgp,"additional_save.RData",sep = "_"))
     
     
