@@ -555,12 +555,12 @@ for(s in 2:nspecies){
   
   ##### demographic composition
   
-  tau_beta_axsy ~ dscaled.gamma(0.1,50) #extra variance
-  sd_beta_axsy <- 1/sqrt(tau_beta_axsy)
   
   
   for(s in 1:nspecies){
-    beta_axsy[s] ~ dnorm(1,tau_beta_axsy)# coefficient controlling the influence of the species by year component
+    beta_axsy[s] ~ dnorm(1,0.1)# coefficient controlling the influence of the species by year component
+    tau_axsy[s] ~ dscaled.gamma(0.1,50) #extra variance
+    sd_axsy[s] <- 1/sqrt(tau_axsy[s])
   }
 
   
@@ -591,8 +591,9 @@ for(s in 2:nspecies){
         #exp_alpha_axsy[d,s,y] <- exp(alpha_axsy[d,s,y])
         # mu_axsy[d,s,y] <- alpha_axsy[d,s,y]
         
-        delta_axsy[d,s,y] <- exp(beta_axsy[s]*alpha_axsy[d,s,y])
-        #alpha_axsy[d,s,y] ~ dnorm(mu_axsy[d,s,y],sd_axsy) # combination of species effect, species-year effect, species period effect
+        #delta_axsy[d,s,y] <- exp(beta_axsy[s]*alpha_axsy[d,s,y])
+        delta_axsy[d,s,y] <- exp(mu_axsy[d,s,y])
+        mu_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y],sd_axsy[s]) # combination of species effect, species-year effect, species period effect
         
         
       } #y
@@ -608,12 +609,12 @@ for(s in 2:nspecies){
   #### multinomial log-ratios, time-series model for the age and sex (ducks) or age (geese) composition
   # 
   # 
-     tau_alpha_ax ~ dscaled.gamma(0.5,50) #variance among species on the first-year parameter for demography
+     tau_alpha_ax ~ dscaled.gamma(0.5,5) #variance among species on the first-year parameter for demography
      sd_alpha_ax <- 1/sqrt(tau_alpha_ax)
      
 
   for(s in 1:nspecies){
-    tau_alpha_axsy[s] ~ dscaled.gamma(0.5,50) #variance of year-effects for the demographic parameters by species
+    tau_alpha_axsy[s] ~ dscaled.gamma(0.5,5) #variance of year-effects for the demographic parameters by species
     sd_alpha_axsy[s] <- 1/sqrt(tau_alpha_axsy[s])
     
     alpha_axs[1,s] <- 0 #fixed first demographic category = 0
@@ -625,15 +626,17 @@ for(s in 2:nspecies){
     for(d in 2:ndemog){
      
       alpha_axs[d,s] ~ dnorm(0,0.1)#tau_alpha_ax)
-      alpha_axsy[d,s,midyear] <- alpha_axs[d,s] # first year
-      
+      #alpha_axsy[d,s,midyear] <- alpha_axs[d,s] # first year
+      alpha_axsy[d,s,midyear] ~ dnorm(alpha_axs[d,s],tau_alpha_axsy[s])
       for(y in (midyear+1):nyears){
         
-        alpha_axsy[d,s,y]  ~ dnorm(alpha_axsy[d,s,y-1],tau_alpha_axsy[s]) 
+        #alpha_axsy[d,s,y]  ~ dnorm(alpha_axsy[d,s,y-1],tau_alpha_axsy[s]) 
+        alpha_axsy[d,s,y]  ~ dnorm(alpha_axs[d,s],tau_alpha_axsy[s]) 
       }
       for(y in 1:(midyear-1)){
-        alpha_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y+1],tau_alpha_axsy[s]) 
-
+        #alpha_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y+1],tau_alpha_axsy[s]) 
+        alpha_axsy[d,s,y] ~ dnorm(alpha_axs[d,s],tau_alpha_axsy[s]) 
+        
       }#y
     }#d
     
