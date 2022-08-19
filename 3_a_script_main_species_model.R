@@ -81,7 +81,7 @@ fit_table <- provzone %>%
 
 
 #fit_table <- fit_table %>% filter(spgp %in% c("goose","murre") | (spgp == "duck" & prov == "ON" & zone == 3))
-fit_table <- fit_table %>% filter(spgp %in% c("goose","murre"))
+fit_table <- fit_table %>% filter(spgp %in% c("duck") | (spgp == "goose" & prov %in% c("NT","YT")))
 
 
 
@@ -161,7 +161,7 @@ parms = c("NACTIVE_y",
           "beta_ps",
           "sd_beta_sy",
           "sd_beta_ps",
-          "sd_beta_axsy",
+          "sd_alpha_axsy",
           "beta_axsy"
           )
 

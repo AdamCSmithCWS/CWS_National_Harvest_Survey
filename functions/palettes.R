@@ -36,3 +36,6 @@ my_col_b <- c(my_single_col,
 names(my_col_b) <- all_levels
 
 
+my_alpha_c <- c(0.5,0.1)
+names(my_alpha_c) <- as.character(c(0.5,0.1))
+

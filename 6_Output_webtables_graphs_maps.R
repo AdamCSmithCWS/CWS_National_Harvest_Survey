@@ -30,6 +30,10 @@ names(years) <- paste(years)
 
 prov_sort <- c("CAN","BC","YT","AB","SK","NT","MB","ON","PQ","NB","PE","NS","NF")
 
+
+
+
+
 # General Harvest Estimates Table -----------------------------------------------------------------
 mod_vars = unique(nat_sums_b$var)
 
@@ -89,6 +93,8 @@ write.csv2(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_poi
 
 
 # Species Harvest Estimates Table -----------------------------------------------------------------
+
+
 sp_harv_list = unique(nat_sums_a$AOU)
 
 b_var = read.csv("website/B_species_names.csv")
@@ -168,18 +174,64 @@ write.csv2(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_point
 
 
 # Age ratio tables (standard and female only) -----------------------------
+# Raw parts data ----------------------------------------------------------
+
+load("data/allkill.RData")
+
+# nparts_species_year <- outscse %>% 
+#   group_by(PRHUNT,ZOHUNT,AOU,YEAR) %>% 
+#   summarise(n_parts = n())
+# 
+# nparts_species_year_sex <- outscse %>% 
+#   group_by(PRHUNT,ZOHUNT,AOU,YEAR,BSEX) %>% 
+#   summarise(n_parts = n())
+# 
+# nparts_species_year_age_sex <- outscse %>% 
+#   group_by(PRHUNT,ZOHUNT,AOU,YEAR,BAGE,BSEX) %>% 
+#   summarise(n_parts = n())
 
 
+nparts_species_year_1 <- outscse %>% 
+  group_by(PRHUNT,ZOHUNT,AOU,YEAR) %>% 
+  summarise(n_parts = n())
+nparts_species_year_2 <- outscse %>% 
+  group_by(PRHUNT,AOU,YEAR) %>% 
+  summarise(n_parts = n())
+nparts_species_year_3 <- outscse %>% 
+  group_by(AOU,YEAR) %>% 
+  summarise(n_parts = n()) %>% 
+  mutate(PRHUNT = "CAN")
+# nparts_species_year <- bind_rows(nparts_species_year_1,
+#                                      nparts_species_year_2,
+#                                      nparts_species_year_3)
 
 nat_sums_c$prov <- "CAN"
+nat_sums_c <- nat_sums_c %>% 
+  left_join(.,nparts_species_year_3,by = c("year" = "YEAR",
+                                           "AOU",
+                                           "prov" = "PRHUNT")) %>% 
+mutate(n_parts = ifelse(!is.na(n_parts),n_parts,0))
+prov_sums_c <- prov_sums_c %>% 
+  left_join(.,nparts_species_year_2,by = c("year" = "YEAR",
+                                           "AOU",
+                                           "prov" = "PRHUNT")) %>% 
+  mutate(n_parts = ifelse(!is.na(n_parts),n_parts,0))
+zone_sums_c <- zone_sums_c %>% 
+  left_join(.,nparts_species_year_1,by = c("year" = "YEAR",
+                                           "AOU",
+                                           "prov" = "PRHUNT",
+                                           "zone" = "ZOHUNT")) %>% 
+  mutate(n_parts = ifelse(!is.na(n_parts),n_parts,0))
+
+
 c_tab <- bind_rows(nat_sums_c,prov_sums_c,zone_sums_c) %>% 
   filter(AOU %in% bvars)%>% 
   left_join(.,b_var,by = c("AOU" = "Species_Code")) %>% 
-  select(-median) %>% 
-  mutate(mean = round(mean,2),
+  mutate(mean = round(median,2),
          lci = round(lci,2),
          uci = round(uci,2),
          prov = factor(prov,levels = prov_sort,ordered = TRUE)) %>% 
+  select(-median) %>% 
   arrange(prov,zone,AOU,desc(year)) %>% 
   left_join(.,prov_trans[,c("prov","Prov_En","Prov_Fr")],by = "prov") %>% 
   relocate(AOU,prov,zone,year,

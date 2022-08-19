@@ -609,12 +609,12 @@ for(s in 2:nspecies){
   #### multinomial log-ratios, time-series model for the age and sex (ducks) or age (geese) composition
   # 
   # 
-     tau_alpha_ax ~ dscaled.gamma(0.5,5) #variance among species on the first-year parameter for demography
+     tau_alpha_ax ~ dscaled.gamma(0.2,50) #variance among species on the first-year parameter for demography
      sd_alpha_ax <- 1/sqrt(tau_alpha_ax)
      
 
   for(s in 1:nspecies){
-    tau_alpha_axsy[s] ~ dscaled.gamma(0.5,5) #variance of year-effects for the demographic parameters by species
+    tau_alpha_axsy[s] ~ dscaled.gamma(0.2,50) #variance of year-effects for the demographic parameters by species
     sd_alpha_axsy[s] <- 1/sqrt(tau_alpha_axsy[s])
     
     alpha_axs[1,s] <- 0 #fixed first demographic category = 0

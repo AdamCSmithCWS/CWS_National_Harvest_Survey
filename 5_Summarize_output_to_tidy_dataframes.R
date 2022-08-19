@@ -9,6 +9,7 @@ library(ggmcmc)
 library(tidybayes)
 library(ggrepel)
 library(ggforce)
+library(HDInterval)
 
 ### caste level summaries
 ### full summaries
@@ -45,8 +46,8 @@ zone_sums_b <- tmp_sim %>%
   group_by(var,prov,zone,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE,na.rm = T),
-            lci = quantile(sum,0.025,names = FALSE,na.rm = T),
-            uci = quantile(sum,0.975,names = FALSE,na.rm = T))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 
 reg_sums_b <- tmp_sim %>%
@@ -56,8 +57,8 @@ reg_sums_b <- tmp_sim %>%
   group_by(var,region,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE,na.rm = T),
-            lci = quantile(sum,0.025,names = FALSE,na.rm = T),
-            uci = quantile(sum,0.975,names = FALSE,na.rm = T))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 
 
@@ -67,8 +68,8 @@ prov_sums_b <- tmp_sim %>%
   group_by(var,prov,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE,na.rm = T),
-            lci = quantile(sum,0.025,names = FALSE,na.rm = T),
-            uci = quantile(sum,0.975,names = FALSE,na.rm = T))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 
 nat_sums_b <- tmp_sim %>%
@@ -77,8 +78,8 @@ nat_sums_b <- tmp_sim %>%
   group_by(var,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE,na.rm = T),
-            lci = quantile(sum,0.025,names = FALSE,na.rm = T),
-            uci = quantile(sum,0.975,names = FALSE,na.rm = T))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 
 save(list = c("nat_sums_b",
@@ -115,8 +116,8 @@ zone_sums_a <- tmp_sp %>%
   group_by(AOU,prov,zone,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 prov_sums_a <- tmp_sp %>%
   group_by(AOU,prov,year,.draw) %>%
@@ -124,8 +125,8 @@ prov_sums_a <- tmp_sp %>%
   group_by(AOU,prov,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 reg_sums_a <- tmp_sp %>%
   filter(region != "") %>% 
@@ -134,8 +135,8 @@ reg_sums_a <- tmp_sp %>%
   group_by(AOU,region,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 
 nat_sums_a <- tmp_sp %>%
@@ -144,8 +145,8 @@ nat_sums_a <- tmp_sp %>%
   group_by(AOU,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 
 
@@ -177,12 +178,12 @@ nat_sums_c <- tmp_sp_demo %>%
   pivot_wider(names_from = BAGE,
               values_from = sum) %>% 
   group_by(AOU,year,.draw) %>%
-  summarise(rati = I/A) %>% 
+  summarise(rati = ceiling(I)/ceiling(A)) %>% 
   group_by(AOU,year) %>%
   summarise(mean = mean(rati),
             median = quantile(rati,0.5,names = FALSE),
-            lci = quantile(rati,0.025,names = FALSE),
-            uci = quantile(rati,0.975,names = FALSE))
+            lci = as.numeric(hdi(rati,0.9)[1]),
+            uci = as.numeric(hdi(rati,0.9)[2]))
 
 nat_sums_cF <- tmp_sp_demo %>%
   filter(BSEX %in% c("F")) %>% 
@@ -192,12 +193,12 @@ nat_sums_cF <- tmp_sp_demo %>%
   pivot_wider(names_from = BAGE,
               values_from = sum) %>% 
   group_by(AOU,year,.draw) %>%
-  summarise(rati = I/A) %>% 
+  summarise(rati = ceiling(I)/ceiling(A)) %>% 
   group_by(AOU,year) %>%
   summarise(mean = mean(rati),
             median = quantile(rati,0.5,names = FALSE),
-            lci = quantile(rati,0.025,names = FALSE),
-            uci = quantile(rati,0.975,names = FALSE))
+            lci = as.numeric(hdi(rati,0.9)[1]),
+            uci = as.numeric(hdi(rati,0.9)[2]))
 
 
 nat_sums_c2 <- tmp_sp_demo %>%
@@ -208,12 +209,12 @@ nat_sums_c2 <- tmp_sp_demo %>%
   pivot_wider(names_from = BSEX,
               values_from = sum) %>% 
   group_by(AOU,year,.draw) %>%
-  summarise(rati = F/M) %>% 
+  summarise(rati = ceiling(F)/ceiling(M)) %>% 
   group_by(AOU,year) %>%
   summarise(mean = mean(rati),
             median = quantile(rati,0.5,names = FALSE),
-            lci = quantile(rati,0.025,names = FALSE),
-            uci = quantile(rati,0.975,names = FALSE))
+            lci = as.numeric(hdi(rati,0.9)[1]),
+            uci = as.numeric(hdi(rati,0.9)[2]))
 
 nat_sums_asxy <- tmp_sp_demo %>%
   group_by(AOU,BSEX,BAGE,year,.draw) %>%
@@ -221,16 +222,16 @@ nat_sums_asxy <- tmp_sp_demo %>%
   group_by(AOU,BSEX,BAGE,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 nat_sums_ag <- tmp_sp_demo %>%
   group_by(AOU,BAGE,year,.draw) %>%
   summarise(sum = sum(.value)) %>%
   group_by(AOU,BAGE,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 nat_sums_sx <- tmp_sp_demo %>%
   group_by(AOU,BSEX,year,.draw) %>%
@@ -238,8 +239,8 @@ nat_sums_sx <- tmp_sp_demo %>%
   group_by(AOU,BSEX,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 rm("tmp_sp_demo")
 
@@ -281,12 +282,12 @@ zone_sums_c_tt <- tmp_sp_demo %>%
   pivot_wider(names_from = BAGE,
               values_from = sum) %>% 
   group_by(AOU,prov,zone,year,.draw) %>%
-  summarise(rati = I/A) %>% 
+  summarise(rati = ceiling(I)/ceiling(A)) %>% 
   group_by(AOU,prov,zone,year) %>%
   summarise(mean = mean(rati),
             median = quantile(rati,0.5,names = FALSE),
-            lci = quantile(rati,0.025,names = FALSE),
-            uci = quantile(rati,0.975,names = FALSE))
+            lci = as.numeric(hdi(rati,0.9)[1]),
+            uci = as.numeric(hdi(rati,0.9)[2]))
 
 
 
@@ -297,12 +298,12 @@ prov_sums_c_tt <- tmp_sp_demo %>%
   pivot_wider(names_from = BAGE,
               values_from = sum) %>% 
   group_by(AOU,prov,year,.draw) %>%
-  summarise(rati = I/A) %>% 
+  summarise(rati = ceiling(I)/ceiling(A)) %>% 
   group_by(AOU,prov,year) %>%
   summarise(mean = mean(rati),
             median = quantile(rati,0.5,names = FALSE),
-            lci = quantile(rati,0.025,names = FALSE),
-            uci = quantile(rati,0.975,names = FALSE))
+            lci = as.numeric(hdi(rati,0.9)[1]),
+            uci = as.numeric(hdi(rati,0.9)[2]))
 
 
 if(suf != "b"){
@@ -315,12 +316,12 @@ reg_sums_c_tt <- tmp_sp_demo %>%
   pivot_wider(names_from = BAGE,
               values_from = sum) %>% 
   group_by(AOU,region,year,.draw) %>%
-  summarise(rati = I/A) %>% 
+  summarise(rati = ceiling(I)/ceiling(A)) %>% 
   group_by(AOU,region,year) %>%
   summarise(mean = mean(rati),
             median = quantile(rati,0.5,names = FALSE),
-            lci = quantile(rati,0.025,names = FALSE),
-            uci = quantile(rati,0.975,names = FALSE))
+            lci = as.numeric(hdi(rati,0.9)[1]),
+            uci = as.numeric(hdi(rati,0.9)[2]))
 }
 
 
@@ -340,12 +341,12 @@ zone_sums_cF_tt <- tmp_sp_demo %>%
   pivot_wider(names_from = BAGE,
               values_from = sum) %>% 
   group_by(AOU,prov,zone,year,.draw) %>%
-  summarise(rati = I/A) %>% 
+  summarise(rati = ceiling(I)/ceiling(A)) %>% 
   group_by(AOU,prov,zone,year) %>%
   summarise(mean = mean(rati),
             median = quantile(rati,0.5,names = FALSE),
-            lci = quantile(rati,0.025,names = FALSE),
-            uci = quantile(rati,0.975,names = FALSE))
+            lci = as.numeric(hdi(rati,0.9)[1]),
+            uci = as.numeric(hdi(rati,0.9)[2]))
 
 
 
@@ -357,12 +358,12 @@ prov_sums_cF_tt <- tmp_sp_demo %>%
   pivot_wider(names_from = BAGE,
               values_from = sum) %>% 
   group_by(AOU,prov,year,.draw) %>%
-  summarise(rati = I/A) %>% 
+  summarise(rati = ceiling(I)/ceiling(A)) %>% 
   group_by(AOU,prov,year) %>%
   summarise(mean = mean(rati),
             median = quantile(rati,0.5,names = FALSE),
-            lci = quantile(rati,0.025,names = FALSE),
-            uci = quantile(rati,0.975,names = FALSE))
+            lci = as.numeric(hdi(rati,0.9)[1]),
+            uci = as.numeric(hdi(rati,0.9)[2]))
 
 if(suf != "b"){
   
@@ -375,12 +376,12 @@ reg_sums_cF_tt <- tmp_sp_demo%>%
   pivot_wider(names_from = BAGE,
               values_from = sum) %>% 
   group_by(AOU,region,year,.draw) %>%
-  summarise(rati = I/A) %>% 
+  summarise(rati = ceiling(I)/ceiling(A)) %>% 
   group_by(AOU,region,year) %>%
   summarise(mean = mean(rati),
             median = quantile(rati,0.5,names = FALSE),
-            lci = quantile(rati,0.025,names = FALSE),
-            uci = quantile(rati,0.975,names = FALSE))
+            lci = as.numeric(hdi(rati,0.9)[1]),
+            uci = as.numeric(hdi(rati,0.9)[2]))
 
 }
 
@@ -398,12 +399,12 @@ zone_sums_c2_tt <- tmp_sp_demo %>%
   pivot_wider(names_from = BSEX,
               values_from = sum) %>% 
   group_by(AOU,prov,zone,year,.draw) %>%
-  summarise(rati = F/M) %>% 
+  summarise(rati = ceiling(F)/ceiling(M)) %>% 
   group_by(AOU,prov,zone,year) %>%
   summarise(mean = mean(rati),
             median = quantile(rati,0.5,names = FALSE),
-            lci = quantile(rati,0.025,names = FALSE),
-            uci = quantile(rati,0.975,names = FALSE))
+            lci = as.numeric(hdi(rati,0.9)[1]),
+            uci = as.numeric(hdi(rati,0.9)[2]))
 
 
 
@@ -415,12 +416,12 @@ prov_sums_c2_tt <- tmp_sp_demo %>%
   pivot_wider(names_from = BSEX,
               values_from = sum) %>% 
   group_by(AOU,prov,year,.draw) %>%
-  summarise(rati = F/M) %>% 
+  summarise(rati = ceiling(F)/ceiling(M)) %>% 
   group_by(AOU,prov,year) %>%
   summarise(mean = mean(rati),
             median = quantile(rati,0.5,names = FALSE),
-            lci = quantile(rati,0.025,names = FALSE),
-            uci = quantile(rati,0.975,names = FALSE))
+            lci = as.numeric(hdi(rati,0.9)[1]),
+            uci = as.numeric(hdi(rati,0.9)[2]))
 
 
 if(suf != "b"){
@@ -434,12 +435,12 @@ reg_sums_c2_tt <- tmp_sp_demo %>%
   pivot_wider(names_from = BSEX,
               values_from = sum) %>% 
   group_by(AOU,region,year,.draw) %>%
-  summarise(rati = F/M) %>% 
+  summarise(rati = ceiling(F)/ceiling(M)) %>% 
   group_by(AOU,region,year) %>%
   summarise(mean = mean(rati),
             median = quantile(rati,0.5,names = FALSE),
-            lci = quantile(rati,0.025,names = FALSE),
-            uci = quantile(rati,0.975,names = FALSE))
+            lci = as.numeric(hdi(rati,0.9)[1]),
+            uci = as.numeric(hdi(rati,0.9)[2]))
 }
 
 
@@ -459,8 +460,8 @@ zone_sums_asxy_tt <- tmp_sp_demo %>%
   group_by(AOU,BSEX,BAGE,prov,zone,year) %>%
   summarise(mean = mean(.value),
             median = quantile(.value,0.5,names = FALSE),
-            lci = quantile(.value,0.025,names = FALSE),
-            uci = quantile(.value,0.975,names = FALSE))
+            lci = as.numeric(hdi(.value,0.95)[1]),
+            uci = as.numeric(hdi(.value,0.95)[2]))
 
 prov_sums_asxy_tt <- tmp_sp_demo %>%
   group_by(AOU,BSEX,BAGE,prov,year,.draw) %>%
@@ -468,8 +469,8 @@ prov_sums_asxy_tt <- tmp_sp_demo %>%
   group_by(AOU,BSEX,BAGE,prov,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 if(suf != "b"){
   
 reg_sums_asxy_tt <- tmp_sp_demo %>%
@@ -479,8 +480,8 @@ reg_sums_asxy_tt <- tmp_sp_demo %>%
   group_by(AOU,BSEX,BAGE,region,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 }
 
 
@@ -497,8 +498,8 @@ zone_sums_ag_tt <- tmp_sp_demo %>%
   group_by(AOU,BAGE,prov,zone,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 prov_sums_ag_tt <- tmp_sp_demo %>%
   group_by(AOU,BAGE,prov,year,.draw) %>%
@@ -506,8 +507,8 @@ prov_sums_ag_tt <- tmp_sp_demo %>%
   group_by(AOU,BAGE,prov,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 if(suf != "b"){
   
@@ -518,8 +519,8 @@ reg_sums_ag_tt <- tmp_sp_demo %>%
   group_by(AOU,BAGE,region,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 }
 
@@ -534,8 +535,8 @@ zone_sums_sx_tt <- tmp_sp_demo %>%
   group_by(AOU,BSEX,prov,zone,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 prov_sums_sx_tt <- tmp_sp_demo %>%
   group_by(AOU,BSEX,prov,year,.draw) %>%
@@ -543,8 +544,8 @@ prov_sums_sx_tt <- tmp_sp_demo %>%
   group_by(AOU,BSEX,prov,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 if(suf != "b"){
   
@@ -555,8 +556,8 @@ reg_sums_sx_tt <- tmp_sp_demo %>%
   group_by(AOU,BSEX,region,year) %>%
   summarise(mean = mean(sum),
             median = quantile(sum,0.5,names = FALSE),
-            lci = quantile(sum,0.025,names = FALSE),
-            uci = quantile(sum,0.975,names = FALSE))
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
 
 }
 

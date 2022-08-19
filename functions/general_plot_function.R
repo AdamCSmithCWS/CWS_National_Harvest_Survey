@@ -239,7 +239,8 @@ general_plot_c<- function(dat = c_tab,
 
     dat <- filter(dat,
                   year >= startYear & year <= endYear) %>% 
-      mutate(gr = "Species")
+      mutate(gr = "Species",
+             npart_alpha = ifelse(n_parts > 10,0.5,0.1))
     lg_pos <- "none"
 
   
@@ -272,7 +273,7 @@ general_plot_c<- function(dat = c_tab,
     tmp = dat %>% filter(V == vv,
                          is.na(zone))
       pp <- geom_point(aes(colour = gr),size = 1)
-      ppe <- geom_errorbar(aes(ymin = lci,ymax = uci,fill = gr),alpha = 0.5,width = 0)
+      ppe <- geom_errorbar(aes(ymin = lci,ymax = uci,colour = gr,alpha = npart_alpha),width = 0)
       ppl <- geom_line(alpha = 0.3,aes(colour = gr))
 
     outgg[[i]] = ggplot(data = tmp,aes(x = year,y = mean))+
@@ -284,6 +285,7 @@ general_plot_c<- function(dat = c_tab,
       xlab("")+
       labs(title = paste(vv,"Canada - Province"))+
       scale_colour_manual(values = my_col_b, aesthetics = c("colour","fill"))+
+      scale_alpha_identity()+
       #geom_ribbon(aes(ymax = uci,ymin = lci),alpha = 0.2)+
       scale_y_continuous(limits = c(0,NA),labels = scales::comma)+
       scale_x_continuous(breaks = pretty_breaks())+
@@ -309,6 +311,7 @@ general_plot_c<- function(dat = c_tab,
       xlab("")+
       labs(title = paste(vv,"Canada - Province"))+
       scale_colour_manual(values = my_col_b, aesthetics = c("colour","fill"))+
+      scale_alpha_identity()+
       #geom_ribbon(aes(ymax = uci,ymin = lci),alpha = 0.2)+
       scale_y_continuous(limits = c(0,NA),labels = scales::comma)+
       scale_x_continuous(breaks = pretty_breaks())+
