@@ -455,12 +455,16 @@ model {
   tau_beta_ps ~ dscaled.gamma(0.1,50) #extra variance
   sd_beta_ps <- 1/sqrt(tau_beta_ps)
   
+  tau_rand_psy ~ dscaled.gamma(1,50) # random variance around period and species proportion models
+  sd_rand_psy <- 1/sqrt(tau_rand_psy)
   
+  BETA_sy ~ dnorm(1,0.1)
   for(p in 1:nperiods){
-  beta_sy[p] ~ dnorm(1,tau_beta_sy)# coefficient controlling the influence of the species by year component
+  beta_sy[p] ~ dnorm(BETA_sy,tau_beta_sy)# coefficient controlling the influence of the species by year component
   }
+  BETA_ps ~ dnorm(1,0.1)
   for(y in 1:nyears){
-    beta_ps[y] ~ dnorm(1,tau_beta_ps)# coefficient controlling the influence of the period-specific pattern
+    beta_ps[y] ~ dnorm(BETA_ps,tau_beta_ps)# coefficient controlling the influence of the period-specific pattern
   }
   
    for (p in 1:nperiods){
@@ -477,7 +481,7 @@ model {
         #exp_alpha_psy[p,s,y] <- exp(mu_psy[p,s,y])
          delta_psy[p,s,y] <- exp(alpha_psy[p,s,y])
          #alpha_psy[p,s,y] ~ dnorm(beta_sy*alpha_sy[s,y] + beta_ps*alpha_ps[p,s],sd_psy) # combination of species effect, species-year effect, species period effect
-         alpha_psy[p,s,y] <- beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s] # combination of species effect, species-year effect, species period effect
+         alpha_psy[p,s,y] ~ dnorm(beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s],tau_rand_psy) # combination of species effect, species-year effect, species period effect
          #alpha_psy[p,s,y] <- alpha_sy[s,y] + alpha_ps[p,s] # combination of species effect, species-year effect, species period effect
          
          # find out why this is so hard to estimate, but the period by year is so easy...
@@ -517,7 +521,7 @@ for(s in 2:nspecies){
   
   
   tau_alpha_s ~ dscaled.gamma(0.1,50) #time-series variance
-  taualpha_perod_s ~ dscaled.gamma(0.1,50) # period-series variance
+  taualpha_perod_s ~ dscaled.gamma(1,50) # period-series variance
   sd_alpha_s <- 1/sqrt(tau_alpha_s)
   sd_alpha_period_s <- 1/sqrt(taualpha_perod_s)
   
@@ -558,7 +562,7 @@ for(s in 2:nspecies){
   
   
   for(s in 1:nspecies){
-    beta_axsy[s] ~ dnorm(1,0.1)# coefficient controlling the influence of the species by year component
+    #beta_axsy[s] ~ dnorm(1,0.1)# coefficient controlling the influence of the species by year component
     tau_axsy[s] ~ dscaled.gamma(0.1,50) #extra variance
     sd_axsy[s] <- 1/sqrt(tau_axsy[s])
   }
@@ -593,7 +597,7 @@ for(s in 2:nspecies){
         
         #delta_axsy[d,s,y] <- exp(beta_axsy[s]*alpha_axsy[d,s,y])
         delta_axsy[d,s,y] <- exp(mu_axsy[d,s,y])
-        mu_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y],sd_axsy[s]) # combination of species effect, species-year effect, species period effect
+        mu_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y],tau_axsy[s]) # combination of species effect, species-year effect, species period effect
         
         
       } #y
