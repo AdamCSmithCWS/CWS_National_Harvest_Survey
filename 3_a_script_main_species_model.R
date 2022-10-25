@@ -81,12 +81,12 @@ fit_table <- provzone %>%
 
 
 #fit_table <- fit_table %>% filter(spgp %in% c("goose","murre") | (spgp == "duck" & prov == "ON" & zone == 3))
-fit_table <- fit_table %>% filter(spgp %in% c("duck") | (spgp == "goose" & prov %in% c("NT","YT")))
+# fit_table <- fit_table %>% filter(spgp %in% c("duck") | (spgp == "goose" & prov %in% c("NT","YT")))
 
 
 
 # Province and Zone loop --------------------------------------------------
-  n_cores <- 16
+  n_cores <- 13
   cluster <- makeCluster(n_cores, type = "PSOCK")
   registerDoParallel(cluster)
 
@@ -226,58 +226,58 @@ if(class(out2) != "try-error"){
     as.data.frame() %>% 
     filter(!is.na(rhat))
 
- sum_pcomp_axsy <- out2sum %>% filter(grepl("pcomp_axsy[",variable,fixed = TRUE))%>%
-       mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies*jdat$ndemog),
-             species = rep(rep(c(1:jdat$nspecies),each = jdat$ndemog),times = jdat$nyears),
-             demog = rep(c(1:jdat$ndemog),times = jdat$nyears*jdat$nspecies))
-
- fail_axsy <- sum_pcomp_axsy %>%
-   mutate(fail_rh = ifelse(rhat > 1.1,TRUE,FALSE)) %>%
-   group_by(species,fail_rh) %>%
-   summarise(n_fail = n())
-
- #sum_beta_axsy <- out2sum %>% filter(grepl("beta_axsy",variable))
-  sum_sd <- out2sum %>% filter(grepl("sd",variable,fixed = TRUE))
-
-  sum_alpha_s <- out2sum %>% filter(grepl("alpha_s[",variable,fixed = TRUE))
-  sum_alpha_sy <- out2sum %>% filter(grepl("alpha_sy[",variable,fixed = TRUE))
-  sum_alpha_ps <- out2sum %>% filter(grepl("alpha_ps[",variable,fixed = TRUE))
-
-  sum_pcomp_s <- out2sum %>% filter(grepl("pcomp_s[",variable,fixed = TRUE))
-  sum_pcomp_s %>% filter(rhat > 1.1) %>% summarise(n_fail = n()/nrow(sum_pcomp_s))
-
-  sum_pkill_py <- out2sum %>% filter(grepl("pkill_py[",variable,fixed = TRUE))
-
-
-  sum_pcomp_psy <- out2sum %>% filter(grepl("pcomp_psy[",variable,fixed = TRUE))
-  sum_pcomp_psy %>% filter(rhat > 1.1) %>% summarise(n_fail = n()/nrow(sum_pcomp_psy))
-
-  sum_pcomp_sy <- out2sum %>% filter(grepl("pcomp_sy[",variable,fixed = TRUE)) %>%
-    mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies),
-           species = rep(c(1:jdat$nspecies),times = jdat$nyears))
-  tst = sum_pcomp_sy %>% filter(rhat > 1.1) %>% group_by(year) %>% summarise(n_fail = n()/jdat$nspecies)
-  wh_fail <- ggplot(data = sum_pcomp_sy,aes(x = year,y = rhat,group = species,colour = species))+
-    geom_line()
-  print(wh_fail)
-
-
-  sum_kill_ys <- out2sum %>% filter(grepl("kill_ys[",variable,fixed = TRUE))%>%
-    mutate(year = rep(c(1:jdat$nyears),times = jdat$nspecies),
-           species = rep(c(1:jdat$nspecies),each = jdat$nyears)) %>%
-    left_join(.,sp.save.out,by = c("species" = "spn"))
-pdf(paste0("temp_kill_plot_",pr,"_",z,".pdf"),
-    width = 11,
-    height = 8.5)
- kill_plot <- ggplot(data = sum_kill_ys,aes(x = year,y = mean))+
-   #  geom_ribbon(aes(x = year,y = mean,ymin = q5,ymax = q95,fill = species),alpha = 0.2, inherit.aes = FALSE)+
-   # geom_line()+
-   geom_errorbar(aes(x = year,y = mean,ymin = q5,ymax = q95),
-                 alpha = 0.2, width = 0)+ 
-   geom_point()+
-   theme_bw()+
-   facet_wrap(vars(AOU),scales = "free")
-  print(kill_plot)
- dev.off()
+#  sum_pcomp_axsy <- out2sum %>% filter(grepl("pcomp_axsy[",variable,fixed = TRUE))%>%
+#        mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies*jdat$ndemog),
+#              species = rep(rep(c(1:jdat$nspecies),each = jdat$ndemog),times = jdat$nyears),
+#              demog = rep(c(1:jdat$ndemog),times = jdat$nyears*jdat$nspecies))
+# 
+#  fail_axsy <- sum_pcomp_axsy %>%
+#    mutate(fail_rh = ifelse(rhat > 1.1,TRUE,FALSE)) %>%
+#    group_by(species,fail_rh) %>%
+#    summarise(n_fail = n())
+# 
+#  #sum_beta_axsy <- out2sum %>% filter(grepl("beta_axsy",variable))
+#   sum_sd <- out2sum %>% filter(grepl("sd",variable,fixed = TRUE))
+# 
+#   sum_alpha_s <- out2sum %>% filter(grepl("alpha_s[",variable,fixed = TRUE))
+#   sum_alpha_sy <- out2sum %>% filter(grepl("alpha_sy[",variable,fixed = TRUE))
+#   sum_alpha_ps <- out2sum %>% filter(grepl("alpha_ps[",variable,fixed = TRUE))
+# 
+#   sum_pcomp_s <- out2sum %>% filter(grepl("pcomp_s[",variable,fixed = TRUE))
+#   sum_pcomp_s %>% filter(rhat > 1.1) %>% summarise(n_fail = n()/nrow(sum_pcomp_s))
+# 
+#   sum_pkill_py <- out2sum %>% filter(grepl("pkill_py[",variable,fixed = TRUE))
+# 
+# 
+#   sum_pcomp_psy <- out2sum %>% filter(grepl("pcomp_psy[",variable,fixed = TRUE))
+#   sum_pcomp_psy %>% filter(rhat > 1.1) %>% summarise(n_fail = n()/nrow(sum_pcomp_psy))
+# 
+#   sum_pcomp_sy <- out2sum %>% filter(grepl("pcomp_sy[",variable,fixed = TRUE)) %>%
+#     mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies),
+#            species = rep(c(1:jdat$nspecies),times = jdat$nyears))
+#   tst = sum_pcomp_sy %>% filter(rhat > 1.1) %>% group_by(year) %>% summarise(n_fail = n()/jdat$nspecies)
+#   wh_fail <- ggplot(data = sum_pcomp_sy,aes(x = year,y = rhat,group = species,colour = species))+
+#     geom_line()
+#   print(wh_fail)
+# 
+# 
+#   sum_kill_ys <- out2sum %>% filter(grepl("kill_ys[",variable,fixed = TRUE))%>%
+#     mutate(year = rep(c(1:jdat$nyears),times = jdat$nspecies),
+#            species = rep(c(1:jdat$nspecies),each = jdat$nyears)) %>%
+#     left_join(.,sp.save.out,by = c("species" = "spn"))
+# pdf(paste0("temp_kill_plot_",pr,"_",z,".pdf"),
+#     width = 11,
+#     height = 8.5)
+#  kill_plot <- ggplot(data = sum_kill_ys,aes(x = year,y = mean))+
+#    #  geom_ribbon(aes(x = year,y = mean,ymin = q5,ymax = q95,fill = species),alpha = 0.2, inherit.aes = FALSE)+
+#    # geom_line()+
+#    geom_errorbar(aes(x = year,y = mean,ymin = q5,ymax = q95),
+#                  alpha = 0.2, width = 0)+ 
+#    geom_point()+
+#    theme_bw()+
+#    facet_wrap(vars(AOU),scales = "free")
+#   print(kill_plot)
+#  dev.off()
 
  #
  attempts <- 0

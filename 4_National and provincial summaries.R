@@ -26,49 +26,6 @@ names(years) <- paste(years)
 
 
 
-# load published estimates by zone prov and national ----------------------------------------
-
-# for(rr in c("by_zone","by_province","canada-wide")){
-#   tmp = read.csv(paste0("data/enp_nhs_a_",rr,"_20200805.csv"),stringsAsFactors = F)
-#   tmp1 = read.csv(paste0("data/enp_nhs_b_",rr,"_20200805.csv"),stringsAsFactors = F)
-#   tmp2 = read.csv(paste0("data/enp_nhs_c_",rr,"_20200805.csv"),stringsAsFactors = F)
-#   # names(tmp) <- c("var","name","prov","zone","resid","year","mean","sd")
-#   if(rr == "by_zone"){
-#     pubEsts_simple_all <- tmp
-#     pubEsts_species_all <- tmp1
-#     pubEsts_age_sex_all <- tmp2
-#   }else{
-#       pubEsts_simple_all <- bind_rows(pubEsts_simple_all,tmp)
-#       pubEsts_species_all <- bind_rows(pubEsts_species_all,tmp1)
-#       pubEsts_age_sex_all <- bind_rows(pubEsts_age_sex_all,tmp2)
-#   }
-#  
-# } 
-#   
-#   names(pubEsts_simple_all) <- c("var","name","prov","zone","resid","year","mean","sd")
-# pubEsts_simple_all$lci = ceiling(pubEsts_simple_all$mean-(1.96*pubEsts_simple_all$sd))
-# pubEsts_simple_all$uci = ceiling(pubEsts_simple_all$mean+(1.96*pubEsts_simple_all$sd))
-# pubEsts_simple_all[which(pubEsts_simple_all$lci < 0),"lci"] <- 0
-# pubEsts_simple_all[which(is.na(pubEsts_simple_all$prov)),"prov"] <- "Canada"
-# 
-# names(pubEsts_species_all) <- c("sp","species","prov","zone","year","mean","sd")
-# pubEsts_species_all$lci = ceiling(pubEsts_species_all$mean-(1.96*pubEsts_species_all$sd))
-# pubEsts_species_all$uci = ceiling(pubEsts_species_all$mean+(1.96*pubEsts_species_all$sd))
-# pubEsts_species_all[which(pubEsts_species_all$lci < 0),"lci"] <- 0
-# pubEsts_species_all[which(is.na(pubEsts_species_all$prov)),"prov"] <- "Canada"
-# 
-# 
-# names(pubEsts_age_sex_all) <- c("sp","species","prov","zone","year","age_ratio")
-# pubEsts_age_sex_all[which(is.na(pubEsts_age_sex_all$prov)),"prov"] <- "Canada"
-# 
-# pubEsts_age_sex_all <- pubEsts_age_sex_all[which(pubEsts_age_sex_all$year > 1975),]
-# pubEsts_species_all <- pubEsts_species_all[which(pubEsts_species_all$year > 1975),]
-# pubEsts_simple_all <- pubEsts_simple_all[which(pubEsts_simple_all$year > 1975),]
-# 
-# 
-# species_web_names = unique(pubEsts_species_all[,c("sp","species")])
-# 
-# var_names_sim <- unique(pubEsts_simple_all[,c("var","name")])
 # # write.csv(var_names_sim,"data/website_variable_names.csv",row.names = F)
 # # 
 # # write.csv(species_web_names,"data/website_species_variable_names.csv",row.names = F)
