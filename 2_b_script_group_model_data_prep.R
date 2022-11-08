@@ -50,7 +50,7 @@ years <- FY:Y
 
 names(years) <- paste(years)
 
-library(foreign)library(runjags)
+library(foreign)
 library(rjags)
 library(jagsUI)
 library(tidyverse)

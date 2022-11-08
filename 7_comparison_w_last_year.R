@@ -65,7 +65,6 @@ pubEsts_simple_all <- pubEsts_simple_all[which(pubEsts_simple_all$year > 1975),]
 
 species_web_names = unique(pubEsts_species_all[,c("sp","species")])
 
-var_names_sim <- unique(pubEsts_simple_all[,c("var","name")])
 
 
 original_estimates <- pubEsts_species_all %>% 
@@ -170,6 +169,133 @@ for(i in 1:nrow(provs)){
 
 dev.off()
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# general estimates -------------------------------------------------------
+
+var_names_sim <- unique(pubEsts_simple_all[,c("var","name")])
+
+ests <- NULL
+for(i in c(ly,yy)){
+  dtall = read.csv(paste0(ddir,"General_Estimates_Donnees_generales_comma_1976-",i,".csv")) %>% 
+    mutate(year_est = as.character(i))
+  
+  ests <- bind_rows(ests,dtall)
+  
+}
+
+
+sp_z <- ests %>% 
+  filter(!is.na(zone))
+
+
+
+
+
+original_estimates <- pubEsts_simple_all %>% 
+  rename(Description_En = name,
+         year_an = year,
+         region_En = prov,
+         mean_moyen = mean,
+         lci_2.5 = lci,
+         uci_97.5 = uci) %>% 
+  select(zone,Description_En,year_an,region_En,
+         var,
+         mean_moyen,lci_2.5,uci_97.5) %>% 
+  mutate(year_est = "2018")
+
+# zone graphs -------------------------------------------------------------
+
+pdf("figures/annual_comparison_General_zone.pdf",
+    width = 11,
+    height = 8.5)
+provs <- unique(sp_z[,c("prov","zone")])
+
+for(i in 1:nrow(provs)){
+  pr = provs[i,"prov"]
+  z = provs[i,"zone"]
+  
+  tmp <- sp_z %>% 
+    filter(prov == pr,
+           zone == z)
+  tmp2 <- original_estimates %>% 
+    filter(region_En == unique(tmp$region_En),
+           zone == z)
+  tmp <- bind_rows(tmp,tmp2)
+  
+  
+
+  compp <- ggplot(data = tmp,
+                  aes(x = year_an,
+                      y = mean_moyen,
+                      colour = year_est))+
+    geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.2,width = 0,
+                  position = position_dodge(width = 0.33))+
+    geom_point(position = position_dodge(width = 0.33),alpha = 0.7)+
+    facet_wrap(vars(Description_En),ncol = 5,scales = "free_y")+
+    labs(title = paste(pr,z))+
+    theme_bw()
+  
+  print(compp) 
+  
+  
+  
+}
+
+dev.off()
+
+
+pdf("figures/annual_comparison_General_zone_10yr.pdf",
+    width = 11,
+    height = 8.5)
+provs <- unique(sp_z[,c("prov","zone")])
+
+for(i in 1:nrow(provs)){
+  pr = provs[i,"prov"]
+  z = provs[i,"zone"]
+  
+  tmp <- sp_z %>% 
+    filter(prov == pr,
+           zone == z, 
+           year_an > yy-11)
+  
+  tmp2 <- original_estimates %>% 
+    filter(region_En == unique(tmp$region_En),
+           zone == z, 
+           year_an > yy-11)
+  tmp <- bind_rows(tmp,tmp2)
+  
+  
+  
+  compp <- ggplot(data = tmp,
+                  aes(x = year_an,
+                      y = mean_moyen,
+                      colour = year_est))+
+    geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.2,width = 0,
+                  position = position_dodge(width = 0.33))+
+    geom_point(position = position_dodge(width = 0.33))+
+    facet_wrap(vars(Description_En),ncol = 5,scales = "free_y")+
+    labs(title = paste(pr,z))+
+    theme_bw()
+  
+  print(compp) 
+  
+}
+
+dev.off()
 
 
 

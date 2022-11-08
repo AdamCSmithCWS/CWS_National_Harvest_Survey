@@ -62,12 +62,20 @@ gps <- c("duck",
          "murre")
 
 
- tmp_sim <- NULL
+### select which set of summaries to calculate
+do_sim <- TRUE  # ~ 10GB RAM
+do_sp <- FALSE # ~20GM RAM
+do_sp_demo <- FALSE # ~80GB RAM!
+  
+if(do_sim){
+  tmp_sim <- NULL
+}
+if(do_sp){
   tmp_sp <- NULL
-  tmp_sp_demo <- NULL
-  
-
-  
+}
+if(do_sp_demo){
+    tmp_sp_demo <- NULL
+}
 for(pr in provs){
   
 
@@ -101,7 +109,7 @@ for(pr in provs){
    for(z in 1:3){
      if(file.exists(paste("output/full harvest zip",pr,z,"duck","alt mod.RData"))){
        load(paste("output/full harvest zip",pr,z,"duck","alt mod.RData"))
-     
+     if(do_sim){
        ### using tidybayes package functions to compile posterior samples into dataframes
            tmp_duck <- out2$samples %>% gather_draws(NACTIVE_y[y],
                                                 days_y[y],
@@ -121,8 +129,12 @@ for(pr in provs){
            tmp_duck$prov <- pr
            tmp_duck$zone <- z
            
-           ## species harvests
+           tmp_sim <- bind_rows(tmp_sim,tmp_duck)
            
+     }
+       
+           ## species harvests
+       if(do_sp){    
            tmp_sp_duck <- out2$samples %>% gather_draws(kill_ys[y,s]) 
            vnm <- sp_vars[which(sp_vars$source == "duck"),c("sp","species","newvar")]
            spss <- sp.save.out[which(sp.save.out$PRHUNT == pr & sp.save.out$ZOHUNT == z),c("AOU","spfact","spn")]
@@ -133,9 +145,12 @@ for(pr in provs){
            tmp_sp_duck$prov <- pr
            tmp_sp_duck$zone <- z
            
+           tmp_sp <- bind_rows(tmp_sp,tmp_sp_duck)
            
+       }
            ## species age-sex harvests
            
+       if(do_sp_demo){
            demog = data.frame(BSEX = rep(c("F","M"),each = 2),
                               BAGE = rep(c("A","I"),times = 2),
                               d = 1:4,
@@ -151,20 +166,20 @@ for(pr in provs){
            tmp_sp_duck_demo <- left_join(tmp_sp_duck_demo,demog,by = "d")
            tmp_sp_duck_demo$prov <- pr
            tmp_sp_duck_demo$zone <- z
+         
+           tmp_sp_demo <- bind_rows(tmp_sp_demo,tmp_sp_duck_demo)
            
-           
+       }     
            
 
-             tmp_sim <- bind_rows(tmp_sim,tmp_duck)
              
-             tmp_sp <- bind_rows(tmp_sp,tmp_sp_duck)
-             tmp_sp_demo <- bind_rows(tmp_sp_demo,tmp_sp_duck_demo)
            
            }
      
      if(file.exists(paste("output/full harvest zip",pr,z,"goose","alt mod.RData"))){
              load(paste("output/full harvest zip",pr,z,"goose","alt mod.RData"))
              
+       if(do_sim){
            tmp_goose <- out2$samples %>% gather_draws(NSUCC_y[y],
                                                      kill_y[y]) 
            
@@ -182,8 +197,10 @@ for(pr in provs){
            tmp_goose$zone <- z
            tmp_sim <- bind_rows(tmp_sim,tmp_goose)
            
+       }
            ## species harvests
            
+       if(do_sp){
            tmp_sp_goose <- out2$samples %>% gather_draws(kill_ys[y,s]) 
            vnm <- sp_vars[which(sp_vars$source == "goose"),c("sp","species","newvar")]
            spss <- sp.save.out[which(sp.save.out$PRHUNT == pr & sp.save.out$ZOHUNT == z),c("AOU","spfact","spn")]
@@ -195,8 +212,10 @@ for(pr in provs){
            tmp_sp_goose$zone <- z
            tmp_sp <- bind_rows(tmp_sp,tmp_sp_goose)
            
+       }
            ## species age-sex harvests 
            
+       if(do_sp_demo){
                       demog = data.frame(BSEX = rep(c("U","U"),each = 1),
                               BAGE = rep(c("A","I"),times = 1),
                               d = 1:2,
@@ -214,12 +233,14 @@ for(pr in provs){
            tmp_sp_goose_demo$zone <- z
            tmp_sp_demo <- bind_rows(tmp_sp_demo,tmp_sp_goose_demo)
            
+       }
            
      }
      
      if(file.exists(paste("output/full harvest zip",pr,z,"murre","alt mod.RData"))){
        load(paste("output/full harvest zip",pr,z,"murre","alt mod.RData"))
        
+       if(do_sim){
        tmp_murre <- out2$samples %>% gather_draws(NSUCC_y[y],
                                                   kill_y[y]) 
        
@@ -236,9 +257,9 @@ for(pr in provs){
        tmp_murre$prov <- pr
        tmp_murre$zone <- z
        tmp_sim <- bind_rows(tmp_sim,tmp_murre)
-       
+       }
        ## species harvests
-       
+       if(do_sp){
        tmp_sp_murre <- out2$samples %>% gather_draws(kill_ys[y,s]) 
        vnm <- sp_vars[which(sp_vars$source == "murre"),c("sp","species","newvar")]
        spss <- sp.save.out[which(sp.save.out$PRHUNT == pr & sp.save.out$ZOHUNT == z),c("AOU","spfact","spn")]
@@ -249,9 +270,9 @@ for(pr in provs){
        tmp_sp_murre$prov <- pr
        tmp_sp_murre$zone <- z
        tmp_sp <- bind_rows(tmp_sp,tmp_sp_murre)
-       
+       }
        ## species age-sex harvests
-       
+       if(do_sp_demo){
        demog = data.frame(BSEX = rep(c("U","U"),each = 1),
                           BAGE = rep(c("A","I"),times = 1),
                           d = 1:2,
@@ -268,11 +289,13 @@ for(pr in provs){
        tmp_sp_murre_demo$prov <- pr
        tmp_sp_murre_demo$zone <- z
        tmp_sp_demo <- bind_rows(tmp_sp_demo,tmp_sp_murre_demo)
-       
+       }
      }
      
      if(file.exists(paste("output/other harvest zip",pr,z,"alt mod.RData"))){
-       load(paste("output/other harvest zip",pr,z,"alt mod.RData"))
+      
+       if(do_sim){
+         load(paste("output/other harvest zip",pr,z,"alt mod.RData"))
        
        vnm <- sim_vars[which(sim_vars$source == "other"),]
        #vnm <- rename(vnm,group = var)
@@ -326,7 +349,7 @@ for(pr in provs){
       #### tidy summary to generate the national and provincial estimates
       
       tmp_sim <- bind_rows(tmp_sim,tmp_other)
-      
+       }
       
       }
        
@@ -341,11 +364,15 @@ for(pr in provs){
 
 
 
-
+if(do_sim){
 save(list = c("tmp_sim"),
      file = "national_provincial_summaries1.RData")
+}
+if(do_sp){
 save(list = c("tmp_sp"),
      file = "national_provincial_summaries2.RData")
+}
+if(do_sp_demo){
 save(list = c("tmp_sp_demo"),
      file = "national_provincial_summaries3.RData")
 
@@ -371,7 +398,7 @@ tmp_sp_demo1 <- tmp_sp_demo %>%
 save(list = c("tmp_sp_demo1"),
      file = "national_provincial_summaries3_c.RData")
 
-
+}
 
 
 

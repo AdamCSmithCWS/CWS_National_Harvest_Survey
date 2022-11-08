@@ -67,7 +67,7 @@ library(posterior)
 
 # load output from data_prep.R --------------------------------------------
 
-
+setwd("F:/CWS_National_Harvest_Survey")
 #load(paste0("data/parts and harvest survey info",Y,".RData"))
 
 source("functions/get_final_values.R")
@@ -115,10 +115,11 @@ provs = provs[-which(provs %in% c("NF","NU"))]##removing NF because definition o
 
 # MCMC loops --------------------------------------------------------------
 
-n_cores <- 4#length(provs)
+n_cores <- 2#length(provs)
 cluster <- makeCluster(n_cores, type = "PSOCK")
 registerDoParallel(cluster)
 
+provs = c("ON","PQ","AB","MB")
 
 fullrun <- foreach(pr = provs,
                    .packages = c("jagsUI","tidyverse","posterior"),
@@ -143,6 +144,8 @@ for(z in 1:3){
     if(file.exists(paste("data/data",pr,z,"other_save.RData",sep = "_"))){
     load(paste("data/data",pr,z,"other_save.RData",sep = "_"))
 
+     
+      
 parms = c("NACTIVE_y",
           "NSUCC_yg",
           "nu_day",
@@ -164,7 +167,12 @@ parms = c("NACTIVE_y",
           "parrive",
           "pleave",
           "psi",
-          "tau_group")
+          "tau_group",
+          "psucc",
+          "pactive",
+          "NACTIVE_cy",
+          "pops_cor",
+          "NSUCC_gcy")
 
 parm_check <- c("NACTIVE_y",
   "NSUCC_yg",
@@ -212,11 +220,12 @@ if(class(out2) != "try-error"){
     summarise_draws() %>% 
     as.data.frame() %>% 
     filter(!is.na(rhat))
+
   
   attempts <- 0
   
   
-  while(any(out2sum$rhat > 1.1) & attempts < 3){
+  while(any(out2sum$rhat > 1.1) & attempts < 1){
     attempts <- attempts+1
     burnInSteps = 0
     thinSteps = thinSteps*2
@@ -254,6 +263,104 @@ if(class(out2) != "try-error"){
   }
   
   #launch_shinystan(shinystan::as.shinystan(out2$samples, model_name = paste(pr,mod.file))) 
+  
+ # load(paste("output/other harvest zip",pr,z,"alt mod.RData"))
+ # 
+ # 
+ #  mean_tot_kill_ycg <- out2$samples %>% gather_draws(mean_totkill_ycg[y,c,g]) 
+ # 
+ #  if(length(jdat$castes) == 3){
+ #    labs = c("D","B","AandE")
+ #  }
+ #  if(length(jdat$castes) == 4){
+ #    labs = c("D","B","A","E")
+ #  }
+ #  
+ #   mean_tot_kill_crane <- mean_tot_kill_ycg %>% 
+ #    filter(g == which(grps == "CRANK")) %>% 
+ #    group_by(y,c) %>% 
+ #    summarise(mean = mean(.value),
+ #              median = median(.value),
+ #              lci = quantile(.value,0.025),
+ #              uci = quantile(.value,0.975)) %>% 
+ #    mutate(year = y + 1975,
+ #           caste = factor(c, labels = labs,ordered = TRUE))
+ #  
+ #  ann_plot <- ggplot(data = mean_tot_kill_crane,
+ #                     aes(x = year, y = mean, colour = caste))+
+ #    geom_errorbar(aes(ymin = lci,ymax = uci),width = 0,alpha = 0.5,
+ #                  position = position_dodge(width = 0.4))+
+ #    geom_point(position = position_dodge(width = 0.4))
+ #  print(ann_plot)
+ #  
+ #  
+ #  mean_tot_kill_ycg_alt <- out2$samples %>% gather_draws(mean_totkill_ycg_alt[y,c,g]) 
+ #  
+ #  mean_tot_kill_crane_alt <- mean_tot_kill_ycg_alt %>% 
+ #    filter(g == which(grps == "CRANK")) %>% 
+ #    group_by(y,c) %>% 
+ #    summarise(mean = mean(.value),
+ #              median = median(.value),
+ #              lci = quantile(.value,0.025),
+ #              uci = quantile(.value,0.975)) %>% 
+ #    mutate(year = y + 1975,
+ #           caste = factor(c, labels = labs,ordered = TRUE))
+ #  
+ #  ann_plot <- ggplot(data = mean_tot_kill_crane_alt,
+ #                     aes(x = year, y = median, colour = caste))+
+ #    geom_errorbar(aes(ymin = lci,ymax = uci),width = 0,alpha = 0.5,
+ #                  position = position_dodge(width = 0.4))+
+ #    geom_point(position = position_dodge(width = 0.4))
+ #  print(ann_plot)
+ #  
+ #  
+ #  NSUCC_yg <- out2$samples %>% gather_draws(NSUCC_yg[y,g])
+ #  
+ #  mean_NSUCC_yg <- NSUCC_yg %>% 
+ #    filter(g == which(grps == "CRANK")) %>% 
+ #    group_by(y) %>% 
+ #    summarise(mean = mean(.value),
+ #              median = median(.value),
+ #              lci = quantile(.value,0.025),
+ #              uci = quantile(.value,0.975)) %>% 
+ #    mutate(year = y + 1975)
+ #  
+ #  ann_plot <- ggplot(data = mean_NSUCC_yg,
+ #                     aes(x = year, y = median))+
+ #    geom_errorbar(aes(ymin = lci,ymax = uci),width = 0,alpha = 0.5)+
+ #    geom_point()
+ #  print(ann_plot)
+ #  
+ #  
+ #  
+ #  psucc_gcy <- out2$samples %>% gather_draws(psucc[g,c,y])
+ #  
+ #  mean_psucc_crane <- psucc_gcy %>% 
+ #    filter(g == which(grps == "CRANK"),
+ #           y > 43) %>% 
+ #    group_by(y,c) %>% 
+ #    summarise(mean = mean(.value),
+ #              median = median(.value),
+ #              lci = quantile(.value,0.025),
+ #              uci = quantile(.value,0.975)) %>% 
+ #    mutate(year = y + 1975,
+ #           caste = factor(c, labels = labs,ordered = TRUE))
+ #  
+ #  ann_plot <- ggplot(data = mean_psucc_crane,
+ #                     aes(x = year, y = mean, colour = caste))+
+ #    geom_errorbar(aes(ymin = lci,ymax = uci),width = 0,alpha = 0.5,
+ #                  position = position_dodge(width = 0.4))+
+ #    geom_point(position = position_dodge(width = 0.4))
+ #  print(ann_plot)
+ #  
+ #  
+ #  "psucc",
+ #  "pactive",
+ #  "NACTIVE_cy",
+ #  "pops_cor",
+ #  "NSUCC_gcy"
+ #  
+ #  
   
   save(list = c("out2","jdat","grps","out2sum","attempts"),
        file = paste("output/other harvest zip",pr,z,"alt mod.RData"))

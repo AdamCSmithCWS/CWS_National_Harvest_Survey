@@ -222,8 +222,9 @@ for(g in 1:ngroups){
     ## caste specific intercept priors
     
     for(g in 1:ngroups){
-     mmu_psucc[g,c,1] ~ dt(0, 1/2.5^2, 1) # cauchy(0, 2.5) prior (Gelman et al., 2008) doi:10.1214/08-AOAS191
-     # phi_psucc[c] ~ dscaled.gamma(0.5,50)
+      for(y in 1:fyear[g]){ #ensures that only years since the start of active hunts influence estimates
+     mmu_psucc[g,c,y] ~ dt(0, 1/2.5^2, 1) # cauchy(0, 2.5) prior (Gelman et al., 2008) doi:10.1214/08-AOAS191
+    } # phi_psucc[c] ~ dscaled.gamma(0.5,50)
      tau_mmu_psucc[g,c] ~ dscaled.gamma(0.5,50)#time-series variance
     }# 
     mmu_pactive[c,1] ~ dt(0, 1/2.5^2, 1) # cauchy(0, 2.5) prior (Gelman et al., 2008) doi:10.1214/08-AOAS191
@@ -231,16 +232,30 @@ for(g in 1:ngroups){
     tau_mu_pactive[c] ~ dscaled.gamma(0.5,50) #time-series variance
     # 
     
-     for(y in 2:nyears){
-       for(g in 1:ngroups){
+    
+    # for(y in 1:fyear[g]){
+    #   group[y,g] ~ dnorm(0,1)
+    # }#y
+    # for(y in (fyear[g]+1):nyears){
+    #   group[y,g] ~ dnorm(group[y-1,g],tau_group[g])
+    # }#y
+    
+    for(g in 1:ngroups){
+     for(y in (fyear[g]+1):nyears){
+       
        mmu_psucc[g,c,y] ~ dnorm(mmu_psucc[g,c,y-1],tau_mmu_psucc[g,c])
        }
-       mmu_pactive[c,y] ~ dnorm(mmu_pactive[c,y-1],tau_mu_pactive[c])
      }
+    
+    for(y in 2:nyears){
+      
+      mmu_pactive[c,y] ~ dnorm(mmu_pactive[c,y-1],tau_mu_pactive[c])
+      
+      
+    }
     
     for(y in 1:nyears){
       
-
       for(g in 1:ngroups){
       logit(psucc[g,c,y]) <- mmu_psucc[g,c,y]
       }

@@ -83,10 +83,11 @@ fit_table <- provzone %>%
 #fit_table <- fit_table %>% filter(spgp %in% c("goose","murre") | (spgp == "duck" & prov == "ON" & zone == 3))
 # fit_table <- fit_table %>% filter(spgp %in% c("duck") | (spgp == "goose" & prov %in% c("NT","YT")))
 
+fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("goosePQ1","goosePQ2","gooseON3"))
 
 
 # Province and Zone loop --------------------------------------------------
-  n_cores <- 13
+  n_cores <- 3
   cluster <- makeCluster(n_cores, type = "PSOCK")
   registerDoParallel(cluster)
 
@@ -108,9 +109,11 @@ fit_table <- provzone %>%
 if(file.exists(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))){
 load(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
 
-  
-  mod.file = "models/species_harvest_model_alt.R" # 
-  
+#  if(paste0(spgp,pr,z) %in% c("goosePQ1","goosePQ2","gooseON3")){
+  mod.file = "models/species_harvest_model_alt2.R" # version with nu fixed at 3
+  # }else{
+  #   mod.file = "models/species_harvest_model_alt.R" # 
+  # }
 
 
 parms = c("NACTIVE_y",
@@ -272,13 +275,25 @@ if(class(out2) != "try-error"){
 #    #  geom_ribbon(aes(x = year,y = mean,ymin = q5,ymax = q95,fill = species),alpha = 0.2, inherit.aes = FALSE)+
 #    # geom_line()+
 #    geom_errorbar(aes(x = year,y = mean,ymin = q5,ymax = q95),
-#                  alpha = 0.2, width = 0)+ 
+#                  alpha = 0.2, width = 0)+
 #    geom_point()+
 #    theme_bw()+
 #    facet_wrap(vars(AOU),scales = "free")
 #   print(kill_plot)
 #  dev.off()
-
+# 
+#  
+ # sum_kill_y <- out2sum %>% filter(grepl("kill_y[",variable,fixed = TRUE))%>%
+ #   mutate(year = rep(c(1:jdat$nyears),times = 1))
+ # kill_plot <- ggplot(data = sum_kill_y,aes(x = year,y = mean))+
+ #   #  geom_ribbon(aes(x = year,y = mean,ymin = q5,ymax = q95,fill = species),alpha = 0.2, inherit.aes = FALSE)+
+ #   # geom_line()+
+ #   geom_errorbar(aes(x = year,y = mean,ymin = q5,ymax = q95),
+ #                 alpha = 0.2, width = 0)+
+ #   geom_point()+
+ #   theme_bw()
+ # print(kill_plot)
+#  
  #
  attempts <- 0
  #
