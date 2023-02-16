@@ -79,7 +79,7 @@ model {
     kill[i] ~ dpois(lambda[i]) #kill is data - each hunter's estimate of the total number of ducks killed 
     lambda[i] <- lambda1[i]*z[i] + 0.00001 ## hack required for JAGS -- otherwise 'incompatible'-error
     z[i] ~ dbern(psi[year[i]]) #psi = proportion of non-zeros for each year
-    log(lambda1[i]) <- elambda1[i] #*succ[caste[i]] + 0.0001 #cheat to avoid non-zero values from zero-mean poisson
+    log(lambda1[i]) <- elambda1[i] #
     elambda1[i] <- ann[year[i]] + cst[caste[i],year[i]] + hntr[caste[i],year[i],hunter[i]] + elambda_day[i] #elambda_day[i] acts as an offset on effort
     
     ## ann[y] is a yearly intercept for all species kill
@@ -91,7 +91,7 @@ model {
     
     
     ### number of days truncated Poisson, because only active hunters are included and therefore days != 0
-    days[i] ~ dpois(lambda_day[i])T(1,) #kill is data - each hunter's estimate of the total number of days spent hunting
+    days[i] ~ dpois(lambda_day[i])T(1,) #days is data - each hunter's estimate of the total number of days spent hunting
     log(lambda_day[i]) <- elambda_day[i] 
     elambda_day[i] <- ann_day[year[i]] + cst_day[caste[i],year[i]] + hntr_day[caste[i],year[i],hunter[i]]
     
@@ -161,8 +161,15 @@ model {
     retrans_hunter[c,yp] <- 0.5*(1/tauhunter[c,yp])/nu_ret[c,yp] 
     sdhunter[c,yp] <- 1/pow(tauhunter[c,yp],0.5)
     tauhunter[c,yp] ~ dscaled.gamma(0.5,50)
-    nu[c,yp] ~ dgamma(2,0.2)
-    nu_ret[c,yp] <- (1.422*nu[c,yp]^0.906)/(1+(1.422*nu[c,yp]^0.906)) #approximate retransformation to equate a t-distribution to a normal distribution - see appendix of Link et al. 2020 BBS model selection paper
+    #nu[c,yp] ~ dgamma(2,0.2)
+    # these adjustments to the harvest retransformation factors allow the model to be more
+    # robust to non-normal distributions of hunter harvest effects
+    # they fit a heavy-tailed distribution (so extremes have reduced influence on teh mean)
+    # then they use a simplified re-transformation factor to scale the estimates
+    # to harvest counts - this has very little effect when the distributions are near-normal
+    # but helps to avoid biased estimates when the distributions are very heavy tailed
+    nu[c,yp] <- 3 # fixed  heavy-tail distribution
+    nu_ret[c,yp] <- 1#(1.422*nu[c,yp]^0.906)/(1+(1.422*nu[c,yp]^0.906)) #approximate retransformation to equate a t-distribution to a normal distribution - see appendix of Link et al. 2020 BBS model selection paper
     }
   
     #activity (days) variance priors
@@ -203,12 +210,12 @@ model {
         ## hntr_day[c,y,h] is an individual random error term to allow for overdispersion in the activity (days spent hunting),
         ##  t-distribution used for overdispersion in activity to allow for heavy-tailed 
         ## variances on both activity and harvest are caste-specific precision to allow hunter-level dispersion to vary among castes
-        ## consider whether tauhunter should also vary among years...
+        ## consider whether tauhunter should also vary among all years...
         wy[c,y,h] <- step(y-(nyears/2))+1 #trick to identify if this value is in the first of last half of the time-series
         hntr_day[c,y,h] ~ dt(0,tauhunter_day[c],nu_day[c])
         hntr[c,y,h] ~ dt(0,tauhunter[c,wy[c,y,h]],nu[c,wy[c,y,h]])
         #n days probably accounts for a bit of the hunting skill effect as well as the activity effect
-        
+        # but not for goose harvests in eastern Canada - large hunter level variation and changing variation over time
       }#h
     }#y
     
@@ -324,11 +331,13 @@ model {
   ## nkill_yh[y,h] is also data, hunter-level total estimate of their harvest
   ### assumes that seasonal distribution is the same across castes...questionable...
   
- # JAGS doesn't allow the parameters of ddirch to be inferred. 
- #However you can use the observation that if delta[k] ~ dgamma(alpha[k], 1), 
- #then the vector with elements delta[k] / sum(delta[1:K]), k = 1, ., K, 
- #is Dirichlet with parameters alpha[k], k = 1, ., K.'
- # Then infer in the gamma distribution instead
+######### As of 2021 - removed the dirichlet priors and instead using
+ #### a multinomial logistic regression approach that has much improved sampling efficiency
+ #### multinomial log-ratios, time-series model for the distribution of harvest across periods
+ #### fixed effects for the mean harvest across periods in the first year
+ #### hyperparameter alpha_py[p] and tau_alpha_py[p], shrinking each period's estimate in a given year
+ #### towards last years proportion of the hunt occurring within that period
+ ### time-series first difference model through years on the period-specific parameters
  
  
 #####################################################################
