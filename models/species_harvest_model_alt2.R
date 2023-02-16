@@ -486,16 +486,8 @@ model {
     for (s in 1:nspecies){
       for (y in 1:nyears){
         pcomp_psy[p,s,y] <- delta_psy[p,s,y] / sum(delta_psy[p,1:nspecies,y]) # softmax regression 
-        #delta_psy[p,s,y] ~ dgamma(exp_alpha_psy[p,s,y], 1)
-        #exp_alpha_psy[p,s,y] <- exp(mu_psy[p,s,y])
          delta_psy[p,s,y] <- exp(alpha_psy[p,s,y])
-         #alpha_psy[p,s,y] ~ dnorm(beta_sy*alpha_sy[s,y] + beta_ps*alpha_ps[p,s],sd_psy) # combination of species effect, species-year effect, species period effect
          alpha_psy[p,s,y] ~ dnorm(beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s],tau_rand_psy) # combination of species effect, species-year effect, species period effect
-         #alpha_psy[p,s,y] <- alpha_sy[s,y] + alpha_ps[p,s] # combination of species effect, species-year effect, species period effect
-         
-         # find out why this is so hard to estimate, but the period by year is so easy...
-         # also integrate the midyear structyre into teh period by year time-series and 
-         # integreat the midyear structure into the demographic analysis
       } #y
       
     }#s
@@ -571,7 +563,6 @@ for(s in 2:nspecies){
   
   
   for(s in 1:nspecies){
-    #beta_axsy[s] ~ dnorm(1,0.1)# coefficient controlling the influence of the species by year component
     tau_axsy[s] ~ dscaled.gamma(0.1,50) #extra variance
     sd_axsy[s] <- 1/sqrt(tau_axsy[s])
   }
@@ -595,16 +586,10 @@ for(s in 2:nspecies){
       # ## species mean demographic proportions across all years
       pcomp_axs[d,s] <- delta_axs[d,s] / sum(delta_axs[1:ndemog,s])
       delta_axs[d,s] <- exp(alpha_axs[d,s])# ~ dgamma(exp_alpha_axs[d,s], 1)
-      #exp_alpha_axs[d,s]
       # 
       for (y in 1:nyears){
         pcomp_axsy[d,s,y] <- delta_axsy[d,s,y] / sum(delta_axsy[1:ndemog,s,y])
         
-        #delta_axsy[d,s,y] ~ dgamma(exp_alpha_axsy[d,s,y], 1)
-        #exp_alpha_axsy[d,s,y] <- exp(alpha_axsy[d,s,y])
-        # mu_axsy[d,s,y] <- alpha_axsy[d,s,y]
-        
-        #delta_axsy[d,s,y] <- exp(beta_axsy[s]*alpha_axsy[d,s,y])
         delta_axsy[d,s,y] <- exp(mu_axsy[d,s,y])
         mu_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y],tau_axsy[s]) # combination of species effect, species-year effect, species period effect
         
@@ -639,15 +624,12 @@ for(s in 2:nspecies){
     for(d in 2:ndemog){
      
       alpha_axs[d,s] ~ dnorm(0,0.1)#tau_alpha_ax)
-      #alpha_axsy[d,s,midyear] <- alpha_axs[d,s] # first year
       alpha_axsy[d,s,midyear] ~ dnorm(alpha_axs[d,s],tau_alpha_axsy[s])
       for(y in (midyear+1):nyears){
         
-        #alpha_axsy[d,s,y]  ~ dnorm(alpha_axsy[d,s,y-1],tau_alpha_axsy[s]) 
         alpha_axsy[d,s,y]  ~ dnorm(alpha_axs[d,s],tau_alpha_axsy[s]) 
       }
       for(y in 1:(midyear-1)){
-        #alpha_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y+1],tau_alpha_axsy[s]) 
         alpha_axsy[d,s,y] ~ dnorm(alpha_axs[d,s],tau_alpha_axsy[s]) 
         
       }#y
