@@ -67,8 +67,7 @@ a_tab <- bind_rows(nat_sums_b,prov_sums_b,zone_sums_b) %>%
 miss_var = avars[-which(avars %in% unique(a_tab$var))]
 print(paste("Data missing for variables",paste(miss_var,collapse = " ")))
 
-write.csv(a_tab,"website/General_harvest_table.csv",row.names = FALSE)
-
+#
 a_tab1 <- a_tab %>% relocate(Description_Fr,
                   Description_En,
                   Prov_Fr,Prov_En,zone,year,
@@ -87,6 +86,7 @@ a_tab_out <- a_tab1 %>%
 
 write.csv(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_comma_",FY,"-",Y,".csv"),row.names = FALSE)
 write.csv2(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_point_virgule_",FY,"-",Y,".csv"),row.names = FALSE)
+write.csv(a_tab_out,paste0("website/General_harvest_table",FY,"-",Y,".csv"),row.names = FALSE)
 
 
 
@@ -140,8 +140,7 @@ b_tab <- bind_rows(b_tab,asxy_tab) %>%
   rename(Age = BAGE,
          Sex = BSEX)
 
-write.csv(b_tab,"website/species_harvest_table_incl_age_sex.csv",row.names = FALSE)
-
+#
 
 b_tab1 <- b_tab %>% relocate(French_Name_New,
                             English_Name,
@@ -168,12 +167,12 @@ b_tab_out <- b_tab1 %>%
 write.csv(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_comma_",FY,"-",Y,".csv"),row.names = FALSE)
 
 write.csv2(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_point_virgule_",FY,"-",Y,".csv"),row.names = FALSE)
+write.csv(b_tab_out,paste0("website/species_harvest_table_incl_age_sex",FY,"-",Y,".csv"),row.names = FALSE)
 
 
 
 
 
-# Age ratio tables (standard and female only) -----------------------------
 # Raw parts data ----------------------------------------------------------
 
 load("data/allkill.RData")
@@ -186,10 +185,31 @@ load("data/allkill.RData")
 #   group_by(PRHUNT,ZOHUNT,AOU,YEAR,BSEX) %>% 
 #   summarise(n_parts = n())
 # 
-# nparts_species_year_age_sex <- outscse %>% 
-#   group_by(PRHUNT,ZOHUNT,AOU,YEAR,BAGE,BSEX) %>% 
-#   summarise(n_parts = n())
+nparts_species_year_age_sex <- outscse %>%
+  group_by(PRHUNT,ZOHUNT,AOU,YEAR,BAGE,BSEX) %>%
+  summarise(n_parts = as.integer(n()),
+            .groups = "drop") %>% 
+  mutate(DEMOGRAPHIC = paste(BAGE,BSEX,sep = "-")) %>% 
+  filter(AOU > 100) %>% 
+  select(-c(BAGE,BSEX)) %>% 
+  pivot_wider(.,names_from = DEMOGRAPHIC,
+              values_from = n_parts,
+              values_fill = 0,
+              names_sep = "_",
+              names_expand = TRUE) %>% 
+  arrange(PRHUNT,ZOHUNT,AOU,YEAR)
 
+write.csv(nparts_species_year_age_sex,
+          file = paste0("GoogleDrive/n_parts_by_zone_year_aou_sex_age",FY,"-",Y,".csv"))
+
+
+
+
+
+
+
+
+# Age ratio tables (standard and female only) -----------------------------
 
 nparts_species_year_1 <- outscse %>% 
   group_by(PRHUNT,ZOHUNT,AOU,YEAR) %>% 
@@ -240,7 +260,6 @@ c_tab <- bind_rows(nat_sums_c,prov_sums_c,zone_sums_c) %>%
            Prov_En,Prov_Fr)
 
 
-write.csv(c_tab,"website/species_age_ratios.csv",row.names = FALSE)
 
 
 c_tab1 <- c_tab %>% relocate(French_Name_New,
@@ -267,6 +286,7 @@ c_tab_out <- c_tab1 %>%
 
 write.csv(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_comma_",FY,"-",Y,".csv"),row.names = FALSE)
 write.csv2(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_point_virgule_",FY,"-",Y,".csv"),row.names = FALSE)
+write.csv(c_tab_out,paste0("website/species_age_ratios",FY,"-",Y,".csv"),row.names = FALSE)
 
 
 
@@ -503,7 +523,7 @@ for(i in 1:nrow(var_maps_a)){
                       name = "",
                       drop = FALSE)
 
-  png(filename = paste0("website/maps/",ft),
+  png(filename = paste0("website/maps/A/",ft),
       res = 300,
       height = 8,
       width = 8,
@@ -515,11 +535,12 @@ for(i in 1:nrow(var_maps_a)){
 
 
 
-## species harvest estimates
+## species harvest estimates - folder B
 
 
 
-sp_maps_b = b_tab %>% distinct(AOU,year,English_Name,French_Name_New,Scientific_Name) %>% 
+sp_maps_b = b_tab %>% 
+  distinct(AOU,year,English_Name,French_Name_New,Scientific_Name) %>% 
   mutate(map_file = paste0(AOU,"_",year,".png"))
 
 
@@ -587,7 +608,7 @@ for(i in 1:nrow(sp_maps_b)){
                       name = "",
                       drop = FALSE)
   
-  png(filename = paste0("website/maps/",ft),
+  png(filename = paste0("website/maps/B/",ft),
       res = 300,
       height = 8,
       width = 8,
@@ -597,6 +618,95 @@ for(i in 1:nrow(sp_maps_b)){
   
 } 
 
+
+
+
+
+
+
+
+
+## species harvest estimates - folder B
+
+
+
+sp_maps_c = c_tab %>% 
+  distinct(AOU,year,English_Name,French_Name_New,Scientific_Name) %>% 
+  mutate(map_file = paste0("Ratio_",AOU,"_",year,".png"))
+
+seqs <- seq(0,1,length = length(colscale2)+1)[-c(1,length(colscale2)+1)]
+
+
+for(i in 1:nrow(sp_maps_c)){
+  vv = as.character(sp_maps_c[i,"AOU"])
+  
+  rng <- c_tab %>% filter(AOU == vv,
+                          !is.na(zone)) %>%
+    ungroup() %>% 
+    select(mean)
+  
+  bbkst <- round(quantile(unlist(rng),
+                          probs = c(seqs),
+                          na.rm = T,
+                          names = F))
+  om <- min(nchar(bbkst))-1
+  
+  bbks <- round(bbkst/(10^om))*10^om
+  ss <- 1
+  
+  while(any(duplicated(bbks))){
+    bbks <- round((bbkst/(10^(om-ss)))*10^(om-ss))
+    ss = ss+1
+  }
+  bks <- c(0,
+           bbks,
+           round(max(rng,na.rm = T)+1))
+  
+  
+  
+  yy = as.integer(sp_maps_b[i,"year"])
+  ft =  as.character(sp_maps_b[i,"map_file"])
+  
+  tmp <- b_tab %>% filter(AOU == vv,
+                          year == yy,
+                          !is.na(zone),
+                          is.na(Age),
+                          is.na(Sex)) %>% 
+    mutate(plot_cat = cut(mean,breaks = bks))
+  
+  colscale1b = c(colscale1,"white")
+  names(colscale1b) <- c(levels(tmp$plot_cat),NA)
+  
+  labs = c(paste0("1 - ",bks[2]),
+           paste(bks[2:(length(bks)-2)],
+                 bks[3:(length(bks)-1)],
+                 sep = " - "),
+           paste0("> ",bks[length(bks)-1]),
+           "no estimate / aucune estimation") 
+  names(labs) <- c(levels(tmp$plot_cat),NA)
+  
+  tmpm = left_join(base_map,tmp,by = c("PROV" = "prov",
+                                       "ZONE" = "zone"))
+  
+  tmap = ggplot()+
+    geom_sf(data = tmpm,aes(fill = plot_cat),colour = grey(0.25))+
+    theme_no_axes()+
+    theme(legend.position = "bottom",
+          legend.text = element_text(size = 12))+
+    scale_fill_manual(values = colscale1b,
+                      labels = labs,
+                      name = "",
+                      drop = FALSE)
+  
+  png(filename = paste0("website/maps/C/",ft),
+      res = 300,
+      height = 8,
+      width = 8,
+      units = "in")
+  print(tmap)
+  dev.off()
+  
+} 
 
 
 
