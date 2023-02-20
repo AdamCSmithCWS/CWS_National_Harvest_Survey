@@ -356,7 +356,6 @@ model {
     for (y in 1:nyears){
       pkill_py[p,y] <- delta_py[p,y] / sum(delta_py[1:nperiods,y])
       delta_py[p,y] <- exp(alpha_py[p,y])
-      # alphat[p,y] <- mut[p]*kappat ### mut[p] is the mean proportion of the hunt occurring in period p across all years
       # 
        } #y
   }#p
@@ -427,7 +426,7 @@ model {
   
   
   
-  ### extra data of parts by species and year may help estimate the various proportions
+  ### extra data of parts by species and year helps estimate the various proportions
   
    for (s in 1:nspecies){
   
