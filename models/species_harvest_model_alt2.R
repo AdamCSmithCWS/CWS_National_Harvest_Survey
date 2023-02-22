@@ -167,7 +167,7 @@ model {
     # they fit a heavy-tailed distribution (so extremes have reduced influence on teh mean)
     # then they use a simplified re-transformation factor to scale the estimates
     # to harvest counts - this has very little effect when the distributions are near-normal
-    # but helps to avoid biased estimates when the distributions are very heavy tailed
+    # but helps to avoid biased retransformations when the distributions are very heavy tailed
     nu[c,yp] <- 3 # fixed  heavy-tail distribution
     nu_ret[c,yp] <- 1#(1.422*nu[c,yp]^0.906)/(1+(1.422*nu[c,yp]^0.906)) #approximate retransformation to equate a t-distribution to a normal distribution - see appendix of Link et al. 2020 BBS model selection paper
     }

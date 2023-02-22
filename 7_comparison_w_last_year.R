@@ -6,7 +6,7 @@ ly = yy - 1
 ddir <- "temparch/"
 
 ests <- NULL
-for(i in c(ly,yy)){
+for(i in c(yy)){
 dtall = read.csv(paste0(ddir,"Species_Harvest_Prises_par_Espece_comma_1976-",i,".csv")) %>% 
   mutate(year_est = as.character(i))
 
@@ -114,12 +114,23 @@ for(i in 1:nrow(provs)){
                   aes(x = year_an,
                       y = mean_moyen,
                       colour = year_est))+
-    geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.2,width = 0,
-                  position = position_dodge(width = 0.33))+
-    geom_point(position = position_dodge(width = 0.33),alpha = 0.7)+
+    geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.5,width = 0,
+                  linewidth = 1,
+                  position = position_dodge(width = 0.75))+
+    geom_point(position = position_dodge(width = 0.75),alpha = 0.7,size = 1)+
     facet_wrap(vars(species),ncol = 5,scales = "free_y")+
     labs(title = paste(pr,z))+
-    theme_bw()
+    xlab("")+
+    ylab("")+
+    theme_bw()+ 
+    theme( 
+      # axis.text = element_text( size = 14 ),
+      #      axis.text.x = element_text( size = 20 ),
+      #      axis.title = element_text( size = 16, face = "bold" ),
+      #      legend.position="none",
+           # The new stuff
+           strip.text = element_text(size = 8))+
+    scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
 
   print(compp) 
   
@@ -128,6 +139,124 @@ for(i in 1:nrow(provs)){
 }
 
 dev.off()
+
+pdf("figures/Quebec_Greater_Snow_Goose.pdf",
+    width = 11,
+    height = 8.5)
+tmp <- sp_z %>% 
+  filter(prov == "PQ",
+         !is.na(zone),
+         grepl("Greater Snow",species))
+tmp2 <- original_estimates %>% 
+  filter(region_En == unique(tmp$region_En),
+         !is.na(zone),
+         grepl("Greater Snow",species))
+tmp <- bind_rows(tmp,tmp2)
+
+compp <- ggplot(data = tmp,
+                aes(x = year_an,
+                    y = mean_moyen,
+                    colour = year_est))+
+  geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.5,width = 0,
+                linewidth = 1,
+                position = position_dodge(width = 0.75))+
+  geom_point(position = position_dodge(width = 0.75),alpha = 0.7,size = 1)+
+  facet_wrap(vars(region_En,zone,species),ncol = 5,scales = "free_y")+
+  #labs(title = paste(pr,z))+
+  xlab("")+
+  ylab("")+
+  theme_bw()+ 
+  theme( 
+    # axis.text = element_text( size = 14 ),
+    #      axis.text.x = element_text( size = 20 ),
+    #      axis.title = element_text( size = 16, face = "bold" ),
+    #      legend.position="none",
+    # The new stuff
+    strip.text = element_text(size = 8))+
+  scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
+
+
+print(compp) 
+
+dev.off()
+
+
+
+pdf("figures/All_Snow_Goose.pdf",
+    width = 17,
+    height = 14)
+tmp <- sp_z %>% 
+  filter(!is.na(zone),
+         grepl("Greater Snow",species))
+tmp2 <- original_estimates %>% 
+  filter(!is.na(zone),
+         grepl("Greater Snow",species))
+tmp <- bind_rows(tmp,tmp2)
+
+compp <- ggplot(data = tmp,
+                aes(x = year_an,
+                    y = mean_moyen,
+                    colour = year_est))+
+  geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.5,width = 0,
+                linewidth = 1,
+                position = position_dodge(width = 0.75))+
+  geom_point(position = position_dodge(width = 0.75),alpha = 0.7,size = 1)+
+  facet_wrap(vars(region_En,species),ncol = 5,scales = "free_y")+
+  labs(title = "Greater Snow Goose")+
+  xlab("")+
+  ylab("")+
+  theme_bw()+ 
+  theme( 
+    # axis.text = element_text( size = 14 ),
+    #      axis.text.x = element_text( size = 20 ),
+    #      axis.title = element_text( size = 16, face = "bold" ),
+    #      legend.position="none",
+    # The new stuff
+    strip.text = element_text(size = 8))+
+  scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
+
+
+print(compp) 
+
+tmp <- sp_z %>% 
+  filter(!is.na(zone),
+         grepl("Lesser Snow",species))
+tmp2 <- original_estimates %>% 
+  filter(!is.na(zone),
+         grepl("Lesser Snow",species))
+tmp <- bind_rows(tmp,tmp2)
+
+compp <- ggplot(data = tmp,
+                aes(x = year_an,
+                    y = mean_moyen,
+                    colour = species))+
+  geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.5,width = 0,
+                linewidth = 1,
+                position = position_dodge(width = 0.75))+
+  geom_point(position = position_dodge(width = 0.75),alpha = 0.7,size = 1)+
+  facet_wrap(vars(region_En,zone),ncol = 5,scales = "free_y")+
+  labs(title = "Lesser Snow Goose")+
+  xlab("")+
+  ylab("")+
+  theme_bw()+ 
+  theme( 
+    # axis.text = element_text( size = 14 ),
+    #      axis.text.x = element_text( size = 20 ),
+    #      axis.title = element_text( size = 16, face = "bold" ),
+    #      legend.position="none",
+    # The new stuff
+    strip.text = element_text(size = 8))+
+  scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
+
+
+print(compp) 
+
+
+dev.off()
+
+
+
+
 
 
 pdf("figures/annual_comparison_species_zone_10yr.pdf",
@@ -161,7 +290,17 @@ for(i in 1:nrow(provs)){
     geom_point(position = position_dodge(width = 0.33))+
     facet_wrap(vars(species),ncol = 5,scales = "free_y")+
     labs(title = paste(pr,z))+
-    theme_bw()
+    xlab("")+
+    ylab("")+
+    theme_bw()+ 
+    theme( 
+      # axis.text = element_text( size = 14 ),
+      #      axis.text.x = element_text( size = 20 ),
+      #      axis.title = element_text( size = 16, face = "bold" ),
+      #      legend.position="none",
+      # The new stuff
+      strip.text = element_text(size = 8))+
+    scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
   
   print(compp) 
   
@@ -189,7 +328,7 @@ dev.off()
 var_names_sim <- unique(pubEsts_simple_all[,c("var","name")])
 
 ests <- NULL
-for(i in c(ly,yy)){
+for(i in c(yy)){
   dtall = read.csv(paste0(ddir,"General_Estimates_Donnees_generales_comma_1976-",i,".csv")) %>% 
     mutate(year_est = as.character(i))
   
@@ -243,11 +382,21 @@ for(i in 1:nrow(provs)){
                       y = mean_moyen,
                       colour = year_est))+
     geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.2,width = 0,
-                  position = position_dodge(width = 0.33))+
-    geom_point(position = position_dodge(width = 0.33),alpha = 0.7)+
+                  position = position_dodge(width = 0.75))+
+    geom_point(position = position_dodge(width = 0.75),alpha = 0.7)+
     facet_wrap(vars(Description_En),ncol = 5,scales = "free_y")+
     labs(title = paste(pr,z))+
-    theme_bw()
+    xlab("")+
+    ylab("")+
+    theme_bw()+ 
+    theme( 
+      # axis.text = element_text( size = 14 ),
+      #      axis.text.x = element_text( size = 20 ),
+      #      axis.title = element_text( size = 16, face = "bold" ),
+      #      legend.position="none",
+      # The new stuff
+      strip.text = element_text(size = 8))+
+    scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
   
   print(compp) 
   
@@ -289,7 +438,17 @@ for(i in 1:nrow(provs)){
     geom_point(position = position_dodge(width = 0.33))+
     facet_wrap(vars(Description_En),ncol = 5,scales = "free_y")+
     labs(title = paste(pr,z))+
-    theme_bw()
+    xlab("")+
+    ylab("")+
+    theme_bw()+ 
+    theme( 
+      # axis.text = element_text( size = 14 ),
+      #      axis.text.x = element_text( size = 20 ),
+      #      axis.title = element_text( size = 16, face = "bold" ),
+      #      legend.position="none",
+      # The new stuff
+      strip.text = element_text(size = 8))+
+    scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
   
   print(compp) 
   
