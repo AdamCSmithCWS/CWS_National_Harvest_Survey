@@ -738,7 +738,8 @@ for(i in 1:nrow(sp_maps_c)){
                                        "ZONE" = "zone"))
   
   tmap = ggplot()+
-    geom_sf(data = tmpm,aes(fill = plot_cat),colour = grey(0.25))+
+    geom_sf(data = tmpm,aes(fill = plot_cat),colour = grey(0.65),
+            linewidth = 0.5)+
     theme_no_axes()+
     theme(legend.position = "bottom",
           legend.text = element_text(size = 12))+
