@@ -425,7 +425,7 @@ base_map = st_read(dsn = "input_map",
 plot(base_map)
 
 #colours for ratios (split at 1.0)
-colscale2 <- brewer.pal(11,"RdBu")[-c(5,7)] #removes the middle lightest colour leaves 4 red (1:5), 4 blue (6:10)
+colscale2 <- brewer.pal(11,"RdBu") #removes the middle lightest colour leaves 4 red (1:5), 4 blue (6:10)
 
 
 ## colour palette (different than one used in 2017 version)
@@ -436,6 +436,9 @@ seqs <- seq(0,1,length = length(colscale1)+1)[-c(1,length(colscale1)+1)]
 
 
 ## loop through all variables to create maps and generate table linking maps to estimates
+
+# General harvest estimates folder A -----------------------------------------------
+
 
 # General harvest estimates
 var_maps_a = a_tab %>% distinct(var,year,Description_En,Description_Fr) %>% 
@@ -535,6 +538,9 @@ for(i in 1:nrow(var_maps_a)){
 
 
 
+# species harvest estimates - folder B ------------------------------------
+
+
 ## species harvest estimates - folder B
 
 
@@ -626,7 +632,10 @@ for(i in 1:nrow(sp_maps_b)){
 
 
 
-## species harvest estimates - folder B
+# age ratio estimates - folder C ------------------------------------------
+
+
+# age ratio estimates - folder C
 
 
 
@@ -634,7 +643,9 @@ sp_maps_c = c_tab %>%
   distinct(AOU,year,English_Name,French_Name_New,Scientific_Name) %>% 
   mutate(map_file = paste0("Ratio_",AOU,"_",year,".png"))
 
-seqs <- seq(0,1,length = length(colscale2)+1)[-c(1,length(colscale2)+1)]
+nbks <- (length(colscale2)+1)/2
+
+seqs <- seq(0,1,length = nbks)[-c(1,nbks)]
 
 
 for(i in 1:nrow(sp_maps_c)){
@@ -645,44 +656,82 @@ for(i in 1:nrow(sp_maps_c)){
     ungroup() %>% 
     select(mean)
   
-  bbkst <- round(quantile(unlist(rng),
+  rngn <- rng %>% filter(mean <= 1)
+  rngp <- rng %>% filter(mean > 1)
+  
+  
+  bbkstn <- round(quantile(unlist(rngn),
                           probs = c(seqs),
                           na.rm = T,
-                          names = F))
-  om <- min(nchar(bbkst))-1
-  
-  bbks <- round(bbkst/(10^om))*10^om
-  ss <- 1
-  
-  while(any(duplicated(bbks))){
-    bbks <- round((bbkst/(10^(om-ss)))*10^(om-ss))
-    ss = ss+1
+                          names = F),
+                  2)
+  if(any(is.na(bbkstn))){
+    bbkstn <- c(0.2,0.4,0.6,0.8)
   }
-  bks <- c(0,
-           bbks,
-           round(max(rng,na.rm = T)+1))
+  
+  if(any(duplicated(bbkstn))){
+    bbkstnt <- seq(min(bbkstn)*0.9,max(bbkstn)*0.95,length.out = length(bbkstn))
+    bbkstn <- bbkstnt
+  }
+  
+  if(any((bbkstn == 1))){
+    bbkstnt <- bbkstn[-length(bbkstn)]  
+    bbkstnt[length(bbkstn)] <- max(bbkstnt) + (1-max(bbkstnt))/2
+    bbkstn <- bbkstnt
+  }
+  
+  bbkstp <- round(quantile(unlist(rngp),
+                          probs = c(seqs),
+                          na.rm = T,
+                          names = F),
+                 2)
+  if(any(is.na(bbkstp))){
+    bbkstp <- c(0.2,0.4,0.6,0.8)
+  }
+  if(any(duplicated(bbkstp))){
+    bbkstpt <- seq(min(bbkstp)*0.9,max(bbkstp),length.out = length(bbkstn))
+    bbkstp <- bbkstpt
+  }
   
   
+  # om <- min(nchar(bbkst))-1
+  # 
+  # bbks <- bbkstn #round(bbkst/(10^om))*10^om
+  # 
+  # ss <- 1
+  # 
+  # while(any(duplicated(bbks))){
+  #   bbks <- round((bbkstn/(10^(om-ss)))*10^(om-ss))
+  #   ss = ss+1
+  # }
+  bksp <- round(c(bbkstp,
+           max(rngp,na.rm = T)*1.1),2)
+  bksn <- round(c(0,
+                  bbkstn,
+                  1),2)
   
-  yy = as.integer(sp_maps_b[i,"year"])
-  ft =  as.character(sp_maps_b[i,"map_file"])
+  bks <- c(bksn,bksp)
   
-  tmp <- b_tab %>% filter(AOU == vv,
+  
+  yy = as.integer(sp_maps_c[i,"year"])
+  ft =  as.character(sp_maps_c[i,"map_file"])
+  
+  tmp <- c_tab %>% filter(AOU == vv,
                           year == yy,
-                          !is.na(zone),
-                          is.na(Age),
-                          is.na(Sex)) %>% 
+                          !is.na(zone)) %>% 
     mutate(plot_cat = cut(mean,breaks = bks))
   
-  colscale1b = c(colscale1,"white")
-  names(colscale1b) <- c(levels(tmp$plot_cat),NA)
+  colscale2b <- colscale2[-length(bksn)]
+  colscale2b = c(colscale2b,"white")
+  names(colscale2b) <- c(levels(tmp$plot_cat),NA)
   
-  labs = c(paste0("1 - ",bks[2]),
+  labs = c(paste0("< ",bks[2]),
            paste(bks[2:(length(bks)-2)],
                  bks[3:(length(bks)-1)],
                  sep = " - "),
            paste0("> ",bks[length(bks)-1]),
            "no estimate / aucune estimation") 
+  labs <- str_replace(labs,"^1 - ",">1 - ")
   names(labs) <- c(levels(tmp$plot_cat),NA)
   
   tmpm = left_join(base_map,tmp,by = c("PROV" = "prov",
@@ -693,7 +742,7 @@ for(i in 1:nrow(sp_maps_c)){
     theme_no_axes()+
     theme(legend.position = "bottom",
           legend.text = element_text(size = 12))+
-    scale_fill_manual(values = colscale1b,
+    scale_fill_manual(values = colscale2b,
                       labels = labs,
                       name = "",
                       drop = FALSE)
