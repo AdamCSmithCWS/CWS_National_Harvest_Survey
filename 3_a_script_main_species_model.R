@@ -83,7 +83,7 @@ fit_table <- provzone %>%
 #fit_table <- fit_table %>% filter(spgp %in% c("goose","murre") | (spgp == "duck" & prov == "ON" & zone == 3))
 # fit_table <- fit_table %>% filter(spgp %in% c("duck") | (spgp == "goose" & prov %in% c("NT","YT")))
 
-fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("goosePQ1","goosePQ2","gooseON3"))
+##fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("goosePQ1","goosePQ2","gooseON3"))
 
 
 # Province and Zone loop --------------------------------------------------
@@ -99,9 +99,9 @@ fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("goosePQ1","goos
                      .errorhandling = "pass") %dopar%
     {
 
-      spgp <- fit_table[i,"spgp"]
-      pr <- fit_table[i,"prov"]
-      z <- fit_table[i,"zone"]
+      spgp <- as.character(fit_table[i,"spgp"])
+      pr <- as.character(fit_table[i,"prov"])
+      z <- as.character(fit_table[i,"zone"])
       
       period = read.csv(paste0("data/period.",spgp,".csv"))
       
@@ -109,11 +109,11 @@ fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("goosePQ1","goos
 if(file.exists(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))){
 load(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
 
-#  if(paste0(spgp,pr,z) %in% c("goosePQ1","goosePQ2","gooseON3")){
-  mod.file = "models/species_harvest_model_alt2.R" # version with nu fixed at 3
-  # }else{
-  #   mod.file = "models/species_harvest_model_alt.R" # 
-  # }
+  if(paste0(spgp,pr,z) %in% c("goosePQ1","goosePQ2","gooseON3")){
+  mod.file = "models/species_harvest_model_alt_goose.R" # version with nu fixed at 3
+  }else{
+    mod.file = "models/species_harvest_model.R" #
+  }
 
 
 parms = c("NACTIVE_y",
@@ -130,6 +130,8 @@ parms = c("NACTIVE_y",
           "nu",
           "psi",
           "sdhunter",
+          "sdyear",
+          "sdyear_day",
           "cst",
           "cst_day",
           "ann",
@@ -139,34 +141,21 @@ parms = c("NACTIVE_y",
           "parrive",
           "pleave",
           "pkill_py",
-          "mut",
-          "mu_ps",
-          "mu_s",
           "alpha_s",
           "alpha_ps",
-          "alpha_psy",
           "alpha_sy",
+          "alpha_psy",
           "alpha_axsy",
-          "alpha_py",
-          #"alpha_psy1",
-          #"tau_alpha_psy",
-          "sd_alpha_psy",
+          "alpha_axs",
           "sd_alpha_s",
+          "sd_alpha_axsy",
+          "sd_axsy",
           "sd_alpha_period_s",
           "sd_psy",
-          "pcomp_sy",
           "pcomp_psy",
           "pcomp_axsy",
-          "pcomp_s",
-          "pcomp_ps",
-          "mu_psy",
           "beta_sy",
-          "beta_ps",
-          "sd_beta_sy",
-          "sd_beta_ps",
-          "sd_alpha_axsy",
-          "beta_axsy",
-          "sd_rand_psy"
+          "beta_ps"
           )
 
 
@@ -183,27 +172,6 @@ t1 = Sys.time()
 
 
 # MCMC sampling -----------------------------------------------------------
-
-w_sy <- apply(jdat$w_psy,c(2,3),sum)
-w_ps <- apply(jdat$w_psy,c(1,2),sum)
-w_s <- apply(jdat$w_psy,c(2),sum)
-
-w_axs <- apply(jdat$w_axsy,c(1,2),sum)
-jdat[["w_axs"]] <- w_axs
-jdat[["nparts_s"]] <- apply(jdat$w_axsy,2,sum)  
-
-jdat[["w_s"]] <- w_s
-jdat[["nparts"]] <- sum(jdat$nparts_py)  
-
-
-jdat[["w_sy"]] <- w_sy
-jdat[["nparts_y"]] <- apply(jdat$nparts_py,2,sum)  
-
-jdat[["w_ps"]] <- w_ps
-jdat[["nparts_p"]] <- apply(jdat$nparts_py,1,sum)  
-
-jdat[["midperiod"]] <- as.integer(floor(jdat$nperiods/2))
-jdat[["midyear"]] <- as.integer(floor(jdat$nyears/2))
 
   out2 = try(jagsUI(data = jdat,
                     parameters.to.save = parms,
@@ -229,70 +197,124 @@ if(class(out2) != "try-error"){
     as.data.frame() %>% 
     filter(!is.na(rhat))
 
+#   pcomp_psy <- out2sum %>% filter(grepl("pcomp_psy[",variable,fixed = TRUE))
+#   alpha_ps <- out2sum %>% filter(grepl("alpha_ps[",variable,fixed = TRUE))
+#   alpha_sy <- out2sum %>% filter(grepl("alpha_sy[",variable,fixed = TRUE))
+#   alpha_psy <- out2sum %>% filter(grepl("alpha_psy[",variable,fixed = TRUE))
+#  
+#   pcomp_axsy <- out2sum %>% filter(grepl("pcomp_axsy[",variable,fixed = TRUE))
+#   alpha_axs <- out2sum %>% filter(grepl("alpha_axs[",variable,fixed = TRUE))
+#   
+#   sd_alpha_axsy <- out2sum %>% filter(grepl("sd_alpha_axsy[",variable,fixed = TRUE))
+#   
+#   
+#   beta_ps <- out2sum %>% filter(grepl("beta_ps[",variable,fixed = TRUE))
+#   beta_sy <- out2sum %>% filter(grepl("beta_sy[",variable,fixed = TRUE))
+#   
 #  sum_pcomp_axsy <- out2sum %>% filter(grepl("pcomp_axsy[",variable,fixed = TRUE))%>%
 #        mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies*jdat$ndemog),
 #              species = rep(rep(c(1:jdat$nspecies),each = jdat$ndemog),times = jdat$nyears),
-#              demog = rep(c(1:jdat$ndemog),times = jdat$nyears*jdat$nspecies))
+#              demog = rep(c(1:jdat$ndemog),times = jdat$nyears*jdat$nspecies)) %>%
+#    left_join(.,sp.save.out,by = c("species" = "spn"))
 # 
 #  fail_axsy <- sum_pcomp_axsy %>%
 #    mutate(fail_rh = ifelse(rhat > 1.1,TRUE,FALSE)) %>%
 #    group_by(species,fail_rh) %>%
 #    summarise(n_fail = n())
-# 
-#  #sum_beta_axsy <- out2sum %>% filter(grepl("beta_axsy",variable))
-#   sum_sd <- out2sum %>% filter(grepl("sd",variable,fixed = TRUE))
-# 
-#   sum_alpha_s <- out2sum %>% filter(grepl("alpha_s[",variable,fixed = TRUE))
-#   sum_alpha_sy <- out2sum %>% filter(grepl("alpha_sy[",variable,fixed = TRUE))
-#   sum_alpha_ps <- out2sum %>% filter(grepl("alpha_ps[",variable,fixed = TRUE))
-# 
-#   sum_pcomp_s <- out2sum %>% filter(grepl("pcomp_s[",variable,fixed = TRUE))
-#   sum_pcomp_s %>% filter(rhat > 1.1) %>% summarise(n_fail = n()/nrow(sum_pcomp_s))
-# 
-#   sum_pkill_py <- out2sum %>% filter(grepl("pkill_py[",variable,fixed = TRUE))
-# 
-# 
-#   sum_pcomp_psy <- out2sum %>% filter(grepl("pcomp_psy[",variable,fixed = TRUE))
-#   sum_pcomp_psy %>% filter(rhat > 1.1) %>% summarise(n_fail = n()/nrow(sum_pcomp_psy))
-# 
-#   sum_pcomp_sy <- out2sum %>% filter(grepl("pcomp_sy[",variable,fixed = TRUE)) %>%
-#     mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies),
-#            species = rep(c(1:jdat$nspecies),times = jdat$nyears))
-#   tst = sum_pcomp_sy %>% filter(rhat > 1.1) %>% group_by(year) %>% summarise(n_fail = n()/jdat$nspecies)
-#   wh_fail <- ggplot(data = sum_pcomp_sy,aes(x = year,y = rhat,group = species,colour = species))+
-#     geom_line()
-#   print(wh_fail)
-# 
-# 
+# # 
+# #  #sum_beta_axsy <- out2sum %>% filter(grepl("beta_axsy",variable))
+# #   sum_sd <- out2sum %>% filter(grepl("sd",variable,fixed = TRUE))
+# # 
+# #   sum_alpha_s <- out2sum %>% filter(grepl("alpha_s[",variable,fixed = TRUE))
+# #   sum_alpha_sy <- out2sum %>% filter(grepl("alpha_sy[",variable,fixed = TRUE))
+# #   sum_alpha_ps <- out2sum %>% filter(grepl("alpha_ps[",variable,fixed = TRUE))
+# # 
+# #   sum_pcomp_s <- out2sum %>% filter(grepl("pcomp_s[",variable,fixed = TRUE))
+# #   sum_pcomp_s %>% filter(rhat > 1.1) %>% summarise(n_fail = n()/nrow(sum_pcomp_s))
+# # 
+# #   sum_pkill_py <- out2sum %>% filter(grepl("pkill_py[",variable,fixed = TRUE))
+# # 
+# # 
+# #   sum_pcomp_psy <- out2sum %>% filter(grepl("pcomp_psy[",variable,fixed = TRUE))
+# #   sum_pcomp_psy %>% filter(rhat > 1.1) %>% summarise(n_fail = n()/nrow(sum_pcomp_psy))
+# # 
+# #   sum_pcomp_sy <- out2sum %>% filter(grepl("pcomp_sy[",variable,fixed = TRUE)) %>%
+# #     mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies),
+# #            species = rep(c(1:jdat$nspecies),times = jdat$nyears))
+# #   tst = sum_pcomp_sy %>% filter(rhat > 1.1) %>% group_by(year) %>% summarise(n_fail = n()/jdat$nspecies)
+# #   wh_fail <- ggplot(data = sum_pcomp_sy,aes(x = year,y = rhat,group = species,colour = species))+
+# #     geom_line()
+# #   print(wh_fail)
+# # 
+# # 
 #   sum_kill_ys <- out2sum %>% filter(grepl("kill_ys[",variable,fixed = TRUE))%>%
 #     mutate(year = rep(c(1:jdat$nyears),times = jdat$nspecies),
 #            species = rep(c(1:jdat$nspecies),each = jdat$nyears)) %>%
 #     left_join(.,sp.save.out,by = c("species" = "spn"))
-# pdf(paste0("temp_kill_plot_",pr,"_",z,".pdf"),
+# pdf(paste0("temp_kill_plot_full",pr,"_",z,".pdf"),
 #     width = 11,
 #     height = 8.5)
-#  kill_plot <- ggplot(data = sum_kill_ys,aes(x = year,y = mean))+
+#  kill_plot <- ggplot(data = sum_kill_ys,aes(x = year,y = median))+
 #    #  geom_ribbon(aes(x = year,y = mean,ymin = q5,ymax = q95,fill = species),alpha = 0.2, inherit.aes = FALSE)+
 #    # geom_line()+
-#    geom_errorbar(aes(x = year,y = mean,ymin = q5,ymax = q95),
+#    geom_errorbar(aes(x = year,y = median,ymin = q5,ymax = q95),
 #                  alpha = 0.2, width = 0)+
 #    geom_point()+
 #    theme_bw()+
 #    facet_wrap(vars(AOU),scales = "free")
 #   print(kill_plot)
 #  dev.off()
-# 
 #  
- # sum_kill_y <- out2sum %>% filter(grepl("kill_y[",variable,fixed = TRUE))%>%
- #   mutate(year = rep(c(1:jdat$nyears),times = 1))
- # kill_plot <- ggplot(data = sum_kill_y,aes(x = year,y = mean))+
- #   #  geom_ribbon(aes(x = year,y = mean,ymin = q5,ymax = q95,fill = species),alpha = 0.2, inherit.aes = FALSE)+
- #   # geom_line()+
- #   geom_errorbar(aes(x = year,y = mean,ymin = q5,ymax = q95),
- #                 alpha = 0.2, width = 0)+
- #   geom_point()+
- #   theme_bw()
- # print(kill_plot)
+#  raw_demog <- NULL
+#  for(d in 1:jdat$ndemog){
+#    for(s in 1:jdat$nspecies){
+#      
+#   
+#    tmp <- data.frame(demog = d,
+#                      species = s,
+#                      year = 1:jdat$nyears,
+#                      parts = jdat$w_axsy[d,s,])
+#    
+#    raw_demog <- bind_rows(raw_demog,tmp)
+#    }
+#  }
+#   raw_demog <- raw_demog %>% 
+#     group_by(species,year) %>% 
+#     mutate(pdemog = parts/sum(parts))%>%
+#     left_join(.,sp.save.out,by = c("species" = "spn"))
+#  
+#  
+#  pdf(paste0("temp_demog_plot_full",pr,"_",z,".pdf"),
+#      width = 11,
+#      height = 8.5)
+#  kill_plot <- ggplot(data = sum_pcomp_axsy,aes(x = year,y = median,
+#                                                colour = factor(demog)))+
+#    geom_point(data = raw_demog,
+#                aes(x = year,y = pdemog),
+#               size = 0.75,
+#               shape = 3)+
+#    #  geom_ribbon(aes(x = year,y = mean,ymin = q5,ymax = q95,fill = fill),alpha = 0.2, inherit.aes = FALSE)+
+#    # geom_line()+
+#    geom_errorbar(aes(x = year,y = median,ymin = q5,ymax = q95,
+#                      colour = factor(demog)),
+#                  alpha = 0.2, width = 0)+
+#    geom_point()+
+#    theme_bw()+
+#    facet_wrap(vars(AOU),scales = "free")
+#  print(kill_plot)
+#  dev.off()
+# # 
+# #  
+#  sum_kill_y <- out2sum %>% filter(grepl("kill_y[",variable,fixed = TRUE))%>%
+#    mutate(year = rep(c(1:jdat$nyears),times = 1))
+#  kill_plot <- ggplot(data = sum_kill_y,aes(x = year,y = median))+
+#    #  geom_ribbon(aes(x = year,y = mean,ymin = q5,ymax = q95,fill = species),alpha = 0.2, inherit.aes = FALSE)+
+#    # geom_line()+
+#    geom_errorbar(aes(x = year,y = median,ymin = q5,ymax = q95),
+#                  alpha = 0.2, width = 0)+
+#    geom_point()+
+#    theme_bw()
+#  print(kill_plot)
 #  
  #
  attempts <- 0
@@ -300,14 +322,14 @@ if(class(out2) != "try-error"){
  #  shinystan::launch_shinystan(shinystan::as.shinystan(out2$samples))
  #
  # 
-  out2test <- out2sum %>% filter(!grepl("axs",variable),
-                                 !grepl("ax",variable),
-                                 !grepl("pfemale",variable),
-                                 !grepl("padult",variable))
+  # out2test <- out2sum %>% filter(!grepl("axs",variable),
+  #                                !grepl("ax",variable),
+  #                                !grepl("pfemale",variable),
+  #                                !grepl("padult",variable))
   
   # restart with final values as initial values
   # and sample more if >1% of non demographic parameters have rhat > 1.1
-  while(quantile(out2test$rhat,0.99) > 1.1 & attempts < 1){
+  while(quantile(out2sum$rhat,0.999) > 1.1 & attempts < 1){
     attempts <- attempts+1
     burnInSteps = 0
     thinSteps = thinSteps*3
