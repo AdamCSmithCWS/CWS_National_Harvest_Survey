@@ -170,7 +170,7 @@ for(spgp in c("duck","goose","murre")){
   
   
   
-  for(pr in provs2[11:12]){
+  for(pr in provs2){
   
   
   
@@ -734,7 +734,7 @@ for(spgp in c("duck","goose","murre")){
                 ncastes = max(castes), # castes (numeric, 1:4)
                 castes = castes, # castes (numeric, 1:4)
                 nhs = nhs, # integer length = 1 number of active hunters over all years (nrow for sumkill_active)
-                n_alt_zones = n_alt_zones,#number of zones other than this one
+                #n_alt_zones = n_alt_zones,#number of zones other than this one
                 #main data for overall harvest estimates
                 hunter = hunter_n_cy, # vector(length = nhs) unique numeric indicator for active hunters by caste and year 
                 kill = kill, # vector(length = nhs), total group (ducks, geese, murres) harvest of nhs response
@@ -745,6 +745,35 @@ for(spgp in c("duck","goose","murre")){
                 leave_hunt_cf = leave_hunt_cf,
                 demof = demof,
                 demoa = demoa)#
+    
+
+    
+    ## additional data objects added since 2020
+    
+    w_sy <- apply(jdat$w_psy,c(2,3),sum)
+    w_ps <- apply(jdat$w_psy,c(1,2),sum)
+    w_s <- apply(jdat$w_psy,c(2),sum)
+    w_axs <- apply(jdat$w_axsy,c(1,2),sum)
+    
+    jdat[["w_axs"]] <- w_axs #total number of parts for each demographic category by species, across all years
+    jdat[["nparts_s"]] <- apply(jdat$w_axsy,2,sum) # total number of parts with demog info by species, in all years
+    
+    jdat[["w_s"]] <- w_s # total number of parts for each species - all years
+    jdat[["nparts"]] <- sum(jdat$nparts_py) #total number of parts all years and species
+    
+    
+    jdat[["w_sy"]] <- w_sy# total number of parts for each species in each year
+    jdat[["nparts_y"]] <- apply(jdat$nparts_py,2,sum) # total number of parts each year for all species
+    
+    jdat[["w_ps"]] <- w_ps # number of parts by period and species, summed across years
+    jdat[["nparts_p"]] <- apply(jdat$nparts_py,1,sum) #total number of parts in each period all species and years
+    
+    
+    jdat[["midperiod"]] <- 2 # sets the second year as the mid-point of the period-time-series structure (period-2 tends to have the most parts)
+    jdat[["midyear"]] <- as.integer(floor(jdat$nyears/2)) #sets the mid-point of annual time-series structures to the middle of the available years
+    
+    jdat[["nspecies_rich"]] <- max(which(jdat$w_s > 300)) #species with sufficient parts to make estimating time-varying demographic proportions reasonble
+    
     
     
     if(any(is.na(jdat))){stop(paste("Missing data in the jdat object for",spgp,pr,z))}

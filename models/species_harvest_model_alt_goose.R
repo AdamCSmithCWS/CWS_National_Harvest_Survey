@@ -1,5 +1,5 @@
 ############################### model
-############### ZIP time-series version - alternate to the standard ZIP
+############### ZIP time-series version
 ### data required
 # pops = pops, # pops[c.y] total populations of permits by caste and year used to rescale all perhunter estimates to totals 
 # #component that estimates p_active etc. to generate totals of active and successful hunters by year
@@ -23,13 +23,29 @@
 # nhunter_cy = nhunter_cy, # nhunter_cy[castes,nyears] number active hunters by caste and year
 # castes = castes, # castes (numeric, 1:4)
 # ncastes = length(castes), # number of castes
-# nhs = nhs, # integer length = 1 number of active hunters over all years (nrow for sumkill_active)
+# nhs , # integer length = 1 number of active hunters over all years (nrow for sumkill_active)
 # #main data for overall harvest estimates
 # hunter = hunter_n_cy, # vector(length = nhs) unique numeric indicator for active hunters by caste and year 
 # kill = kill, # vector(length = nhs), total group (ducks, geese, murres) harvest of nhs response
 # year = year, # vector(length = nhs), year of response
 # caste = caste, # vector(length = nhs), caste of response
 # days = days# vector(length = nhs), number of days spent hunting
+# n_arrive #matrix nrow = ncastes, ncol = nyears, number of permits to add to the local populations based on the permist sampled outside of this zone but hutning here
+# leave_hunt_cf #martrix nrow = nyears, ncol = 2, column-1 = number of hunters sampled here that hunted in a different zone, column-2 = total number of hunters
+# demof #integer - indicates which demog are female
+# demoa #integer - indicates which demog are male
+# w_axs #total number of parts for each demographic category by species, across all years
+# nparts_s # total number of parts with demog info by species, in all years
+# w_s # total number of parts for each species - all years
+# nparts #total number of parts all years and species
+# w_sy # total number of parts for each species in each year
+# nparts_y # total number of parts each year for all species
+# w_ps #number of parts by period and species, summed across years
+# nparts_p #total number of parts in each period all species and years
+# midperiod # sets the second year as the mid-point of the period-time-series structure (period-2 tends to have the most parts)
+# midyear  #sets the mid-point of annual time-series structures to the middle of the available years
+# nspecies_rich #species with sufficient parts to make estimating time-varying demographic proportions reasonble
+
 ###### see below for alternate w[p,s,y,h] - hunter-specific data
 #### hunter specific data would be better because it would better account for the uncertainty among hunters in the species composition
 #### currently, this assumes that the selection of hunters in a given zone and year is representative
@@ -245,6 +261,10 @@ model {
     for(y in 1:nyears){
       ## derived estimated means, which can then be multiplied by the extrapolation factors for each caste and year
       # estimate of the mean (per hunter) kill per caste, and year
+      # these are alternate calculations of the mean total kill and days which
+      # do not rely on the log-normal assumption of the transformation factors
+      # unfortunately, they often result in extremely unstable estimates affected by some long tails in the
+      # distribution of hunter effects, so they're not used. 
       #   for(h in 1:nhunter_cy[c,y]){
       # 
       #   #hunter-level predictions of mean kill
@@ -279,7 +299,7 @@ model {
   
 
   #total harvest estimate by species year and caste
-  ## mean harvest and days * population sizes of each caste and year * esimated proportion of population that is active to generate final harvest estimates.
+  ## mean harvest and days * population sizes of each caste and year * estimated proportion of population that is active to generate final harvest estimates.
   for(y in 1:nyears){
    
     for(c in 1:ncastes){
@@ -333,8 +353,10 @@ model {
   
 ######### As of 2021 - removed the dirichlet priors and instead using
  #### a multinomial logistic regression approach that has much improved sampling efficiency
+ #### over the approach in Smith et al. 2020 that involves the dirichlet priors
+ #### should have done this from the start
  #### multinomial log-ratios, time-series model for the distribution of harvest across periods
- #### fixed effects for the mean harvest across periods in the first year
+ #### fixed effects for the mean harvest across periods in the middle year
  #### hyperparameter alpha_py[p] and tau_alpha_py[p], shrinking each period's estimate in a given year
  #### towards last years proportion of the hunt occurring within that period
  ### time-series first difference model through years on the period-specific parameters
@@ -360,10 +382,9 @@ model {
        } #y
   }#p
 
-  # exponential transformation to monitor the hyperparameter mean proportion in a given period
-
+  
   #### multinomial log-ratios, time-series model for the distribution of harvest across periods
-  #### fixed effects for the mean harvest across periods in the first year
+  #### fixed effects for the mean harvest across periods in the middle year
   #### hyperparameter alpha_py[p] and tau_alpha_py[p], shrinking each period's estimate in a given year
   #### towards last years proportion of the hunt occurring within that period
   ### time-series first difference model through years on the period-specific parameters
@@ -392,12 +413,7 @@ model {
   
   
  
-  
-##################################################################################
-  ## species composition across periods and years
-  ## same basic model as the overall kill proportional distribution across periods
-  
-  ######## this model currently doesn't use the variation among hunters in the species distribution
+  ######## The composition model still doesn't use the variation among hunters in the species distribution
   ### but perhaps it should, commented-out section that follows suggests how it could work
   ##### species composition
   #     for (p in 1:nperiods){
@@ -410,6 +426,17 @@ model {
   #   }#h
   # }#y
   
+##################################################################################
+  ## species composition across periods and years
+  ## modification of the model used in Smith et al. 2020. 
+  ## this approach uses all-year and all-period summaries of the parts to estimate
+  ## predictors on the yearly proportions of species in each period
+  
+
+  # this is a sub-model that estimates the proportion of each species in teh harvest in each year
+  # summing across all of the periods
+  # this estimate is useful to generate the alpha_sy[s,y] values that are used as a predictor in the 
+  # full annual period and year specific proportions
  w_s[1:nspecies] ~ dmulti(pcomp_s[1:nspecies], nparts)   # w_s is the total number of parts for each species (across all years), nparts is the sum of the total parts
   
  
@@ -438,69 +465,18 @@ model {
      
    }#s   
   
-   for (p in 1:nperiods){
-     
-     w_ps[p,1:nspecies] ~ dmulti(pcomp_ps[p,1:nspecies], nparts_p[p])   # multinom distr vector responses
-     
-   }
   
-   # period effects by species
-   for (s in 1:nspecies){
-   for (p in 1:nperiods){
-       pcomp_ps[p,s] <- delta_ps[p,s] / sum(delta_ps[p,1:nspecies])
-       delta_ps[p,s] <- exp(alpha_ps[p,s])
-       
-     } #p
-     
-   }#s
-  
-  tau_psy ~ dscaled.gamma(0.1,50) #extra variance
-  sd_psy <- 1/sqrt(tau_psy)
-  
-  tau_beta_sy ~ dscaled.gamma(0.1,50) #extra variance
-  sd_beta_sy <- 1/sqrt(tau_beta_sy)
-  
-  tau_beta_ps ~ dscaled.gamma(0.1,50) #extra variance
-  sd_beta_ps <- 1/sqrt(tau_beta_ps)
-  
-  tau_rand_psy ~ dscaled.gamma(1,50) # random variance around period and species proportion models
-  sd_rand_psy <- 1/sqrt(tau_rand_psy)
-  
-  BETA_sy ~ dnorm(1,0.1)
-  for(p in 1:nperiods){
-  beta_sy[p] ~ dnorm(BETA_sy,tau_beta_sy)# coefficient controlling the influence of the species by year component
-  }
-  BETA_ps ~ dnorm(1,0.1)
-  for(y in 1:nyears){
-    beta_ps[y] ~ dnorm(BETA_ps,tau_beta_ps)# coefficient controlling the influence of the period-specific pattern
-  }
-  
-   for (p in 1:nperiods){
-     for (y in 1:nyears) {
-        w_psy[p,1:nspecies,y] ~ dmulti(pcomp_psy[p,1:nspecies,y], nparts_py[p,y])   # multinom distr vector responses
-       }
-    
-    ##### pcomp_psy[p,s,y] is the estimated proportion of the species composition in year-y, period-p, that is species-s
-    
-    for (s in 1:nspecies){
-      for (y in 1:nyears){
-        pcomp_psy[p,s,y] <- delta_psy[p,s,y] / sum(delta_psy[p,1:nspecies,y]) # softmax regression 
-         delta_psy[p,s,y] <- exp(alpha_psy[p,s,y])
-         alpha_psy[p,s,y] ~ dnorm(beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s],tau_rand_psy) # combination of species effect, species-year effect, species period effect
-      } #y
-      
-    }#s
-    
-  }#p
   
   #### multinomial log-ratios, time-series model for the species composition
-
- alpha_s[1] <- 0
-
-for(s in 2:nspecies){
-  alpha_s[s] ~ dnorm(0,0.5)
-}
-
+  tau_alpha_s ~ dscaled.gamma(0.1,50) #time-series variance
+  sd_alpha_s <- 1/sqrt(tau_alpha_s)
+  
+  alpha_s[1] <- 0
+  
+  for(s in 2:nspecies){
+    alpha_s[s] ~ dnorm(0,0.5)
+  }
+  
   ### first species is the reference group in each year
   for(y in 1:nyears){
     alpha_sy[1,y] <- 0 #~ dnorm(alpha_sy[1,y-1],tau_alpha_s[s]) 
@@ -520,9 +496,31 @@ for(s in 2:nspecies){
   ###time series of species overall proportions in the parts
   
   
-  tau_alpha_s ~ dscaled.gamma(0.1,50) #time-series variance
+  
+  # this is a sub-model that estimates the proportion of each species in teh harvest in each period
+  # summing across all years
+  # this estimate is useful to generate the alpha_ps[period,species] values that are also used as a predictor in the 
+  # full annual period and year specific proportions
+   for (p in 1:nperiods){
+     
+     w_ps[p,1:nspecies] ~ dmulti(pcomp_ps[p,1:nspecies], nparts_p[p])   # multinom distr vector responses
+     
+   }
+  
+   # period effects by species
+   for (s in 1:nspecies){
+   for (p in 1:nperiods){
+       pcomp_ps[p,s] <- delta_ps[p,s] / sum(delta_ps[p,1:nspecies])
+       delta_ps[p,s] <- exp(alpha_ps[p,s])
+       
+     } #p
+     
+   }#s
+  
+
+  
+  
   taualpha_perod_s ~ dscaled.gamma(1,50) # period-series variance
-  sd_alpha_s <- 1/sqrt(tau_alpha_s)
   sd_alpha_period_s <- 1/sqrt(taualpha_perod_s)
   
   
@@ -532,7 +530,7 @@ for(s in 2:nspecies){
   }
   
   for(s in 2:nspecies){
-    alpha_ps[midperiod,s] <- 0#~ dnorm(0,0.5) #fixed effect for species 2:nspecies in middle period
+    alpha_ps[midperiod,s] ~ dnorm(0,0.5) #fixed effect for species 2:nspecies in middle period
   }
   
   for(p in (midperiod+1):nperiods){
@@ -552,26 +550,67 @@ for(s in 2:nspecies){
   }
   
   
+  ##### full period by species, by year estimates of composition
+  ### using the alpha_sy and alpha_ps parameters above as predictors on the 
+  ### period, year, and species specific proportions
+  
+  ## the following betas are the coefficients that control the contribution of
+  ## the alpha_sy and alpha_ps to teh alpha_psy
+  ## they are random effects that vary by year and period
+  tau_beta_sy ~ dscaled.gamma(0.1,50) #extra variance
+  sd_beta_sy <- 1/sqrt(tau_beta_sy)
+  tau_beta_ps ~ dscaled.gamma(0.1,50) #extra variance
+  sd_beta_ps <- 1/sqrt(tau_beta_ps)
+  BETA_sy ~ dnorm(1,1) # relatively narrow and primarily positive prior
+  for(p in 1:nperiods){
+    beta_sy[p] ~ dnorm(BETA_sy,tau_beta_sy)# coefficient controlling the influence of the species by year component - varies by period
+  }
+  BETA_ps ~ dnorm(1,1)
+  for(y in 1:nyears){
+    beta_ps[y] ~ dnorm(BETA_ps,tau_beta_ps)# coefficient controlling the influence of the period-specific pattern - varies by year
+  }
+  
+  for (p in 1:nperiods){
+    for (y in 1:nyears) {
+      w_psy[p,1:nspecies,y] ~ dmulti(pcomp_psy[p,1:nspecies,y], nparts_py[p,y])   # multinom distr vector responses
+    }
+    
+    ##### pcomp_psy[p,s,y] is the estimated proportion of the species composition in year-y, period-p, that is species-s
+    
+    for (s in 1:nspecies){
+      for (y in 1:nyears){
+        pcomp_psy[p,s,y] <- delta_psy[p,s,y] / sum(delta_psy[p,1:nspecies,y]) # softmax regression 
+        delta_psy[p,s,y] <- exp(alpha_psy[p,s,y])
+        alpha_psy[p,s,y] <- beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s] # combination of species effect, species-year effect, species period effect
+      } #y
+      
+    }#s
+    
+  }#p
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   #####################################################################
   #### proportional distribution of age and sex by species
   #### pcomp_axsy[1:ndemog,s,y] = proportional distribution of age and sex classes by species and year
   
   ##### demographic composition
-  
-  
-  
-  for(s in 1:nspecies){
-    tau_axsy[s] ~ dscaled.gamma(0.1,50) #extra variance
-    sd_axsy[s] <- 1/sqrt(tau_axsy[s])
-  }
 
-  
+  ### model only allows demographic composition to vary throught time, if the species
+  ### has at least 300 parts - i.e., at least 6 parts per year on average
+  ### given that there are 4 proportions/year and ~50 years, this demographic composition
+  ### requires a lot of data to estimate so many parameters 
   
   for (s in 1:nspecies){
-    
-    w_axs[1:ndemog,s] ~ dmulti(pcomp_axs[1:ndemog,s], nparts_s[s])   # multinom distr vector responses
-    
     
     for (y in 1:nyears) {
       w_axsy[1:ndemog,s,y] ~ dmulti(pcomp_axsy[1:ndemog,s,y], nparts_sy[s,y])   # multinom distr vector responses
@@ -582,60 +621,64 @@ for(s in 2:nspecies){
     ### for ducks d is 1 for AF, 2 for IF, 3 for AM, and 4 for IM 
     
     for (d in 1:ndemog){
-      # ## species mean demographic proportions across all years
-      pcomp_axs[d,s] <- delta_axs[d,s] / sum(delta_axs[1:ndemog,s])
-      delta_axs[d,s] <- exp(alpha_axs[d,s])# ~ dgamma(exp_alpha_axs[d,s], 1)
-      # 
+
       for (y in 1:nyears){
         pcomp_axsy[d,s,y] <- delta_axsy[d,s,y] / sum(delta_axsy[1:ndemog,s,y])
-        
-        delta_axsy[d,s,y] <- exp(mu_axsy[d,s,y])
-        mu_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y],tau_axsy[s]) # combination of species effect, species-year effect, species period effect
-        
-        
-      } #y
-      
+        delta_axsy[d,s,y] <- exp(alpha_axsy[d,s,y])
+           } #y
     }#d
-    
-    #### monitoring the mean demographic splits across all years for a given species
-
-    
-    
-  }#s
+    }#s
   
-  #### multinomial log-ratios, time-series model for the age and sex (ducks) or age (geese) composition
-  # 
-  # 
-     tau_alpha_ax ~ dscaled.gamma(0.2,50) #variance among species on the first-year parameter for demography
-     sd_alpha_ax <- 1/sqrt(tau_alpha_ax)
-     
+  #### multinomial log-ratios, model for the age and sex (ducks) or age (geese) composition
 
-  for(s in 1:nspecies){
-    tau_alpha_axsy[s] ~ dscaled.gamma(0.2,50) #variance of year-effects for the demographic parameters by species
+  ## annual variation only for data-rich species
+  for(s in 1:nspecies_rich){
+    tau_alpha_axsy[s] ~ dscaled.gamma(0.5,50) #variance of year-effects for the demographic parameters by species
     sd_alpha_axsy[s] <- 1/sqrt(tau_alpha_axsy[s])
     
-    alpha_axs[1,s] <- 0 #fixed first demographic category = 0
- 
+    alpha_axs[ndemog,s] <- 0 #final demographic category fixed at 0
+    
     for(y in 1:nyears){
-      alpha_axsy[1,s,y] <- alpha_axs[1,s]  #first demographic group is fixed at 0
+      alpha_axsy[ndemog,s,y] <- alpha_axs[ndemog,s]  #final demographic group is fixed at 0 in all years for each species
     }#y
     
-    for(d in 2:ndemog){
-     
+    for(d in 1:(ndemog-1)){
       alpha_axs[d,s] ~ dnorm(0,0.1)#tau_alpha_ax)
-      alpha_axsy[d,s,midyear] ~ dnorm(alpha_axs[d,s],tau_alpha_axsy[s])
+      alpha_axsy[d,s,midyear] <- alpha_axs[d,s]
       for(y in (midyear+1):nyears){
         
-        alpha_axsy[d,s,y]  ~ dnorm(alpha_axs[d,s],tau_alpha_axsy[s]) 
+        alpha_axsy[d,s,y]  ~ dnorm(alpha_axsy[d,s,y-1],tau_alpha_axsy[s]) 
       }
       for(y in 1:(midyear-1)){
-        alpha_axsy[d,s,y] ~ dnorm(alpha_axs[d,s],tau_alpha_axsy[s]) 
+        alpha_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y+1],tau_alpha_axsy[s]) 
         
       }#y
     }#d
     
   }#s
- 
+  
+  
+  
+  ### for the non-data rich species (those with less than ~300 parts total)
+  ### the annual values of demographic proportions are fixed at the mean 
+  ### value for the species - complete pooling across all years
+  
+  for(s in (nspecies_rich+1):nspecies){
+    alpha_axs[ndemog,s] <- 0 #fixed first demographic category = 0
+    
+    for(y in 1:nyears){
+      alpha_axsy[ndemog,s,y] <- alpha_axs[ndemog,s]  #first demographic group is fixed at 0 in all years for each species
+    }#y
+    
+    for(d in 1:(ndemog-1)){
+      alpha_axs[d,s] ~ dnorm(0,0.1)#tau_alpha_ax)
+      for(y in 1:nyears){
+        alpha_axsy[d,s,y] <- alpha_axs[d,s]
+      }
+    }#d
+    
+  }#s
+  
   
 }## end of model
 
