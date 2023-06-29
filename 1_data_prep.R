@@ -12,7 +12,8 @@
 # species changes for final harvest survey estimates ----------------------
 
 ### recode all 1720 as 1722 (large race Canada Geese)
-### recode all 1691 as 1690 (white-phase lesser snow goose - drop blue phase)
+### recode all 1699 and 1690 as 1692 (white-phase snow goose)
+### recode all 1691 as 1693 (blue-phase snow goose)
 ### Drop Black Brant - 1740
 ### drop Eurasian Green-winged Teal - 1380
 ### consider splitting eastern and western Harlequin ducks
@@ -22,7 +23,7 @@
 
 
 
-Y <- 2021
+Y <- 2022
 years <- 1976:Y
 
 names(years) <- paste(years)
@@ -40,8 +41,8 @@ sashome <- "C:\\Program Files\\SASHome\\SASFoundation\\9.4"
 provs = c("AB","BC","SK","MB","ON","PQ","NS","PE","NB","NF","NT","YT")#,"NU") #All prov
 #ignoring territories above
 
-sps <- read.csv(paste(home.fold,"/data/Bird_names_2019.csv", sep = ""))
-aou_rec <- read.csv("data/Reconcile_AOU_codes_2019.csv")
+sps <- read.csv(paste(home.fold,"/data/Bird_names_2023.csv", sep = ""))
+aou_rec <- read.csv("data/Reconcile_AOU_codes_2023.csv")
 
 
 species <- unique(sps[which(sps$group %in% c("duck","goose","murre")),"specieslevelenglish"])
@@ -189,10 +190,19 @@ print(y)
   }#y
 
 
-save.image(file = "data/stored_SAS_download.RData")
+#save.image(file = "data/stored_SAS_download.RData")
 
 
-load("data/stored_SAS_download.RData")
+saveRDS(outscse,paste0("data/outscse",Y,".rds"))
+saveRDS(perms,paste0("data/perms",Y,".rds"))
+saveRDS(popsiz,paste0("data/popsiz",Y,".rds"))
+
+saveRDS(cald,paste0("data/cald",Y,".rds"))
+saveRDS(harvw,paste0("data/harvw",Y,".rds"))
+saveRDS(calg,paste0("data/calg",Y,".rds"))
+saveRDS(calm,paste0("data/calm",Y,".rds"))
+
+
 
 #if(any(calm[[as.character(2019)]]$YEAR != 2019)){stop("ERROR murre calendar info for 2019 is wrong")}
 for(y in years){
@@ -254,6 +264,8 @@ tof <- which(outscse$WEEK < 1) #small % of parts have negative weeks because the
 if(length(tof) > 0){stop("some parts have non-positive weeks = hunting pre September 1")}
 
 
+
+#### replace BAGE with PAGE
 outscse[which(outscse$PAGE != ""),"BAGE"] <- outscse[which(outscse$PAGE != ""),"PAGE"]
 # outscse[which(outscse$BAGE %in% c("2")),"BAGE"] <- "I"
 # outscse[which(outscse$BAGE %in% c("3")),"BAGE"] <- "U"
@@ -440,7 +452,6 @@ save(list = c("allkill",
 
 
 
-
 # exporting the parts data as a readable csv file -------------------------
 parts_out <- outscse[,c("PRHUNT","ZOHUNT","AOU","YRHUNT","MONH","DAYH","BAGE","BSEX","WEEK")]
 names(parts_out) <- c("Province of hunt",
@@ -456,12 +467,15 @@ parts_out <- left_join(parts_out,sps,by = "AOU")
 write.csv(parts_out,paste0("GoogleDrive/All_raw_parts_data_",Y,".csv"))
 # tmp <- parts_out %>% filter(specieslevelenglish == "Mallard")
 # write.csv(tmp,paste0("output/Mallard_parts_all_years_through_",Y,".csv"))
+
+
 ######################
 #define periods across all years
 
 zones <- 1:3
 pers <- 1:20
-
+##### identify periods based on weeks with at least prop_period-% of the parts across all years
+prop_period <- 0.05
 period.duck <- expand.grid(pr = provs,zo = zones,period = pers,stringsAsFactors = F)
 
 period.duck[,"startweek"] <- NA
@@ -481,7 +495,7 @@ for(pr in provs){
     wsums <- colSums(testm)
     wprops <- wsums/sum(wsums)
 
-    ##### identify periods based on weeks with at least 5% of the parts across all years
+    
     per1 <- 1
     per2 <- NA
     p = 1
@@ -491,7 +505,7 @@ for(pr in provs){
     for(w in 1:length(wprops)){
       if(mw){
 
-        if(sum(wprops[per1[p]:(per1[p]+q)]) > 0.05){
+        if(sum(wprops[per1[p]:(per1[p]+q)]) > prop_period){
           q <- 0
           per2[p] <- w
           p <- p+1
@@ -501,7 +515,7 @@ for(pr in provs){
         }
       }else{
 
-        if(wprops[w] > 0.05){
+        if(wprops[w] > prop_period){
           per1[p] <- w
           per2[p] <- w
           p <- p+1
@@ -555,7 +569,7 @@ for(pr in provs){
     for(w in 1:length(wprops)){
       if(mw){
 
-        if(sum(wprops[per1[p]:(per1[p]+q)]) > 0.05){
+        if(sum(wprops[per1[p]:(per1[p]+q)]) > prop_period){
           q <- 0
           per2[p] <- w
           p <- p+1
@@ -565,7 +579,7 @@ for(pr in provs){
         }
       }else{
 
-        if(wprops[w] > 0.05){
+        if(wprops[w] > prop_period){
           per1[p] <- w
           per2[p] <- w
           p <- p+1
@@ -623,7 +637,7 @@ for(pr in "NF"){
     for(w in 1:length(wprops)){
       if(mw){
         
-        if(sum(wprops[per1[p]:(per1[p]+q)]) > 0.05){
+        if(sum(wprops[per1[p]:(per1[p]+q)]) > prop_period){
           q <- 0
           per2[p] <- w
           p <- p+1
@@ -633,7 +647,7 @@ for(pr in "NF"){
         }
       }else{
         
-        if(wprops[w] > 0.05){
+        if(wprops[w] > prop_period){
           per1[p] <- w
           per2[p] <- w
           p <- p+1
