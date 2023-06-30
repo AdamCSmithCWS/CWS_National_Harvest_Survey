@@ -27,8 +27,9 @@ Y <- 2022
 years <- 1976:Y
 
 names(years) <- paste(years)
-home.fold1 <- "m:/My Documents/Harvest Survey A146/"
-# 
+home.fold1 <- "C:/Users/smithac/OneDrive - EC-EC/Harvest Survey A146/"
+home.fold1 <- "M:/My Documents/Harvest Survey A146/"
+# C:\Users\smithac\OneDrive - EC-EC\Harvest Survey A146
 home.fold <- getwd()
 # setwd(home.fold)
 
