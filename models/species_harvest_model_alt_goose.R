@@ -632,7 +632,7 @@ model {
   #### multinomial log-ratios, model for the age and sex (ducks) or age (geese) composition
 
   ## annual variation only for data-rich species
-  for(s in 1:nspecies_rich){
+  for(s in species_rich){
     tau_alpha_axsy[s] ~ dscaled.gamma(0.5,50) #variance of year-effects for the demographic parameters by species
     sd_alpha_axsy[s] <- 1/sqrt(tau_alpha_axsy[s])
     
@@ -663,7 +663,7 @@ model {
   ### the annual values of demographic proportions are fixed at the mean 
   ### value for the species - complete pooling across all years
   
-  for(s in (nspecies_rich+1):nspecies){
+  for(s in species_sparse){
     alpha_axs[ndemog,s] <- 0 #fixed first demographic category = 0
     
     for(y in 1:nyears){

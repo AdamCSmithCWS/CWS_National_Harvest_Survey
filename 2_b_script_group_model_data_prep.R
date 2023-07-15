@@ -44,7 +44,7 @@
 #   The ratio corresponds to the number of males per female bird in the sample. Ratios were calculated if the total sample equals or exceeds 20 parts.
 
 
-Y <- 2021
+Y <- 2022
 FY = 1976
 years <- FY:Y
 
@@ -92,6 +92,16 @@ for(spgp in others){
  tmp <- read.csv(file = paste0("data/reg_",spgp,".csv"))
 names(tmp)[which(names(tmp) == "QC")] <- "PQ"
 names(tmp)[which(names(tmp) == "YK")] <- "YT"
+
+### if no changes to regs this year, then repeat last year's regs
+if(tmp$YEAR[nrow(tmp)] == Y-1){
+  tmp2 <- tmp %>% 
+    filter(YEAR == Y-1) %>% 
+    mutate(YEAR = Y)
+  tmp <- bind_rows(tmp,tmp2)
+  write.csv(tmp,paste0("data/reg_",spgp,".csv"))
+}
+
 regs_other[[spgp]] <- tmp
 }
 

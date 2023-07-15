@@ -772,7 +772,8 @@ for(spgp in c("duck","goose","murre")){
     jdat[["midperiod"]] <- 2 # sets the second year as the mid-point of the period-time-series structure (period-2 tends to have the most parts)
     jdat[["midyear"]] <- as.integer(floor(jdat$nyears/2)) #sets the mid-point of annual time-series structures to the middle of the available years
     
-    jdat[["nspecies_rich"]] <- max(which(jdat$w_s > 300)) #species with sufficient parts to make estimating time-varying demographic proportions reasonble
+    jdat[["species_rich"]] <- which(jdat$w_s > 300) #species with sufficient parts to make estimating time-varying demographic proportions reasonble
+    jdat[["species_sparse"]] <- which(jdat$w_s <= 300) #species with sufficient parts to make estimating time-varying demographic proportions reasonble
     
     
     

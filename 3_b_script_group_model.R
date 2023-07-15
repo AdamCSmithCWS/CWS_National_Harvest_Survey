@@ -44,7 +44,7 @@
 #   The ratio corresponds to the number of males per female bird in the sample. Ratios were calculated if the total sample equals or exceeds 20 parts.
 
 
-Y <- 2021
+Y <- 2022
 FY = 1976
 years <- FY:Y
 
@@ -67,7 +67,7 @@ library(posterior)
 
 # load output from data_prep.R --------------------------------------------
 
-setwd("F:/CWS_National_Harvest_Survey")
+setwd("C:/Users/SmithAC/Documents/GitHub/CWS_national_harvest_survey")
 #load(paste0("data/parts and harvest survey info",Y,".RData"))
 
 source("functions/get_final_values.R")
@@ -111,40 +111,43 @@ provs = unique(provzone$prov)
 # non_res_combine <- non_res_combine[-which(non_res_combine %in% keep_E)]
 
 provs = provs[-which(provs %in% c("NF","NU"))]##removing NF because definition of other has changed over time (including then excluding murres)
+all_zones <- expand.grid(prov = provs,
+                        zone = 1:3)
 
+# all_zones <- data.frame(prov = c("MB","NB","SK","ON"),
+#                         zone = c(2,2,1,3))
+# all_zones <- data.frame(prov = c("MB","AB","NT","PQ","YT"),
+#                         zone = c(1,1,1,2,1))
+
+all_zones <- data.frame(prov = c("MB","NB","PQ","YT"),
+                        zone = c(2,2,2,1))
 
 # MCMC loops --------------------------------------------------------------
+rerun <- TRUE # set to true if the loop should force model fit for zones already completed
 
-n_cores <- 2#length(provs)
+n_cores <- 4
 cluster <- makeCluster(n_cores, type = "PSOCK")
 registerDoParallel(cluster)
 
-provs = c("ON","PQ","AB","MB")
 
-fullrun <- foreach(pr = provs,
+fullrun <- foreach(i = 1:nrow(all_zones),
                    .packages = c("jagsUI","tidyverse","posterior"),
                    .inorder = FALSE,
                    .errorhandling = "pass") %dopar%
   {
 
-#for(pr in provs2){
-# Set up parallel stuff
+    pr <- all_zones[i,"prov"]
+    z <- all_zones[i,"zone"]
+    
 
 
-for(z in 1:3){
-# fullrun <- foreach(z = zns,
-#                    .packages = c("jagsUI","tidyverse"),
-#                    .inorder = FALSE,
-#                    .errorhandling = "pass") %dopar%
-#   {
-    
-    
-    mod.file = "models/group_model.R" # 
-    
-    if(file.exists(paste("data/data",pr,z,"other_save.RData",sep = "_"))){
+    if(file.exists(paste("data/data",pr,z,"other_save.RData",sep = "_")) &
+       (rerun | !file.exists(paste("output/other harvest zip",pr,z,"alt mod.RData")))
+       ){
     load(paste("data/data",pr,z,"other_save.RData",sep = "_"))
 
-     
+      mod.file = "models/group_model.R" # 
+      
       
 parms = c("NACTIVE_y",
           "NSUCC_yg",
@@ -182,17 +185,17 @@ parm_check <- c("NACTIVE_y",
 
 
 #adaptSteps = 200              # Number of steps to "tune" the samplers.
-burnInSteps = 5000           # Number of steps to "burn-in" the samplers.
+burnInSteps = 50000           # Number of steps to "burn-in" the samplers.
 
 nChains = 3                   # Number of chains to run.
 numSavedSteps=1000          # Total number of steps in each chain to save.
-thinSteps=10                   # Number of steps to "thin" (1=keep every step).
+thinSteps=100                   # Number of steps to "thin" (1=keep every step).
 
 
-if(pr %in% c("YT","NT")){
-  burnInSteps = burnInSteps*5
-  thinSteps = thinSteps*5
-}
+# if(pr %in% c("YT","NT","NB")){
+#   burnInSteps = burnInSteps*2
+#   thinSteps = thinSteps*2
+# }
 
 
 nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
@@ -369,9 +372,8 @@ rm(list = "out2")
 }
 }
 
-  }#z
+  }#i
 
-}#pr
 stopCluster(cl = cluster)
 
 

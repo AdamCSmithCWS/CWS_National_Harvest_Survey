@@ -10,6 +10,7 @@ library(tidybayes)
 library(ggrepel)
 library(ggforce)
 library(HDInterval)
+source("functions/utility_functions.R")
 
 ### caste level summaries
 ### full summaries
@@ -17,7 +18,7 @@ library(HDInterval)
 ### age-sex summaries
 ### age-sex raw data for website - 
 
-Y <- 2021
+Y <- 2022
 FY = 1976
 years <- FY:Y
 
@@ -29,7 +30,13 @@ alt_regs <- prov_zone %>%
 
 #load("national_provincial_summaries.RData")
 
+# load the convergence information and track parameters that have failed below
+# For rhat convergence failures, consider removing the zonal estimates from the summaries
+# problem with removing them is that the estimated proportions for remaining species
+# will be affected...also 
+# alternative is to flag estimates that
 
+converge_sum <- readRDS(paste0("output/all_parameter_convergence_summary_",Y,".rds")) 
 # Simple estimates effort and groups --------------------------------------
 
 
@@ -49,6 +56,13 @@ zone_sums_b <- tmp_sim %>%
             lci = as.numeric(hdi(sum,0.95)[1]),
             uci = as.numeric(hdi(sum,0.95)[2]))
 
+conv_tmp <- converge_sum %>% 
+  filter(var %in% unique(zone_sums_b))
+tmp2 <- zone_sums_b %>% 
+  left_join(converge_sum,
+            by = c(var,prov,zone))
+### this is the point at which to flag convergence fails by joining to 
+### parameter summary by var prov zone and year.
 
 reg_sums_b <- tmp_sim %>%
   filter(region != "") %>% 

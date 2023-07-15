@@ -29,3 +29,33 @@ jags_dim <- function(dim = 1,
   
 }
 
+
+
+
+
+jags_dim_tidy <- function(dim = 1,
+                          x = variable){
+  ##3 function to extract the indicator value of a multi-dimension indicator variable name
+  require(stringr)
+  
+ 
+  if(dim == 1){
+    pat <- stringr::str_replace_all(stringr::str_extract(x, "^\\w+\\[[:digit:]{1,}[:punct:]"),
+                                "^\\w+\\[|[[:punct:]]",
+                                replacement = "")
+  }
+  if(dim == 2){
+    pat <- stringr::str_replace_all(stringr::str_extract(x, "^\\w+\\[[:digit:]{1,}[:punct:][:digit:]{1,}[:punct:]"),
+                                    "^\\w+\\[[:digit:]{1,}[:punct:]|[[:punct:]]",
+                                    replacement = "")
+  }
+  if(dim == 3){
+    pat <- stringr::str_replace_all(stringr::str_extract(x, "^\\w+\\[[:digit:]{1,}[:punct:][:digit:]{1,}[:punct:][:digit:]{1,}[:punct:]"),
+                                    "^\\w+\\[[:digit:]{1,}[:punct:][:digit:]{1,}[:punct:]|[[:punct:]]",
+                                    replacement = "")
+  }
+  
+  pat <- as.integer(pat)
+return(pat)
+}
+

@@ -8,13 +8,14 @@ library(tidybayes)
 library(ggrepel)
 library(ggforce)
 source("functions/other_reg_setup.R")
+source("functions/utility_functions.R")
 ### caste level summaries
 ### full summaries
 ### harvest, activity, total group-level and species-level
 ### age-sex summaries
 ### age-sex raw data for website - 
 
-Y <- 2021
+Y <- 2022
 FY = 1976
 years <- FY:Y
 
@@ -62,10 +63,143 @@ gps <- c("duck",
          "murre")
 
 
+### need to add in the final variable names, species names, and year indicators to this file
+### so that it can be added to final summaries in the following script (5_Summarize_output_to_tidy_dataframes....R)
+
+
+# %>% 
+#   mutate(var = stringr::str_extract(variable, "^\\w+"),
+#          d1 = jags_dim_tidy(1,variable),
+#          d2 = jags_dim_tidy(2,variable),
+#          d3 = jags_dim_tidy(3,variable))
+
+
+sum_convergence <- FALSE # run this first
+parameter_summary <- NULL
+sp_save <- NULL
+for(pr in provs){
+  for(z in 1:3){
+    for(spgp in gps){
+      if(spgp == "other"){
+       saved_file <- paste("output/other harvest zip",pr,z,"alt mod.RData")
+      }else{
+        saved_file <- paste("output/full harvest zip",pr,z,spgp,"alt mod.RData")        
+      }
+      if(!file.exists(saved_file)){next}
+      load(saved_file)
+      out2sum <- out2sum %>% 
+        mutate(prov = pr,
+               zone = z,
+               model = spgp,
+               var = stringr::str_extract(variable, "^\\w+"),
+                        d1 = jags_dim_tidy(1,variable),
+                        d2 = jags_dim_tidy(2,variable),
+                        d3 = jags_dim_tidy(3,variable))
+      parameter_summary <- bind_rows(parameter_summary,
+                                     out2sum)
+      
+      if(spgp != "other"){
+      sp.save.out <- sp.save.out %>% 
+        mutate(prov = pr,
+               zone = z,
+               model = spgp)
+      sp_save <- bind_rows(sp_save,
+                           sp.save.out)
+      }
+      
+    
+    }
+  }
+ saveRDS(parameter_summary,
+         paste0("output/all_parameter_convergence_summary_",Y,".rds")) 
+}
+
+rhat_lim <- 1.1
+ess_lim <- 50
+
+parameter_summary <- parameter_summary %>% 
+  mutate(variable_type = stringr::str_extract(variable, "^\\w+"),
+         rhat_fail = ifelse(rhat > rhat_lim,TRUE,FALSE),
+         ess_fail = ifelse(ess_bulk < ess_lim,TRUE,FALSE))
+
+simplified_summary <- parameter_summary %>% 
+  group_by(prov,zone,model,variable_type) %>% 
+  summarise(n_fail = sum(rhat_fail),
+            max_rhat = max(rhat),
+            n_ess_fail = sum(ess_fail))
+
+
+## identify models that have non-converged parameters that need to be re-run
+## excluding models that have convergence fails that can be flagged
+problems <- simplified_summary %>% 
+  filter(!grepl("ax",variable_type), #demographic parameters that need to be flagged when failed
+         !grepl("adult",variable_type), #demographic parameters that need to be flagged when failed 
+         !grepl("female",variable_type),  #demographic parameters that need to be flagged when failed
+         !grepl("beta",variable_type),  #demographic parameters that need to be flagged when failed
+         n_fail > 0,
+         !grepl("psucc",variable_type), # other model usually uninformed parameters (group by year combinations that have no open season)
+         !grepl("NSUCC_gcy",variable_type)) %>% # other model usually uninformed parameters (group by year combinations that have no open season) 
+  select(prov,zone,model) %>% 
+  distinct()
+
+
+
+demog_summary <- parameter_summary %>% 
+  filter(grepl("ax",variable_type),
+         !grepl("sd",variable_type)) %>% 
+  mutate(demog = d1,
+         species = d2,
+         y = d3) %>% 
+  left_join(.,sp_save,
+            by = c("prov",
+                   "zone",
+                   "model",
+                   "species" = "spn"),
+            relationship = "many-to-one")
+
+saveRDS(demog_summary,"output/demog_summary.rds")
+
+
+spkill_summary <- parameter_summary %>% 
+  filter(variable_type == "kill_ys") %>% 
+  mutate(species = d2,
+         y = d1) %>% 
+  left_join(.,sp_save,
+            by = c("prov",
+                   "zone",
+                   "model",
+                   "species" = "spn"),
+            relationship = "many-to-one")
+saveRDS(spkill_summary,"output/spkill_summary.rds")
+
+
+other_summary <- parameter_summary %>% 
+  filter(variable_type == "kill_yg" |
+         variable_type == "days_yg") %>% 
+  mutate(group = d2,
+         y = d1) 
+saveRDS(other_summary,"output/other_summary.rds")
+
+
+
+sum_convergence <- TRUE
+
+
+
+
+
+
+
+
 ### select which set of summaries to calculate
-do_sim <- TRUE  # ~ 10GB RAM
-do_sp <- FALSE # ~20GM RAM
-do_sp_demo <- FALSE # ~80GB RAM!
+do_sim <- ifelse(sum_convergence,TRUE,FALSE)  # ~ 10GB RAM
+do_sp <- ifelse(sum_convergence &
+                  !do_sim,TRUE,FALSE) # ~20GM RAM
+do_sp_demo <- ifelse(sum_convergence &
+                       !do_sim &
+                       !do_sp,TRUE,FALSE) # ~80GB RAM!
+
+
   
 if(do_sim){
   tmp_sim <- NULL
@@ -76,6 +210,7 @@ if(do_sp){
 if(do_sp_demo){
     tmp_sp_demo <- NULL
 }
+
 for(pr in provs){
   
 
@@ -109,7 +244,12 @@ for(pr in provs){
    for(z in 1:3){
      if(file.exists(paste("output/full harvest zip",pr,z,"duck","alt mod.RData"))){
        load(paste("output/full harvest zip",pr,z,"duck","alt mod.RData"))
+       
+       ys <- data.frame(y = 1:jdat$nyears,
+                        year = years) 
+       
      if(do_sim){
+
        ### using tidybayes package functions to compile posterior samples into dataframes
            tmp_duck <- out2$samples %>% gather_draws(NACTIVE_y[y],
                                                 days_y[y],
@@ -122,8 +262,8 @@ for(pr in provs){
            tmp_duck <- left_join(tmp_duck,vnm,by = c(".variable" = "newvar"))
            
            
-           ys <- data.frame(y = 1:jdat$nyears,
-                            year = years) 
+           # ys <- data.frame(y = 1:jdat$nyears,
+           #                  year = years) 
            
            tmp_duck <- full_join(tmp_duck,ys,by = "y")
            tmp_duck$prov <- pr
@@ -179,6 +319,9 @@ for(pr in provs){
      if(file.exists(paste("output/full harvest zip",pr,z,"goose","alt mod.RData"))){
              load(paste("output/full harvest zip",pr,z,"goose","alt mod.RData"))
              
+       ys <- data.frame(y = 1:jdat$nyears,
+                        year = years) 
+       
        if(do_sim){
            tmp_goose <- out2$samples %>% gather_draws(NSUCC_y[y],
                                                      kill_y[y]) 
@@ -189,9 +332,7 @@ for(pr in provs){
            tmp_goose <- left_join(tmp_goose,vnm,by = c(".variable" = "newvar"))
            
            
-           ys <- data.frame(y = 1:jdat$nyears,
-                            year = years) 
-           
+
            tmp_goose <- full_join(tmp_goose,ys,by = "y")
            tmp_goose$prov <- pr
            tmp_goose$zone <- z
@@ -239,6 +380,9 @@ for(pr in provs){
      
      if(file.exists(paste("output/full harvest zip",pr,z,"murre","alt mod.RData"))){
        load(paste("output/full harvest zip",pr,z,"murre","alt mod.RData"))
+
+       ys <- data.frame(y = 1:jdat$nyears,
+                        year = years[c(((length(years)-jdat$nyears)+1):length(years))]) 
        
        if(do_sim){
        tmp_murre <- out2$samples %>% gather_draws(NSUCC_y[y],
@@ -250,9 +394,7 @@ for(pr in provs){
        tmp_murre <- left_join(tmp_murre,vnm,by = c(".variable" = "newvar"))
        
        
-       ys <- data.frame(y = 1:jdat$nyears,
-                        year = years[c(((length(years)-jdat$nyears)+1):length(years))]) 
-       
+
        tmp_murre <- full_join(tmp_murre,ys,by = "y")
        tmp_murre$prov <- pr
        tmp_murre$zone <- z
@@ -338,8 +480,8 @@ for(pr in provs){
                              tmp_otherd,
                              tmp_others)
       
-      ys <- data.frame(y = 1:jdat$nyears,
-                       year = years) 
+      # ys <- data.frame(y = 1:jdat$nyears,
+      #                  year = years) 
       
       tmp_other <- full_join(tmp_other,ys,by = "y")
       tmp_other$prov <- pr

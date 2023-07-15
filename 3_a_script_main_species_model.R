@@ -84,11 +84,11 @@ fit_table <- provzone %>%
 #fit_table <- fit_table %>% filter(spgp %in% c("goose","murre") | (spgp == "duck" & prov == "ON" & zone == 3))
 # fit_table <- fit_table %>% filter(spgp %in% c("duck") | (spgp == "goose" & prov %in% c("NT","YT")))
 
-##fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("goosePQ1","goosePQ2","gooseON3"))
+ fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckNB2","duckMB1","duckYT1"))
 
 
 # Province and Zone loop --------------------------------------------------
-  n_cores <- 16
+  n_cores <- 3
   cluster <- makeCluster(n_cores, type = "PSOCK")
   registerDoParallel(cluster)
 
@@ -161,10 +161,10 @@ parms = c("NACTIVE_y",
 
 
 #adaptSteps = 200              # Number of steps to "tune" the samplers.
-burnInSteps = 5000            # Number of steps to "burn-in" the samplers.
+burnInSteps = 20000            # Number of steps to "burn-in" the samplers.
 nChains = 3                   # Number of chains to run.
 numSavedSteps=1000          # Total number of steps in each chain to save.
-thinSteps=10                   # Number of steps to "thin" (1=keep every step).
+thinSteps=40                   # Number of steps to "thin" (1=keep every step).
 nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
 
 t1 = Sys.time()
@@ -196,7 +196,7 @@ if(class(out2) != "try-error"){
   out2sum <- posterior::as_draws_df(out2$samples) %>%
     summarise_draws() %>% 
     as.data.frame() %>% 
-    filter(!is.na(rhat))
+    filter(!is.na(rhat)) #removes the parameters that are fixed 
 
 #   pcomp_psy <- out2sum %>% filter(grepl("pcomp_psy[",variable,fixed = TRUE))
 #   alpha_ps <- out2sum %>% filter(grepl("alpha_ps[",variable,fixed = TRUE))
@@ -329,11 +329,11 @@ if(class(out2) != "try-error"){
   #                                !grepl("padult",variable))
   
   # restart with final values as initial values
-  # and sample more if >1% of non demographic parameters have rhat > 1.1
-  while(quantile(out2sum$rhat,0.999) > 1.1 & attempts < 1){
+  # and sample more if >0.5% of parameters have rhat > 1.1
+  while(quantile(out2sum$rhat,0.995) > 1.1 & attempts < 1){
     attempts <- attempts+1
     burnInSteps = 0
-    thinSteps = thinSteps*3
+    thinSteps = thinSteps*5
     nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
     
    # initls <- get_final_values(out2)
@@ -369,7 +369,7 @@ if(class(out2) != "try-error"){
   }
   
 
-  save(list = c("out2","jdat","sp.save.out","out2sum"),
+  save(list = c("out2","jdat","sp.save.out","out2sum", "attempts"),
        file = paste("output/full harvest zip",pr,z,spgp,"alt mod.RData"))
   
 
