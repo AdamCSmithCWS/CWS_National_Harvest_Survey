@@ -173,13 +173,12 @@ model {
   
   for(c in 1:ncastes){
     ## harvest rate priors
-    for(yp in 1:2){ ## adding a first-half vs last-half of time-series split on hunter variance
-      retrans_hunter[c,yp] <- 0.5*(1/tauhunter[c,yp])/nu_ret[c,yp] 
-      sdhunter[c,yp] <- 1/pow(tauhunter[c,yp],0.5)
-      tauhunter[c,yp] ~ dscaled.gamma(0.5,50)
-      nu[c,yp] ~ dgamma(2,0.2)
-      nu_ret[c,yp] <- (1.422*nu[c,yp]^0.906)/(1+(1.422*nu[c,yp]^0.906)) #approximate retransformation to equate a t-distribution to a normal distribution - see appendix of Link et al. 2020 BBS model selection paper
-    }
+    retrans_hunter[c] <- 0.5*(1/tauhunter[c])/nu_ret[c] 
+      sdhunter[c] <- 1/pow(tauhunter[c],0.5)
+      tauhunter[c] ~ dscaled.gamma(0.5,50)
+      nu[c] ~ dgamma(2,0.2)
+      nu_ret[c] <- (1.422*nu[c]^0.906)/(1+(1.422*nu[c]^0.906)) #approximate retransformation to equate a t-distribution to a normal distribution - see appendix of Link et al. 2020 BBS model selection paper
+    
     
     #activity (days) variance priors
     retrans_hunter_day[c] <- 0.5*(1/tauhunter_day[c])/nu_day_ret[c]
@@ -220,9 +219,8 @@ model {
         ##  t-distribution used for overdispersion in activity to allow for heavy-tailed 
         ## variances on both activity and harvest are caste-specific precision to allow hunter-level dispersion to vary among castes
         ## consider whether tauhunter should also vary among all years...
-        wy[c,y,h] <- step(y-(nyears/2))+1 #trick to identify if this value is in the first of last half of the time-series
         hntr_day[c,y,h] ~ dt(0,tauhunter_day[c],nu_day[c])
-        hntr[c,y,h] ~ dt(0,tauhunter[c,wy[c,y,h]],nu[c,wy[c,y,h]])
+        hntr[c,y,h] ~ dt(0,tauhunter[c],nu[c])
         #n days probably accounts for a bit of the hunting skill effect as well as the activity effect
         # but not for goose harvests in eastern Canada - large hunter level variation and changing variation over time
       }#h
@@ -269,9 +267,8 @@ model {
       # mean_totdays_yc_alt[y,c] <- mean(totdays_hcy[y,c,1:nhunter_cy[c,y]]) #mean days per active hunter
 
       #mean per-hunter kill and days by year and caste - alternative estimate
-      wy2[y,c] <- step(y-(nyears/2))+1 #trick to identify if this value is in the first of last half of the time-series
-      
-      mean_totkill_yc[y,c] <- exp(ann[y] + cst[c,y] + ann_day[y] + cst_day[c,y] + retrans_hunter_day[c] + retrans_hunter[c,wy2[y,c]]) *psi[y]
+     
+      mean_totkill_yc[y,c] <- exp(ann[y] + cst[c,y] + ann_day[y] + cst_day[c,y] + retrans_hunter_day[c] + retrans_hunter[c]) *psi[y]
       mean_totdays_yc[y,c] <- exp(ann_day[y] + cst_day[c,y] + retrans_hunter_day[c])
       
       for(p in 1:nperiods){
@@ -550,11 +547,6 @@ model {
   ## the following betas are the coefficients that control the contribution of
   ## the alpha_sy and alpha_ps to teh alpha_psy
   ## they are random effects that vary by year and period
-for(s in 1:nspecies){
-    tau_alpha_psy[s] ~ dscaled.gamma(0.1,50) 
-    sd_alpha_psy[s] <- 1/sqrt(tau_alpha_psy[s])
-}
-  
   tau_beta_sy ~ dscaled.gamma(0.1,50) #extra variance
   sd_beta_sy <- 1/sqrt(tau_beta_sy)
   tau_beta_ps ~ dscaled.gamma(0.1,50) #extra variance
@@ -579,8 +571,7 @@ for(s in 1:nspecies){
       for (y in 1:nyears){
         pcomp_psy[p,s,y] <- delta_psy[p,s,y] / sum(delta_psy[p,1:nspecies,y]) # softmax regression 
         delta_psy[p,s,y] <- exp(alpha_psy[p,s,y])
-        alpha_psy[p,s,y] ~ dnorm(beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s],tau_alpha_psy[s]) # combination of species effect, species-year effect, species period effect
-      #  alpha_psy[p,s,y] <- beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s] # combination of species effect, species-year effect, species period effect
+        alpha_psy[p,s,y] <- beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s] # combination of species effect, species-year effect, species period effect
       } #y
       
     }#s
@@ -658,26 +649,26 @@ for(s in 1:nspecies){
   
   
   
-  ### for the non-data rich species (those with less than ~300 parts total)
-  ### the annual values of demographic proportions are fixed at the mean 
-  ### value for the species - complete pooling across all years
-  
-  for(s in species_sparse){
-    alpha_axs[ndemog,s] <- 0 #fixed first demographic category = 0
-    
-    for(y in 1:nyears){
-      alpha_axsy[ndemog,s,y] <- alpha_axs[ndemog,s]  #first demographic group is fixed at 0 in all years for each species
-    }#y
-    
-    for(d in 1:(ndemog-1)){
-      alpha_axs[d,s] ~ dnorm(0,0.1)#tau_alpha_ax)
-      for(y in 1:nyears){
-        alpha_axsy[d,s,y] <- alpha_axs[d,s]
-      }
-    }#d
-    
-  }#s
-  
+  # ### for the non-data rich species (those with less than ~300 parts total)
+  # ### the annual values of demographic proportions are fixed at the mean 
+  # ### value for the species - complete pooling across all years
+  # 
+  # for(s in species_sparse){
+  #   alpha_axs[ndemog,s] <- 0 #fixed first demographic category = 0
+  #   
+  #   for(y in 1:nyears){
+  #     alpha_axsy[ndemog,s,y] <- alpha_axs[ndemog,s]  #first demographic group is fixed at 0 in all years for each species
+  #   }#y
+  #   
+  #   for(d in 1:(ndemog-1)){
+  #     alpha_axs[d,s] ~ dnorm(0,0.1)#tau_alpha_ax)
+  #     for(y in 1:nyears){
+  #       alpha_axsy[d,s,y] <- alpha_axs[d,s]
+  #     }
+  #   }#d
+  #   
+  # }#s
+  # 
   
 }## end of model
 

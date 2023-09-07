@@ -22,7 +22,7 @@ load("data/Posterior_summaries3.RData")
 
 prov_trans <- read.csv("data/Province_names_EN_FR.csv")
 
-Y <- 2021
+Y <- 2022
 FY = 1976
 years <- FY:Y
 
@@ -50,9 +50,9 @@ a_tab <- bind_rows(nat_sums_b,prov_sums_b,zone_sums_b) %>%
   filter(var %in% avars) %>% 
   left_join(.,a_var,by = c("var" = "Variable_Code")) %>% 
   select(-median) %>% 
-  mutate(mean = as.integer(ceiling(mean)),
-         lci = as.integer(ceiling(lci)),
-         uci = as.integer(ceiling(uci)),
+  mutate(mean = as.integer(round(mean)),
+         lci = as.integer(round(lci)),
+         uci = as.integer(round(uci)),
          prov = factor(prov,levels = prov_sort,ordered = TRUE))%>% 
   arrange(prov,zone,var,desc(year)) %>% 
   filter(var != "SNIPK" | (var== "SNIPK" & year > 1991)) %>% 
@@ -105,9 +105,9 @@ b_tab <- bind_rows(nat_sums_a,prov_sums_a,zone_sums_a) %>%
   filter(AOU %in% bvars)%>% 
   left_join(.,b_var,by = c("AOU" = "Species_Code")) %>% 
   select(-median) %>% 
-  mutate(mean = as.integer(ceiling(mean)),
-         lci = as.integer(ceiling(lci)),
-         uci = as.integer(ceiling(uci)),
+  mutate(mean = as.integer(round(mean)),
+         lci = as.integer(round(lci)),
+         uci = as.integer(round(uci)),
          prov = factor(prov,levels = prov_sort,ordered = TRUE))%>% 
   arrange(prov,zone,AOU,desc(year)) %>% 
   left_join(.,prov_trans[,c("prov","Prov_En","Prov_Fr")],by = "prov") 
@@ -125,9 +125,9 @@ asxy_tab <- bind_rows(nat_sums_ag,prov_sums_ag,zone_sums_ag,
   filter(AOU %in% bvars)%>% 
   left_join(.,b_var,by = c("AOU" = "Species_Code")) %>% 
   select(-median) %>% 
-  mutate(mean = as.integer(ceiling(mean)),
-         lci = as.integer(ceiling(lci)),
-         uci = as.integer(ceiling(uci)),
+  mutate(mean = as.integer(round(mean)),
+         lci = as.integer(round(lci)),
+         uci = as.integer(round(uci)),
          prov = factor(prov,levels = prov_sort,ordered = TRUE)) %>% 
   arrange(prov,zone,AOU,BAGE,BSEX,desc(year)) %>% 
   left_join(.,prov_trans[,c("prov","Prov_En","Prov_Fr")],by = "prov")
@@ -203,6 +203,25 @@ write.csv(nparts_species_year_age_sex,
           file = paste0("GoogleDrive/n_parts_by_zone_year_aou_sex_age",FY,"-",Y,".csv"))
 
 
+raw_age_ratios <- outscse %>%
+  group_by(PRHUNT,ZOHUNT,AOU,YEAR,BAGE) %>%
+  summarise(n_parts = as.integer(n()),
+            .groups = "drop") %>% 
+  mutate(DEMOGRAPHIC = paste(BAGE,sep = "_")) %>% 
+  filter(AOU > 100) %>% 
+  select(-c(BAGE)) %>% 
+  pivot_wider(.,names_from = DEMOGRAPHIC,
+              values_from = n_parts,
+              values_fill = 0,
+              names_sep = "_",
+              names_expand = TRUE) %>% 
+  arrange(PRHUNT,ZOHUNT,AOU,YEAR) %>% 
+  mutate(n_parts_w_age = I+A,
+        raw_age_ratio = I/A,
+         raw_age_ratio = ifelse(is.finite(raw_age_ratio) & n_parts_w_age > 0,signif(raw_age_ratio,2),(I+1/1)),
+         raw_age_ratio = ifelse(n_parts_w_age == 0,NA,raw_age_ratio)) %>% 
+  rename(prov = PRHUNT,
+         zone = ZOHUNT)
 
 
 
@@ -224,6 +243,7 @@ nparts_species_year_3 <- outscse %>%
 # nparts_species_year <- bind_rows(nparts_species_year_1,
 #                                      nparts_species_year_2,
 #                                      nparts_species_year_3)
+
 
 nat_sums_c$prov <- "CAN"
 nat_sums_c <- nat_sums_c %>% 
@@ -247,7 +267,7 @@ zone_sums_c <- zone_sums_c %>%
 c_tab <- bind_rows(nat_sums_c,prov_sums_c,zone_sums_c) %>% 
   filter(AOU %in% bvars)%>% 
   left_join(.,b_var,by = c("AOU" = "Species_Code")) %>% 
-  mutate(mean = round(median,2),
+  mutate(mean = round(mean,2),
          lci = round(lci,2),
          uci = round(uci,2),
          prov = factor(prov,levels = prov_sort,ordered = TRUE)) %>% 
@@ -289,7 +309,9 @@ write.csv2(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_po
 write.csv(c_tab_out,paste0("website/species_age_ratios",FY,"-",Y,".csv"),row.names = FALSE)
 
 
-
+c_tab_plot <- c_tab1 %>% 
+  left_join(.,raw_age_ratios,
+            by = c("prov","zone","year" = "YEAR","AOU"))
 
 
 
@@ -377,7 +399,7 @@ for(l in c("En","Fr")){
   }#end tty loop
   
   
-  tmpp <- general_plot_c(dat = c_tab1,
+  tmpp <- general_plot_c(dat = c_tab_plot,
                          startYear = sy,
                          endYear = Y,
                          lang = l)
@@ -762,3 +784,110 @@ for(i in 1:nrow(sp_maps_c)){
 
 
 
+
+# Species proportions comparison ------------------------------------------
+
+converge_sum <- readRDS(paste0("output/all_parameter_convergence_summary_",Y,".rds")) 
+b_var = read.csv("website/B_species_names.csv")
+
+prop_estimates <- converge_sum %>% 
+  filter(grepl("pcomp_psy",variable)) %>% 
+  ungroup()
+
+raw_prop <- NULL
+for(pr in prov_sort[-1]){
+  for(z in 1:3){
+    for(spgp in c("duck","goose","murre")){
+ 
+      if(!file.exists(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))){next}
+      load(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
+      
+raw_psy <- jdat$w_psy
+raw_py <- jdat$nparts_py
+aou_link <- sp.save.out
+raw_propt <- NULL
+for(p in 1:dim(raw_py)[1]){
+  for(y in 1:dim(raw_py)[2]){
+    tmpdf <- data.frame(p = p,
+                        s = 1:jdat$nspecies,
+                        y = y,
+                        raw_prop = raw_psy[p,,y]/raw_py[p,y],
+                        raw_count = raw_psy[p,,y],
+                        raw_part_py =raw_py[p,y],
+                        prov = pr,
+                        zone = z,
+                        model = spgp)
+    raw_propt <- bind_rows(raw_propt,tmpdf) 
+  }
+}
+
+raw_propt <- raw_propt %>% 
+  left_join(.,aou_link,
+            by = c("s" = "spn"))
+raw_prop <- bind_rows(raw_prop,raw_propt)
+print(paste(pr,z,spgp))
+    }
+  }
+}
+
+
+prop_estimates <- inner_join(prop_estimates,
+                             raw_prop,
+                             by = c("prov","zone","model",
+                                    "d1" = "p",
+                                    "d2" = "s",
+                                    "d3" = "y")) %>% 
+  mutate(year = d3+1975,
+         period = d1) %>% 
+  inner_join(.,b_var,
+             by = c("AOU" = "Species_Code"))
+
+pdf("Figures/proportions of parts by species period year zone.pdf",
+    width = 11,
+    height = 8.5)
+for(pr in prov_sort[-1]){
+  for(z in c(1:3)){
+  prop_estimatest <- prop_estimates %>% 
+    filter(prov == pr, zone == z)
+  if(nrow(prop_estimatest) == 0){next}
+  for(sp in unique(prop_estimatest$AOU)){
+    tmpt <- prop_estimatest %>% 
+      filter(AOU == sp)
+    sp_n <- b_var %>% 
+      filter(Species_Code == sp) %>% 
+      select(English_Name,French_Name_New) 
+    sp_n <- paste(sp_n[1,1],sp_n[1,2],pr,z,sep = " - ")
+    
+    prop_plot <- ggplot(data = tmpt,
+                        aes(x = year,y = mean))+
+      geom_errorbar(aes(ymin = q5,ymax = q95),
+                    alpha = 0.3, width = 0)+
+      geom_point()+
+      geom_point(aes(x = year, y = raw_prop, colour = raw_part_py+1),
+                 alpha = 0.8)+
+      scale_colour_viridis_c(trans = "log10",guide_legend(title = "Total parts by \n period and year"))+
+      facet_wrap(vars(period))+
+      labs(title = sp_n,
+           subtitle = "Proportions of all parts by period (facets) and year (black = estimated and coloured = obs)")+
+      ylab("Species estimated and observed proportion of all parts")
+    
+    print(prop_plot)
+  }
+  
+  }
+  
+}
+
+dev.off()
+
+
+prop_plot <- ggplot(data = prop_estimatest,
+                    aes(x = year,y = mean))+
+  geom_errorbar(aes(ymin = q5,ymax = q95),
+                alpha = 0.3, width = 0)+
+  geom_point()+
+  geom_point(aes(x = year, y = raw_prop, colour = raw_part_py+1),
+             alpha = 0.8)+
+  scale_colour_viridis_c(trans = "log10")+
+  facet_wrap(vars(d1))
+print(prop_plot)

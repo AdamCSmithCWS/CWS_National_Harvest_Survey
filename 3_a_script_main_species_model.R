@@ -78,17 +78,22 @@ nfmurre <- data.frame(prov = "NF",
 fit_table <- provzone %>% 
   select(prov,zone) %>% 
   expand_grid(.,spgp = c("duck","goose")) %>% 
-  bind_rows(.,nfmurre)
+  bind_rows(.,nfmurre) %>% 
+  arrange(spgp)
 
 
 #fit_table <- fit_table %>% filter(spgp %in% c("goose","murre") | (spgp == "duck" & prov == "ON" & zone == 3))
 # fit_table <- fit_table %>% filter(spgp %in% c("duck") | (spgp == "goose" & prov %in% c("NT","YT")))
 
- fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckNB2","duckMB1","duckYT1"))
+#fit_table <- fit_table %>% filter(spgp %in% c("duck"))
+#fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckNB2","duckMB1","duckYT1"))
+fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckNB1","duckON1","duckPQ1","duckON2","duckON3"))
 
-
+ overwrite <- TRUE # set to TRUE if attempting to overwrite earlier model runs
+ 
+ 
 # Province and Zone loop --------------------------------------------------
-  n_cores <- 3
+  n_cores <- 5
   cluster <- makeCluster(n_cores, type = "PSOCK")
   registerDoParallel(cluster)
 
@@ -106,7 +111,8 @@ fit_table <- provzone %>%
       
       period = read.csv(paste0("data/period.",spgp,".csv"))
       
-
+if(overwrite | !file.exists(paste("output/full harvest zip",pr,z,spgp,"alt mod.RData"))){
+      
 if(file.exists(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))){
 load(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
 
@@ -116,6 +122,35 @@ load(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
     mod.file = "models/species_harvest_model.R" #
   }
 
+  if(length(jdat$species_sparse) == 0){ # if there are no species below the threshold
+    # if above fails, it
+    mod.file = "models/species_harvest_model_allrich.R" #
+    jdat$species_sparse <- NULL
+    if(paste0(spgp,pr,z) %in% c("goosePQ1","goosePQ2","gooseON3")){
+      mod.file = "models/species_harvest_model_alt_goose_allrich.R" # version with nu fixed at 3
+    }
+    
+    
+  }
+  
+  if(length(jdat$species_rich) == 0){ # if there are no species below the threshold
+    # if above fails, it
+    mod.file = "models/species_harvest_model_allsparse.R" #
+    jdat$species_rich <- NULL
+    # if(paste0(spgp,pr,z) %in% c("goosePQ1","goosePQ2","gooseON3")){
+    #   mod.file = "models/species_harvest_model_alt_goose_allrich.R" # version with nu fixed at 3
+    # }
+    
+    
+  }
+  
+  
+  if(spgp == "murre"){
+  mod.file = "models/species_harvest_model_murre_allrich.R" #
+  jdat$species_sparse <- NULL
+  
+  }
+  
 
 parms = c("NACTIVE_y",
           "NSUCC_y",
@@ -156,7 +191,8 @@ parms = c("NACTIVE_y",
           "pcomp_psy",
           "pcomp_axsy",
           "beta_sy",
-          "beta_ps"
+          "beta_ps",
+          "sd_alpha_psy"
           )
 
 
@@ -186,8 +222,9 @@ t1 = Sys.time()
                     #model.file = "models/species_harvest_model_alt4.R"
   ),silent = F)
 
+
   
-  t2 = Sys.time()
+
 if(class(out2) != "try-error"){
 
 
@@ -198,7 +235,14 @@ if(class(out2) != "try-error"){
     as.data.frame() %>% 
     filter(!is.na(rhat)) #removes the parameters that are fixed 
 
-#   pcomp_psy <- out2sum %>% filter(grepl("pcomp_psy[",variable,fixed = TRUE))
+  # pcomp_psy <- out2sum %>% filter(grepl("pcomp_psy[",variable,fixed = TRUE))
+  # 
+  #  sum_pcomp_psy <- out2sum %>% filter(grepl("pcomp_psy[",variable,fixed = TRUE))%>%
+  #        mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies*jdat$ndemog),
+  #              species = rep(rep(c(1:jdat$nspecies),each = jdat$ndemog),times = jdat$nyears)) %>%
+  #    left_join(.,sp.save.out,by = c("species" = "spn"))
+  # 
+
 #   alpha_ps <- out2sum %>% filter(grepl("alpha_ps[",variable,fixed = TRUE))
 #   alpha_sy <- out2sum %>% filter(grepl("alpha_sy[",variable,fixed = TRUE))
 #   alpha_psy <- out2sum %>% filter(grepl("alpha_psy[",variable,fixed = TRUE))
@@ -239,12 +283,13 @@ if(class(out2) != "try-error"){
 # #   sum_pcomp_psy <- out2sum %>% filter(grepl("pcomp_psy[",variable,fixed = TRUE))
 # #   sum_pcomp_psy %>% filter(rhat > 1.1) %>% summarise(n_fail = n()/nrow(sum_pcomp_psy))
 # # 
-# #   sum_pcomp_sy <- out2sum %>% filter(grepl("pcomp_sy[",variable,fixed = TRUE)) %>%
-# #     mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies),
-# #            species = rep(c(1:jdat$nspecies),times = jdat$nyears))
-# #   tst = sum_pcomp_sy %>% filter(rhat > 1.1) %>% group_by(year) %>% summarise(n_fail = n()/jdat$nspecies)
-# #   wh_fail <- ggplot(data = sum_pcomp_sy,aes(x = year,y = rhat,group = species,colour = species))+
-# #     geom_line()
+  # sum_pcomp_sy <- out2sum %>% filter(grepl("pcomp_sy[",variable,fixed = TRUE)) %>%
+  #   mutate(year = rep(c(1:jdat$nyears),each = jdat$nspecies),
+  #          species = rep(c(1:jdat$nspecies),times = jdat$nyears))
+  # 
+  # tst = sum_pcomp_sy %>% filter(rhat > 1.1) %>% group_by(year) %>% summarise(n_fail = n()/jdat$nspecies)
+  # wh_fail <- ggplot(data = sum_pcomp_sy,aes(x = year,y = rhat,group = species,colour = species))+
+  #   geom_line()
 # #   print(wh_fail)
 # # 
 # # 
@@ -376,8 +421,9 @@ if(class(out2) != "try-error"){
 
 }
 }
+}#end overwrite conditional
       
-    }#end parallele cluster run
+    }#end parallel cluster run
 
   stopCluster(cl = cluster)
   

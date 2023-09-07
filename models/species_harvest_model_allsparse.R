@@ -550,11 +550,6 @@ model {
   ## the following betas are the coefficients that control the contribution of
   ## the alpha_sy and alpha_ps to teh alpha_psy
   ## they are random effects that vary by year and period
-for(s in 1:nspecies){
-    tau_alpha_psy[s] ~ dscaled.gamma(0.1,50) 
-    sd_alpha_psy[s] <- 1/sqrt(tau_alpha_psy[s])
-}
-  
   tau_beta_sy ~ dscaled.gamma(0.1,50) #extra variance
   sd_beta_sy <- 1/sqrt(tau_beta_sy)
   tau_beta_ps ~ dscaled.gamma(0.1,50) #extra variance
@@ -579,8 +574,7 @@ for(s in 1:nspecies){
       for (y in 1:nyears){
         pcomp_psy[p,s,y] <- delta_psy[p,s,y] / sum(delta_psy[p,1:nspecies,y]) # softmax regression 
         delta_psy[p,s,y] <- exp(alpha_psy[p,s,y])
-        alpha_psy[p,s,y] ~ dnorm(beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s],tau_alpha_psy[s]) # combination of species effect, species-year effect, species period effect
-      #  alpha_psy[p,s,y] <- beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s] # combination of species effect, species-year effect, species period effect
+        alpha_psy[p,s,y] <- beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s] # combination of species effect, species-year effect, species period effect
       } #y
       
     }#s
@@ -630,32 +624,32 @@ for(s in 1:nspecies){
   
   #### multinomial log-ratios, model for the age and sex (ducks) or age (geese) composition
 
-  ## annual variation only for data-rich species
-  for(s in species_rich){
-    tau_alpha_axsy[s] ~ dscaled.gamma(0.5,50) #variance of year-effects for the demographic parameters by species
-    sd_alpha_axsy[s] <- 1/sqrt(tau_alpha_axsy[s])
-    
-    alpha_axs[ndemog,s] <- 0 #final demographic category fixed at 0
-    
-    for(y in 1:nyears){
-      alpha_axsy[ndemog,s,y] <- alpha_axs[ndemog,s]  #final demographic group is fixed at 0 in all years for each species
-    }#y
-    
-    for(d in 1:(ndemog-1)){
-      alpha_axs[d,s] ~ dnorm(0,0.1)#tau_alpha_ax)
-      alpha_axsy[d,s,midyear] <- alpha_axs[d,s]
-      for(y in (midyear+1):nyears){
-        
-        alpha_axsy[d,s,y]  ~ dnorm(alpha_axsy[d,s,y-1],tau_alpha_axsy[s]) 
-      }
-      for(y in 1:(midyear-1)){
-        alpha_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y+1],tau_alpha_axsy[s]) 
-        
-      }#y
-    }#d
-    
-  }#s
-  
+  # ## annual variation only for data-rich species
+  # for(s in species_rich){
+  #   tau_alpha_axsy[s] ~ dscaled.gamma(0.5,50) #variance of year-effects for the demographic parameters by species
+  #   sd_alpha_axsy[s] <- 1/sqrt(tau_alpha_axsy[s])
+  #   
+  #   alpha_axs[ndemog,s] <- 0 #final demographic category fixed at 0
+  #   
+  #   for(y in 1:nyears){
+  #     alpha_axsy[ndemog,s,y] <- alpha_axs[ndemog,s]  #final demographic group is fixed at 0 in all years for each species
+  #   }#y
+  #   
+  #   for(d in 1:(ndemog-1)){
+  #     alpha_axs[d,s] ~ dnorm(0,0.1)#tau_alpha_ax)
+  #     alpha_axsy[d,s,midyear] <- alpha_axs[d,s]
+  #     for(y in (midyear+1):nyears){
+  #       
+  #       alpha_axsy[d,s,y]  ~ dnorm(alpha_axsy[d,s,y-1],tau_alpha_axsy[s]) 
+  #     }
+  #     for(y in 1:(midyear-1)){
+  #       alpha_axsy[d,s,y] ~ dnorm(alpha_axsy[d,s,y+1],tau_alpha_axsy[s]) 
+  #       
+  #     }#y
+  #   }#d
+  #   
+  # }#s
+  # 
   
   
   ### for the non-data rich species (those with less than ~300 parts total)

@@ -258,16 +258,16 @@ for(spgp in c("duck","goose","murre")){
           for(dg in 1:ndemog){
             ag <- demog[dg,"BAGE"]
             sx <- demog[dg,"BSEX"]
-            
+
             agesexarray[dg,sp,y] <- nrow(prts1[which(prts1$BAGE == ag & prts1$BSEX == sx & prts1$spn == sp & prts1$YEAR == yr),])
-            
+
             for(per in 1:nperiods){
-              
+
               agesexperiodarray[dg,per,sp,y] <- nrow(prts1[which(prts1$period == per & prts1$spn == sp & prts1$YEAR == yr & prts1$BAGE == ag & prts1$BSEX == sx ),])
-              
-              
+
+
             }#per
-            
+
           }#dg
         }
         if(spgp %in% c("murre","goose")){ ### lumps all sexes including unknowns just tracks ages
@@ -775,6 +775,7 @@ for(spgp in c("duck","goose","murre")){
     jdat[["species_rich"]] <- which(jdat$w_s > 300) #species with sufficient parts to make estimating time-varying demographic proportions reasonble
     jdat[["species_sparse"]] <- which(jdat$w_s <= 300) #species with sufficient parts to make estimating time-varying demographic proportions reasonble
     
+
     
     
     if(any(is.na(jdat))){stop(paste("Missing data in the jdat object for",spgp,pr,z))}

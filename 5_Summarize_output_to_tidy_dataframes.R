@@ -39,7 +39,6 @@ alt_regs <- prov_zone %>%
 converge_sum <- readRDS(paste0("output/all_parameter_convergence_summary_",Y,".rds")) 
 # Simple estimates effort and groups --------------------------------------
 
-
 load("national_provincial_summaries1.RData")
 
 tmp_sim <- tmp_sim %>% 
@@ -56,13 +55,6 @@ zone_sums_b <- tmp_sim %>%
             lci = as.numeric(hdi(sum,0.95)[1]),
             uci = as.numeric(hdi(sum,0.95)[2]))
 
-conv_tmp <- converge_sum %>% 
-  filter(var %in% unique(zone_sums_b))
-tmp2 <- zone_sums_b %>% 
-  left_join(converge_sum,
-            by = c(var,prov,zone))
-### this is the point at which to flag convergence fails by joining to 
-### parameter summary by var prov zone and year.
 
 reg_sums_b <- tmp_sim %>%
   filter(region != "") %>% 
@@ -123,6 +115,16 @@ tmp_sp <- tmp_sp %>%
   left_join(.,alt_regs,
             by = c("prov","zone"))
 
+# Snow Goose combined blue- and white-phases
+sngo_aou <- c(1692,1693) # white- and blue-phase sngo
+
+sngo_obs <- tmp_sp %>% # extract only sngo records
+  filter(AOU %in% sngo_aou) %>% 
+  group_by(prov,zone,year,.draw) %>%
+  summarise(.value = sum(.value)) %>% # sum draw values for each prov, zone, and year 
+  mutate(AOU = 1695) # add new AOU value
+
+tmp_sp <- bind_rows(tmp_sp,sngo_obs) #append sngo full species to rest of estimates
 
 zone_sums_a <- tmp_sp %>%
   group_by(AOU,prov,zone,year,.draw) %>%
@@ -142,15 +144,15 @@ prov_sums_a <- tmp_sp %>%
             lci = as.numeric(hdi(sum,0.95)[1]),
             uci = as.numeric(hdi(sum,0.95)[2]))
 
-reg_sums_a <- tmp_sp %>%
-  filter(region != "") %>% 
-  group_by(AOU,region,year,.draw) %>%
-  summarise(sum = sum(.value)) %>%
-  group_by(AOU,region,year) %>%
-  summarise(mean = mean(sum),
-            median = quantile(sum,0.5,names = FALSE),
-            lci = as.numeric(hdi(sum,0.95)[1]),
-            uci = as.numeric(hdi(sum,0.95)[2]))
+# reg_sums_a <- tmp_sp %>%
+#   filter(region != "") %>% 
+#   group_by(AOU,region,year,.draw) %>%
+#   summarise(sum = sum(.value)) %>%
+#   group_by(AOU,region,year) %>%
+#   summarise(mean = mean(sum),
+#             median = quantile(sum,0.5,names = FALSE),
+#             lci = as.numeric(hdi(sum,0.95)[1]),
+#             uci = as.numeric(hdi(sum,0.95)[2]))
 
 
 nat_sums_a <- tmp_sp %>%
@@ -167,13 +169,13 @@ nat_sums_a <- tmp_sp %>%
 
 save(list = c("nat_sums_a",
               "prov_sums_a",
-              "reg_sums_a",
+              #"reg_sums_a",
               "zone_sums_a"),
      file = "data/Posterior_summaries2.RData")
 rm(list = c("tmp_sp",
             "nat_sums_a",
             "prov_sums_a",
-            "reg_sums_a",
+            #"reg_sums_a",
             "zone_sums_a"))
 
 
@@ -181,9 +183,49 @@ rm(list = c("tmp_sp",
 
 # age ratios --------------------------------------------------------------
 
+# load demographic convergence summary
+demog_summary <- readRDS("~/GitHub/CWS_national_harvest_survey/output/demog_summary.rds")
+# this identifies species, years, and regions where the demographic parameters
+# failed to converge. 
+# these species x region (maybe years) combinations should be removed from the demographic 
+# summaries below
+
+## species for which we don't report age-ratios or demographic summaries
+## these species sexes are not treated equally in both ages (e.g., unidentifiable when immature)
+## 
+sp_demog_never <- c(1300,
+                    1310,
+                    1540,
+                    1630,
+                    1650,
+                    1660,
+                    1670)
+# sp_demog_keep <- demog_summary %>% 
+#   group_by(.,prov,zone,model,AOU) %>% 
+#   summarise(keep = ifelse(any(rhat_fail),FALSE,TRUE),
+#             min_ess = min(ess_bulk),
+#             max_rhat = max(rhat)) %>% 
+#   filter(keep)
+
+sp_demog_keep <- demog_summary %>% 
+  group_by(.,prov,zone,model,AOU) %>% 
+  summarise(keep = ifelse(any(rhat_fail),FALSE,TRUE)) %>% 
+  filter(!AOU %in% sp_demog_never) %>% 
+  filter(keep)
+
+
+
+sp_demog_drop <- demog_summary %>% 
+  group_by(.,prov,zone,model,AOU) %>% 
+  summarise(keep = ifelse(any(rhat_fail),TRUE,FALSE)) %>% 
+  filter(keep)
+
 
 load(paste0("national_provincial_summaries3.RData"))
 
+tmp_sp_demo <- tmp_sp_demo %>%
+  inner_join(.,sp_demog_keep,
+             by = c("prov","zone","AOU"))
 
 nat_sums_c <- tmp_sp_demo %>%
   group_by(AOU,BAGE,year,.draw) %>%
@@ -285,7 +327,9 @@ load(paste0("national_provincial_summaries3_",suf,".RData"))
 
 tmp_sp_demo <- tmp_sp_demo1 %>% 
   left_join(.,alt_regs,
-            by = c("prov","zone"))
+            by = c("prov","zone")) %>%
+  inner_join(.,sp_demog_keep,
+             by = c("prov","zone","AOU"))
 
 rm("tmp_sp_demo1")
 

@@ -1,4 +1,6 @@
 Species_Code,English_Name,French_Name_New,French_Name_Old,Scientific_Name
+300,Common Murre,Guillemot marmette,Guillemot marmette,Uria aalge
+310,Thick-billed Murre,Guillemot de Brünnich,Guillemot de Brünnich,Uria lomvia
 1290,Common Merganser,Grand Harle,Grand Bec-scie,Mergus merganser
 1300,Red-breasted Merganser,Harle huppé,Bec-scie à poitrine rousse,Mergus serrator
 1310,Hooded Merganser,Harle couronné,Bec-scie couronné,Lophodytes cucullatus
@@ -29,14 +31,13 @@ Species_Code,English_Name,French_Name_New,French_Name_Old,Scientific_Name
 1650,White-winged Scoter,Macreuse à ailes blanches,Macreuse à ailes blanches,Melanitta (fusca) deglandi
 1660,Surf Scoter,Macreuse à front blanc,Macreuse à front blanc,Melanitta perspicillata
 1670,Ruddy Duck,Érismature rousse,Canard Roux,Oxyura jamaicensis
-1690,Lesser Snow Goose,Oie des neiges : petite oie blanche,Oie des neiges : petite oie blanche,Anser caerulescens caerulescens
-1699,Greater Snow Goose,Oie des neiges : grande,Oie des neiges : grande oie blanche,Anser caerulescens atlantica
+1692,Snow Goose: white-phase,Oie des neiges : phase blanche,Oie des neiges : phase blanche,Anser caerulescens caerulescens
+1693,Snow Goose: blue phase,Oie des neiges : phase bleue,Oie des neiges : phase bleue,Anser caerulescens atlantica
+1695,Snow Goose,Oie des neiges,Oie des neiges,Anser caerulescens
 1700,Ross' Goose,Oie de Ross,Oie de Ross,Anser rossii
 1710,White-fronted Goose,Oie rieuse,Oie naine/rieuse (Oie à front blanc),Anser albifrons
 1721,Cackling Goose,Bernache de Hutchins,Cackling Goose,Bernache de Hutchins
 1722,Canada Goose,Bernache du Canada,Bernache du Canada,Branta canadensis
 1730,Brant,Bernache cravant,Bernache cravant,Branta bernicla
 1740,Black Brant,Bernache cravant : race de l'Ouest,Bernache cravant : race de l'Ouest,Branta bernicla
-300,Common Murre,Guillemot marmette,Guillemot marmette,Uria aalge
 2280,American Woodcock,Bécasse d'Amerique,Bécasse d'Amerique,Scolopax minor
-310,Thick-billed Murre,Guillemot de Brünnich,Guillemot de Brünnich,Uria lomvia

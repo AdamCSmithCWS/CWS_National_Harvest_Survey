@@ -275,6 +275,10 @@ general_plot_c<- function(dat = c_tab,
       pp <- geom_point(aes(colour = gr),size = 1)
       ppe <- geom_errorbar(aes(ymin = lci,ymax = uci,colour = gr,alpha = npart_alpha),width = 0)
       ppl <- geom_line(alpha = 0.3,aes(colour = gr))
+      rp <- geom_point(aes(x = year,y = raw_age_ratio,
+                           alpha = n_parts_w_age),
+                       inherit.aes = FALSE,
+                       colour = grey(0.6))
 
     outgg[[i]] = ggplot(data = tmp,aes(x = year,y = mean))+
       geom_abline(slope = 0,intercept = 1,colour = grey(0.5),alpha = 0.5)+
@@ -304,6 +308,7 @@ general_plot_c<- function(dat = c_tab,
                          !is.na(zone))
     outgg[[i]] = ggplot(data = tmp,aes(x = year,y = mean))+
       geom_abline(slope = 0,intercept = 1,colour = grey(0.5),alpha = 0.5)+
+      rp+
       pp+
       ppe+
       ppl+

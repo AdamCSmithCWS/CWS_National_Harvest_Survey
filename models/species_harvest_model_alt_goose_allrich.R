@@ -174,13 +174,20 @@ model {
   for(c in 1:ncastes){
     ## harvest rate priors
     for(yp in 1:2){ ## adding a first-half vs last-half of time-series split on hunter variance
-      retrans_hunter[c,yp] <- 0.5*(1/tauhunter[c,yp])/nu_ret[c,yp] 
-      sdhunter[c,yp] <- 1/pow(tauhunter[c,yp],0.5)
-      tauhunter[c,yp] ~ dscaled.gamma(0.5,50)
-      nu[c,yp] ~ dgamma(2,0.2)
-      nu_ret[c,yp] <- (1.422*nu[c,yp]^0.906)/(1+(1.422*nu[c,yp]^0.906)) #approximate retransformation to equate a t-distribution to a normal distribution - see appendix of Link et al. 2020 BBS model selection paper
+    retrans_hunter[c,yp] <- 0.5*(1/tauhunter[c,yp])/nu_ret[c,yp] 
+    sdhunter[c,yp] <- 1/pow(tauhunter[c,yp],0.5)
+    tauhunter[c,yp] ~ dscaled.gamma(0.5,50)
+    #nu[c,yp] ~ dgamma(2,0.2)
+    # these adjustments to the harvest retransformation factors allow the model to be more
+    # robust to non-normal distributions of hunter harvest effects
+    # they fit a heavy-tailed distribution (so extremes have reduced influence on teh mean)
+    # then they use a simplified re-transformation factor to scale the estimates
+    # to harvest counts - this has very little effect when the distributions are near-normal
+    # but helps to avoid biased retransformations when the distributions are very heavy tailed
+    nu[c,yp] <- 3 # fixed  heavy-tail distribution
+    nu_ret[c,yp] <- 1#(1.422*nu[c,yp]^0.906)/(1+(1.422*nu[c,yp]^0.906)) #approximate retransformation to equate a t-distribution to a normal distribution - see appendix of Link et al. 2020 BBS model selection paper
     }
-    
+  
     #activity (days) variance priors
     retrans_hunter_day[c] <- 0.5*(1/tauhunter_day[c])/nu_day_ret[c]
     sdhunter_day[c] <- 1/pow(tauhunter_day[c],0.5)
@@ -550,11 +557,6 @@ model {
   ## the following betas are the coefficients that control the contribution of
   ## the alpha_sy and alpha_ps to teh alpha_psy
   ## they are random effects that vary by year and period
-for(s in 1:nspecies){
-    tau_alpha_psy[s] ~ dscaled.gamma(0.1,50) 
-    sd_alpha_psy[s] <- 1/sqrt(tau_alpha_psy[s])
-}
-  
   tau_beta_sy ~ dscaled.gamma(0.1,50) #extra variance
   sd_beta_sy <- 1/sqrt(tau_beta_sy)
   tau_beta_ps ~ dscaled.gamma(0.1,50) #extra variance
@@ -579,8 +581,7 @@ for(s in 1:nspecies){
       for (y in 1:nyears){
         pcomp_psy[p,s,y] <- delta_psy[p,s,y] / sum(delta_psy[p,1:nspecies,y]) # softmax regression 
         delta_psy[p,s,y] <- exp(alpha_psy[p,s,y])
-        alpha_psy[p,s,y] ~ dnorm(beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s],tau_alpha_psy[s]) # combination of species effect, species-year effect, species period effect
-      #  alpha_psy[p,s,y] <- beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s] # combination of species effect, species-year effect, species period effect
+        alpha_psy[p,s,y] <- beta_sy[p]*alpha_sy[s,y] + beta_ps[y]*alpha_ps[p,s] # combination of species effect, species-year effect, species period effect
       } #y
       
     }#s
@@ -662,22 +663,22 @@ for(s in 1:nspecies){
   ### the annual values of demographic proportions are fixed at the mean 
   ### value for the species - complete pooling across all years
   
-  for(s in species_sparse){
-    alpha_axs[ndemog,s] <- 0 #fixed first demographic category = 0
-    
-    for(y in 1:nyears){
-      alpha_axsy[ndemog,s,y] <- alpha_axs[ndemog,s]  #first demographic group is fixed at 0 in all years for each species
-    }#y
-    
-    for(d in 1:(ndemog-1)){
-      alpha_axs[d,s] ~ dnorm(0,0.1)#tau_alpha_ax)
-      for(y in 1:nyears){
-        alpha_axsy[d,s,y] <- alpha_axs[d,s]
-      }
-    }#d
-    
-  }#s
-  
+  # for(s in species_sparse){
+  #   alpha_axs[ndemog,s] <- 0 #fixed first demographic category = 0
+  #   
+  #   for(y in 1:nyears){
+  #     alpha_axsy[ndemog,s,y] <- alpha_axs[ndemog,s]  #first demographic group is fixed at 0 in all years for each species
+  #   }#y
+  #   
+  #   for(d in 1:(ndemog-1)){
+  #     alpha_axs[d,s] ~ dnorm(0,0.1)#tau_alpha_ax)
+  #     for(y in 1:nyears){
+  #       alpha_axsy[d,s,y] <- alpha_axs[d,s]
+  #     }
+  #   }#d
+  #   
+  # }#s
+  # 
   
 }## end of model
 

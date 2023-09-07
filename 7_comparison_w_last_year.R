@@ -1,12 +1,12 @@
 ### comparing annual species harvests
 library(tidyverse)
-yy = 2021
+yy = 2022
 ly = yy - 1
 
 ddir <- "temparch/"
 
 ests <- NULL
-for(i in c(yy)){
+for(i in c(yy,ly)){
 dtall = read.csv(paste0(ddir,"Species_Harvest_Prises_par_Espece_comma_1976-",i,".csv")) %>% 
   mutate(year_est = as.character(i))
 
@@ -328,7 +328,7 @@ dev.off()
 var_names_sim <- unique(pubEsts_simple_all[,c("var","name")])
 
 ests <- NULL
-for(i in c(yy)){
+for(i in c(yy,ly)){
   dtall = read.csv(paste0(ddir,"General_Estimates_Donnees_generales_comma_1976-",i,".csv")) %>% 
     mutate(year_est = as.character(i))
   

@@ -78,7 +78,7 @@ sum_convergence <- FALSE # run this first
 parameter_summary <- NULL
 sp_save <- NULL
 for(pr in provs){
-  for(z in 1:3){
+  for(z in 1){
     for(spgp in gps){
       if(spgp == "other"){
        saved_file <- paste("output/other harvest zip",pr,z,"alt mod.RData")
@@ -139,7 +139,7 @@ problems <- simplified_summary %>%
          n_fail > 0,
          !grepl("psucc",variable_type), # other model usually uninformed parameters (group by year combinations that have no open season)
          !grepl("NSUCC_gcy",variable_type)) %>% # other model usually uninformed parameters (group by year combinations that have no open season) 
-  select(prov,zone,model) %>% 
+  select(prov,zone,model,variable_type) %>% 
   distinct()
 
 
@@ -188,16 +188,14 @@ sum_convergence <- TRUE
 
 
 
-
+for(jj in 1:3){
 
 
 ### select which set of summaries to calculate
-do_sim <- ifelse(sum_convergence,TRUE,FALSE)  # ~ 10GB RAM
-do_sp <- ifelse(sum_convergence &
-                  !do_sim,TRUE,FALSE) # ~20GM RAM
-do_sp_demo <- ifelse(sum_convergence &
-                       !do_sim &
-                       !do_sp,TRUE,FALSE) # ~80GB RAM!
+do_sim <- ifelse(jj == 1,TRUE,FALSE)  # ~ 10GB RAM
+do_sp <- ifelse(jj == 2,TRUE,FALSE) # ~20GM RAM
+do_sp_demo <- ifelse(jj == 3,TRUE,FALSE) # ~80GB RAM!
+do_sp_props <- ifelse(jj == 4,TRUE,FALSE) # not currently implemented, calculated in 6_Output_webtables...R
 
 
   
@@ -209,6 +207,9 @@ if(do_sp){
 }
 if(do_sp_demo){
     tmp_sp_demo <- NULL
+}
+if(do_sp_props){
+tmp_sp_props <- NULL
 }
 
 for(pr in provs){
@@ -288,6 +289,9 @@ for(pr in provs){
            tmp_sp <- bind_rows(tmp_sp,tmp_sp_duck)
            
        }
+       
+     
+       
            ## species age-sex harvests
            
        if(do_sp_demo){
@@ -509,10 +513,13 @@ for(pr in provs){
 if(do_sim){
 save(list = c("tmp_sim"),
      file = "national_provincial_summaries1.RData")
+  rm(list = "tmp_sim")
 }
 if(do_sp){
 save(list = c("tmp_sp"),
      file = "national_provincial_summaries2.RData")
+  rm(list = "tmp_sp")
+  
 }
 if(do_sp_demo){
 save(list = c("tmp_sp_demo"),
@@ -542,7 +549,13 @@ save(list = c("tmp_sp_demo1"),
 
 }
 
+if(do_sp_props){
+  save(list = c("tmp_sp_props"),
+       file = "national_provincial_summaries4.RData")
+  }
 
+
+}#jj
 
 
 
