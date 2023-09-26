@@ -97,49 +97,87 @@ cls = c("PRHUNT",
 for (y in years){
   dir.yr <- paste0(home.fold1,y)
 
+  if(y == Y){
   fil.yr <- paste0("harv",substring(y,3,4),"w")
   harvw[[as.character(y)]] <- read.ssd(libname = dir.yr,
                                        sectionnames = fil.yr,
                                        sascmd = file.path(sashome, "sas.exe"))
+  saveRDS(harvw[[as.character(y)]],paste0("data/harvw_",y,".rds"))
+  }else{
+    harvw[[as.character(y)]] <- readRDS(paste0("data/harvw_",y,".rds"))
+  }
+  if(y == Y){
   fil.yr <- paste0("dcal",substring(y,3,4))
   cald[[as.character(y)]] <- read.ssd(libname = dir.yr,
                                         sectionnames = fil.yr,
                                         sascmd = file.path(sashome, "sas.exe"))
+  saveRDS(cald[[as.character(y)]],paste0("data/cald_",y,".rds"))
+  }else{
+  cald[[as.character(y)]] <- readRDS(paste0("data/cald_",y,".rds"))
+  }
+  
+  if(y == Y){
   fil.yr <- paste0("gcal",substring(y,3,4))
   calg[[as.character(y)]] <- read.ssd(libname = dir.yr,
                                         sectionnames = fil.yr,
                                         sascmd = file.path(sashome, "sas.exe"))
-
+  saveRDS(calg[[as.character(y)]],paste0("data/calg_",y,".rds"))
+}else{
+  calg[[as.character(y)]] <- readRDS(paste0("data/calg_",y,".rds"))
+}
    if(y > 2012){
+     if(y == Y){
    fil.yr <- paste0("mcal",substring(y,3,4))
    calm[[as.character(y)]] <- read.ssd(libname = dir.yr,
                                        sectionnames = fil.yr,
                                        sascmd = file.path(sashome, "sas.exe"))
- }
+   saveRDS(calm[[as.character(y)]],paste0("data/calm_",y,".rds"))
+     }else{
+   calm[[as.character(y)]] <- readRDS(paste0("data/calm_",y,".rds"))
+     }
+   }
+  
+  if(y == Y){
  fil.yr = paste0("persal",substring(y,3,4))
  tmpp <- read.ssd(libname = paste0(home.fold1,"/PermitSales"),
                                      sectionnames = fil.yr,
                                      sascmd = file.path(sashome, "sas.exe"))
+
+
  if(any(tmpp$YEAR > 50,na.rm = T) ){
    tmpp$YEAR = tmpp$YEAR+1900
  }else{
    tmpp$YEAR = tmpp$YEAR+2000
 
  }
-
-
+ saveRDS(tmpp,paste0("data/persal_",y,".rds"))
+  }else{
+ tmpp <- readRDS(paste0("data/persal_",y,".rds"))
+  }
+  
+  if(y == Y){
  fil.yr = paste0("popsiz",substring(y,3,4))
  tmppop <- read.ssd(libname = paste0(home.fold1,"/PopulationSize"),
                   sectionnames = fil.yr,
                   sascmd = file.path(sashome, "sas.exe"))
-
+ saveRDS(tmppop,paste0("data/popsiz_",y,".rds"))
+  }else{
+ tmppop <- readRDS(paste0("data/popsiz_",y,".rds"))
+}
 
  ### if desired to swap BAGE for PAGE (geese), then scsYY is required, instead of scsYYe
  ### but then additional changes are needed to align with old data
+  if(y == Y){
   fil.yr <- paste0("scs",substring(y,3,4),"e")
   tmp <- read.ssd(libname = dir.yr,
                                       sectionnames = fil.yr,
                                       sascmd = file.path(sashome, "sas.exe"))
+  if(is.null(tmp)){
+    dir.alt <- "C:/Users/smithac/OneDrive - EC-EC/Harvest Survey A146/alt"
+    tmp <- read.ssd(libname = dir.alt,
+                    sectionnames = fil.yr,
+                    sascmd = file.path(sashome, "sas.exe"))
+  }
   # fil.yr <- paste0("scs",substring(y,3,4))
   # tmp2 <- read.ssd(libname = dir.yr,
   #                  sectionnames = fil.yr,
@@ -174,7 +212,11 @@ for (y in years){
   }
 
   tmp = tmp[,cls]
-
+  saveRDS(tmp,paste0("data/scs_",y,".rds"))
+}else{
+  tmp <- readRDS(paste0("data/scs_",y,".rds"))
+}
+  
   if(y == years[1]) {
     outscse <- tmp
     perms = tmpp
