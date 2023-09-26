@@ -236,14 +236,14 @@ print(y)
 #save.image(file = "data/stored_SAS_download.RData")
 
 
-saveRDS(outscse,paste0("data/outscse",Y,".rds"))
-saveRDS(perms,paste0("data/perms",Y,".rds"))
-saveRDS(popsiz,paste0("data/popsiz",Y,".rds"))
+saveRDS(outscse,paste0("data/outscse.rds"))
+saveRDS(perms,paste0("data/perms.rds"))
+saveRDS(popsiz,paste0("data/popsiz.rds"))
 
-saveRDS(cald,paste0("data/cald",Y,".rds"))
-saveRDS(harvw,paste0("data/harvw",Y,".rds"))
-saveRDS(calg,paste0("data/calg",Y,".rds"))
-saveRDS(calm,paste0("data/calm",Y,".rds"))
+saveRDS(cald,paste0("data/cald.rds"))
+saveRDS(harvw,paste0("data/harvw.rds"))
+saveRDS(calg,paste0("data/calg.rds"))
+saveRDS(calm,paste0("data/calm.rds"))
 
 
 
