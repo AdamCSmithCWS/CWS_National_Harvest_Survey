@@ -83,23 +83,23 @@ fit_table <- provzone %>%
 
 
 #fit_table <- fit_table %>% filter(spgp %in% c("goose","murre") | (spgp == "duck" & prov == "ON" & zone == 3))
-# fit_table <- fit_table %>% filter(spgp %in% c("duck") | (spgp == "goose" & prov %in% c("NT","YT")))
+#fit_table <- fit_table %>% filter(spgp %in% c("duck") | (spgp == "goose" & prov %in% c("NT","YT")))
 
 #fit_table <- fit_table %>% filter(spgp %in% c("duck"))
 #fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckNB2","duckMB1","duckYT1"))
-fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckNB1","duckON1","duckPQ1","duckON2","duckON3"))
+#fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckNB1","duckON1","duckPQ1","duckON2","duckON3"))
 
  overwrite <- TRUE # set to TRUE if attempting to overwrite earlier model runs
  
  
 # Province and Zone loop --------------------------------------------------
-  n_cores <- 5
+  n_cores <- 14
   cluster <- makeCluster(n_cores, type = "PSOCK")
   registerDoParallel(cluster)
 
 
 
-  fullrun <- foreach(i = c(1:nrow(fit_table)),
+  fullrun <- foreach(i = rev(c(1:nrow(fit_table))),
                      .packages = c("jagsUI","tidyverse","posterior"),
                      .inorder = FALSE,
                      .errorhandling = "pass") %dopar%
@@ -119,7 +119,12 @@ load(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
   if(paste0(spgp,pr,z) %in% c("goosePQ1","goosePQ2","gooseON3")){
   mod.file = "models/species_harvest_model_alt_goose.R" # version with nu fixed at 3
   }else{
-    mod.file = "models/species_harvest_model.R" #
+    if(spgp == "duck" & pr %in% c("ON","PQ")){
+    mod.file = "models/species_harvest_model_more_flexible.R" #
+    }else{
+      mod.file = "models/species_harvest_model.R" #
+      
+    }
   }
 
   if(length(jdat$species_sparse) == 0){ # if there are no species below the threshold
@@ -197,10 +202,10 @@ parms = c("NACTIVE_y",
 
 
 #adaptSteps = 200              # Number of steps to "tune" the samplers.
-burnInSteps = 20000            # Number of steps to "burn-in" the samplers.
+burnInSteps = 30000            # Number of steps to "burn-in" the samplers.
 nChains = 3                   # Number of chains to run.
 numSavedSteps=1000          # Total number of steps in each chain to save.
-thinSteps=40                   # Number of steps to "thin" (1=keep every step).
+thinSteps=60                   # Number of steps to "thin" (1=keep every step).
 nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
 
 t1 = Sys.time()

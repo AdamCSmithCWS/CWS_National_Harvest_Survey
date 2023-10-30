@@ -78,7 +78,7 @@ sum_convergence <- FALSE # run this first
 parameter_summary <- NULL
 sp_save <- NULL
 for(pr in provs){
-  for(z in 1){
+  for(z in 1:3){
     for(spgp in gps){
       if(spgp == "other"){
        saved_file <- paste("output/other harvest zip",pr,z,"alt mod.RData")

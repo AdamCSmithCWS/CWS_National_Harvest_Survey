@@ -119,13 +119,13 @@ all_zones <- expand.grid(prov = provs,
 # all_zones <- data.frame(prov = c("MB","AB","NT","PQ","YT"),
 #                         zone = c(1,1,1,2,1))
 
-all_zones <- data.frame(prov = c("MB","NB","PQ","YT"),
-                        zone = c(2,2,2,1))
+# all_zones <- data.frame(prov = c("MB","NB","PQ","YT"),
+#                         zone = c(2,2,2,1))
 
 # MCMC loops --------------------------------------------------------------
 rerun <- TRUE # set to true if the loop should force model fit for zones already completed
 
-n_cores <- 4
+n_cores <- 3
 cluster <- makeCluster(n_cores, type = "PSOCK")
 registerDoParallel(cluster)
 

@@ -881,13 +881,13 @@ for(pr in prov_sort[-1]){
 dev.off()
 
 
-prop_plot <- ggplot(data = prop_estimatest,
-                    aes(x = year,y = mean))+
-  geom_errorbar(aes(ymin = q5,ymax = q95),
-                alpha = 0.3, width = 0)+
-  geom_point()+
-  geom_point(aes(x = year, y = raw_prop, colour = raw_part_py+1),
-             alpha = 0.8)+
-  scale_colour_viridis_c(trans = "log10")+
-  facet_wrap(vars(d1))
-print(prop_plot)
+# prop_plot <- ggplot(data = prop_estimatest,
+#                     aes(x = year,y = mean))+
+#   geom_errorbar(aes(ymin = q5,ymax = q95),
+#                 alpha = 0.3, width = 0)+
+#   geom_point()+
+#   geom_point(aes(x = year, y = raw_prop, colour = raw_part_py+1),
+#              alpha = 0.8)+
+#   scale_colour_viridis_c(trans = "log10")+
+#   facet_wrap(vars(d1))
+# print(prop_plot)

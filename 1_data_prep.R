@@ -33,12 +33,14 @@ home.fold1 <- "C:/Users/smithac/OneDrive - EC-EC/Harvest Survey A146/"
 home.fold <- getwd()
 # setwd(home.fold)
 
-library(foreign)
+#library(foreign)
 #library(runjags)
 library(rjags)
 library(tidyverse)
+library(haven)
 
-sashome <- "C:\\Program Files\\SASHome\\SASFoundation\\9.4"
+
+#sashome <- "C:\\Program Files\\SASHome\\SASFoundation\\9.4"
 provs = c("AB","BC","SK","MB","ON","PQ","NS","PE","NB","NF","NT","YT")#,"NU") #All prov
 #ignoring territories above
 
@@ -99,18 +101,17 @@ for (y in years){
 
   if(y == Y){
   fil.yr <- paste0("harv",substring(y,3,4),"w")
-  harvw[[as.character(y)]] <- read.ssd(libname = dir.yr,
-                                       sectionnames = fil.yr,
-                                       sascmd = file.path(sashome, "sas.exe"))
+  harvw[[as.character(y)]] <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat"))
+  
   saveRDS(harvw[[as.character(y)]],paste0("data/harvw_",y,".rds"))
   }else{
     harvw[[as.character(y)]] <- readRDS(paste0("data/harvw_",y,".rds"))
   }
   if(y == Y){
   fil.yr <- paste0("dcal",substring(y,3,4))
-  cald[[as.character(y)]] <- read.ssd(libname = dir.yr,
-                                        sectionnames = fil.yr,
-                                        sascmd = file.path(sashome, "sas.exe"))
+  cald[[as.character(y)]] <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat"))
+  
+  
   saveRDS(cald[[as.character(y)]],paste0("data/cald_",y,".rds"))
   }else{
   cald[[as.character(y)]] <- readRDS(paste0("data/cald_",y,".rds"))
@@ -118,9 +119,8 @@ for (y in years){
   
   if(y == Y){
   fil.yr <- paste0("gcal",substring(y,3,4))
-  calg[[as.character(y)]] <- read.ssd(libname = dir.yr,
-                                        sectionnames = fil.yr,
-                                        sascmd = file.path(sashome, "sas.exe"))
+  calg[[as.character(y)]] <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat"))
+  
   saveRDS(calg[[as.character(y)]],paste0("data/calg_",y,".rds"))
 }else{
   calg[[as.character(y)]] <- readRDS(paste0("data/calg_",y,".rds"))
@@ -128,9 +128,8 @@ for (y in years){
    if(y > 2012){
      if(y == Y){
    fil.yr <- paste0("mcal",substring(y,3,4))
-   calm[[as.character(y)]] <- read.ssd(libname = dir.yr,
-                                       sectionnames = fil.yr,
-                                       sascmd = file.path(sashome, "sas.exe"))
+   calm[[as.character(y)]] <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat"))
+   
    saveRDS(calm[[as.character(y)]],paste0("data/calm_",y,".rds"))
      }else{
    calm[[as.character(y)]] <- readRDS(paste0("data/calm_",y,".rds"))
@@ -139,9 +138,8 @@ for (y in years){
   
   if(y == Y){
  fil.yr = paste0("persal",substring(y,3,4))
- tmpp <- read.ssd(libname = paste0(home.fold1,"/PermitSales"),
-                                     sectionnames = fil.yr,
-                                     sascmd = file.path(sashome, "sas.exe"))
+ tmpp <- read_sas(paste0(home.fold1,"/PermitSales/",fil.yr,".sas7bdat"))
+ 
 
 
  if(any(tmpp$YEAR > 50,na.rm = T) ){
@@ -157,9 +155,8 @@ for (y in years){
   
   if(y == Y){
  fil.yr = paste0("popsiz",substring(y,3,4))
- tmppop <- read.ssd(libname = paste0(home.fold1,"/PopulationSize"),
-                  sectionnames = fil.yr,
-                  sascmd = file.path(sashome, "sas.exe"))
+ tmppop <- read_sas(paste0(home.fold1,"/PopulationSize/",fil.yr,".sas7bdat"))
+ 
  saveRDS(tmppop,paste0("data/popsiz_",y,".rds"))
   }else{
  tmppop <- readRDS(paste0("data/popsiz_",y,".rds"))
@@ -169,14 +166,12 @@ for (y in years){
  ### but then additional changes are needed to align with old data
   if(y == Y){
   fil.yr <- paste0("scs",substring(y,3,4),"e")
-  tmp <- read.ssd(libname = dir.yr,
-                                      sectionnames = fil.yr,
-                                      sascmd = file.path(sashome, "sas.exe"))
+  tmp <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat"))
+  
   if(is.null(tmp)){
     dir.alt <- "C:/Users/smithac/OneDrive - EC-EC/Harvest Survey A146/alt"
-    tmp <- read.ssd(libname = dir.alt,
-                    sectionnames = fil.yr,
-                    sascmd = file.path(sashome, "sas.exe"))
+    tmp <- read_sas(paste0(dir.alt,"/",fil.yr,".sas7bdat"))
+
   }
   # fil.yr <- paste0("scs",substring(y,3,4))
   # tmp2 <- read.ssd(libname = dir.yr,
