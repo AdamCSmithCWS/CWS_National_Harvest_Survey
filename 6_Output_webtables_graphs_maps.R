@@ -75,18 +75,25 @@ a_tab1 <- a_tab %>% relocate(Description_Fr,
                   var,prov)
 
 
-a_tab_out <- a_tab1 %>%  
-  rename(region_En = Prov_En,
-         region_Fr = Prov_Fr,
-         year_an = year,
-         mean_moyen = mean,
-         lci_2.5 = lci,
-         uci_97.5 = uci)
+a_tab_out <- a_tab1 %>% 
+  relocate(var,prov,zone,year,mean,lci,uci,Description_En,Description_Fr,Prov_En,Prov_Fr) %>% 
+  rowwise() %>% 
+  mutate(Prov_Fr = ifelse(is.na(Prov_Fr),"0",Prov_Fr),
+         Prov_En = ifelse(is.na(Prov_En),"0",Prov_En),
+         zone = ifelse(is.na(zone),0,zone)) %>% 
+  rename(Variable_Code = var,
+         Province_ID = prov,
+         Zone_ID = zone,
+         Year = year,
+         Estimate = mean,
+         Province_Name = Prov_En,
+         Province_Nom = Prov_Fr)
 
 
-write.csv(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_comma_",FY,"-",Y,".csv"),row.names = FALSE)
-write.csv2(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_point_virgule_",FY,"-",Y,".csv"),row.names = FALSE)
-write.csv(a_tab_out,paste0("website/General_harvest_table",FY,"-",Y,".csv"),row.names = FALSE)
+write_csv(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_comma_",FY,"-",Y,".csv"))
+write_csv2(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_point_virgule_",FY,"-",Y,".csv"))
+write_csv(a_tab_out,paste0("website/General_harvest_table",FY,"-",Y,".csv"))
+write_csv(a_tab_out,paste0("website/General_harvest_table.csv"))
 
 
 
@@ -156,19 +163,30 @@ b_tab1 <- b_tab %>% relocate(French_Name_New,
 
 
 
-b_tab_out <- b_tab1 %>%  
-  rename(region_En = Prov_En,
-         region_Fr = Prov_Fr,
-         year_an = year,
-         mean_moyen = mean,
-         lci_2.5 = lci,
-         uci_97.5 = uci)
+b_tab_out <- b_tab %>% 
+  rowwise() %>% 
+  mutate(Age = ifelse(is.na(Age),"All",Age),
+         Sex = ifelse(is.na(Sex),"All",Sex),
+         zone = ifelse(is.na(zone),0,zone)) %>% 
+  rename(Species_Code = AOU,
+         Province_ID = prov,
+         Zone_ID = zone,
+         Year = year,
+         Estimate = mean,
+         Species_Name_English = English_Name,
+         Species_Name_French = French_Name_New,
+         Province_Name = Prov_En,
+         Province_Nom = Prov_Fr) %>% 
+  select(Species_Code,Age,Sex,Province_ID,Zone_ID,Year,Estimate,lci,uci,
+         Species_Name_English,Species_Name_French,Scientific_Name,
+         Province_Name,Province_Nom)
 
-write.csv(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_comma_",FY,"-",Y,".csv"),row.names = FALSE)
+write_csv(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_comma_",FY,"-",Y,".csv"))
 
-write.csv2(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_point_virgule_",FY,"-",Y,".csv"),row.names = FALSE)
-write.csv(b_tab_out,paste0("website/species_harvest_table_incl_age_sex",FY,"-",Y,".csv"),row.names = FALSE)
+write_csv2(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_point_virgule_",FY,"-",Y,".csv"))
+write_csv(b_tab_out,paste0("website/species_harvest_table_incl_age_sex",FY,"-",Y,".csv"))
 
+write_csv(b_tab_out,paste0("website/species_harvest_table_incl_age_sex.csv"))
 
 
 
@@ -199,7 +217,7 @@ nparts_species_year_age_sex <- outscse %>%
               names_expand = TRUE) %>% 
   arrange(PRHUNT,ZOHUNT,AOU,YEAR)
 
-write.csv(nparts_species_year_age_sex,
+write_csv(nparts_species_year_age_sex,
           file = paste0("GoogleDrive/n_parts_by_zone_year_aou_sex_age",FY,"-",Y,".csv"))
 
 
@@ -296,17 +314,30 @@ c_tab1 <- c_tab %>% relocate(French_Name_New,
 
 
 
-c_tab_out <- c_tab1 %>%  
-  rename(region_En = Prov_En,
-         region_Fr = Prov_Fr,
-         year_an = year,
-         mean_moyen = mean,
-         lci_2.5 = lci,
-         uci_97.5 = uci)
+c_tab_out <- c_tab %>% 
+  rowwise() %>% 
+  mutate(Prov_Fr = ifelse(is.na(Prov_Fr),"0",Prov_Fr),
+         Prov_En = ifelse(is.na(Prov_En),"0",Prov_En),
+         zone = ifelse(is.na(zone),0,zone)) %>%  
+  rename(Province_Name = Prov_En,
+         Province_Nom = Prov_Fr,
+         Year = year,
+         Estimate = mean,
+         Species_Code = AOU,
+         Province_ID = prov,
+         Zone_ID = zone,
+         Species_Name_English = English_Name,
+         Species_Name_French = French_Name_New,
+         Part_Count = n_parts) %>% 
+  select(Species_Code, Province_ID, Zone_ID, Year, Estimate, lci, uci,
+         Species_Name_English, Species_Name_French, Scientific_Name,
+         Province_Name, Province_Nom, Part_Count)
+  
 
-write.csv(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_comma_",FY,"-",Y,".csv"),row.names = FALSE)
-write.csv2(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_point_virgule_",FY,"-",Y,".csv"),row.names = FALSE)
-write.csv(c_tab_out,paste0("website/species_age_ratios",FY,"-",Y,".csv"),row.names = FALSE)
+write_csv(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_comma_",FY,"-",Y,".csv"))
+write_csv2(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_point_virgule_",FY,"-",Y,".csv"))
+write_csv(c_tab_out,paste0("website/species_age_ratios",FY,"-",Y,".csv"))
+write_csv(c_tab_out,paste0("website/species_age_ratios.csv"))
 
 
 c_tab_plot <- c_tab1 %>% 
