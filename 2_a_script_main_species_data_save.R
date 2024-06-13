@@ -44,7 +44,7 @@
 #   The ratio corresponds to the number of males per female bird in the sample. Ratios were calculated if the total sample equals or exceeds 20 parts.
 
 
-Y <- 2022
+Y <- 2023
 FY = 1976
 years <- FY:Y
 

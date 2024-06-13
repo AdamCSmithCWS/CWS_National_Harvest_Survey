@@ -10,7 +10,8 @@ GoogleDrive/
 website/
 Figures/
 data/**info2020.RData
-
+data/permit_lookup*
+arch/
 
 
 

@@ -23,7 +23,7 @@
 
 
 
-Y <- 2022
+Y <- 2023
 years <- 1976:Y
 
 names(years) <- paste(years)
@@ -96,46 +96,136 @@ cls = c("PRHUNT",
         #"JDHUN",
        "WEEK")
 #
+# simple funtion to replace permit numbers with unique anonymous factors
+permit_replace <- function(x,Y){
+  y <- as.integer(factor(x))
+  y <- paste0(Y,"_",y)
+  return(y)
+}
+
+
 for (y in years){
   dir.yr <- paste0(home.fold1,y)
 
+  ## this if, and the related if(y == Y) statements ensure that the 
+  ## sas based files are only loaded for the current year.
   if(y == Y){
   fil.yr <- paste0("harv",substring(y,3,4),"w")
-  harvw[[as.character(y)]] <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat"))
+
+  tmpharv <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat")) %>%
+    mutate(PERM = PERMIT + SELYEAR*1e6,
+           PERMIT = permit_replace(PERM,y))
   
-  saveRDS(harvw[[as.character(y)]],paste0("data/harvw_",y,".rds"))
+  perm_lookup_nhs <- tmpharv %>%
+    select(PERM,PERMIT) %>%
+    distinct()
+
+  tmpharv <- tmpharv %>%
+    select(-PERM)
+
+
+  harvw[[as.character(y)]] <- tmpharv
+
+  saveRDS(harvw[[as.character(y)]],paste0("data/harvw_",y,"_anon.rds"))
+
   }else{
-    harvw[[as.character(y)]] <- readRDS(paste0("data/harvw_",y,".rds"))
+
+    tmpharv <- readRDS(paste0("data/harvw_",y,".rds")) %>%
+      mutate(PERM = PERMIT + SELYEAR*1e6,
+             PERMIT = permit_replace(PERM,y))
+
+    perm_lookup_nhs <- tmpharv %>%
+        select(PERM,PERMIT) %>%
+        distinct()
+
+      tmpharv <- tmpharv %>%
+        select(-PERM)
+
+    harvw[[as.character(y)]] <- tmpharv
+
+    saveRDS(harvw[[as.character(y)]],paste0("data/harvw_",y,"_anon.rds"))
+
   }
+
   if(y == Y){
   fil.yr <- paste0("dcal",substring(y,3,4))
-  cald[[as.character(y)]] <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat"))
-  
-  
-  saveRDS(cald[[as.character(y)]],paste0("data/cald_",y,".rds"))
+  tmp_cal <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat")) %>%
+    mutate(PERM = PERMIT + Y*1e6) %>%
+    select(-PERMIT) %>%
+    left_join(.,perm_lookup_nhs,
+              by = "PERM")%>% 
+    select(-PERM)
+
+  cald[[as.character(y)]] <- tmp_cal
+  saveRDS(cald[[as.character(y)]],paste0("data/cald_",y,"_anon.rds"))
+
   }else{
-  cald[[as.character(y)]] <- readRDS(paste0("data/cald_",y,".rds"))
+
+  tmp_cal <- readRDS(paste0("data/cald_",y,".rds"))%>%
+    mutate(PERM = PERMIT + Y*1e6)  %>%
+    select(-PERMIT) %>%
+    left_join(.,perm_lookup_nhs,
+              by = "PERM")%>% 
+    select(-PERM)
+
+  cald[[as.character(y)]] <- tmp_cal
+  saveRDS(cald[[as.character(y)]],paste0("data/cald_",y,"_anon.rds"))
+
   }
-  
+
   if(y == Y){
   fil.yr <- paste0("gcal",substring(y,3,4))
-  calg[[as.character(y)]] <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat"))
-  
-  saveRDS(calg[[as.character(y)]],paste0("data/calg_",y,".rds"))
+  tmp_calg <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat")) %>%
+    mutate(PERM = PERMIT + Y*1e6)  %>%
+    select(-PERMIT) %>%
+    left_join(.,perm_lookup_nhs,
+              by = "PERM")%>% 
+    select(-PERM)
+
+  calg[[as.character(y)]] <- tmp_calg
+  saveRDS(calg[[as.character(y)]],paste0("data/calg_",y,"_anon.rds"))
 }else{
-  calg[[as.character(y)]] <- readRDS(paste0("data/calg_",y,".rds"))
+  tmp_calg <- readRDS(paste0("data/calg_",y,".rds"))%>%
+    mutate(PERM = PERMIT + Y*1e6)  %>%
+    select(-PERMIT) %>%
+    left_join(.,perm_lookup_nhs,
+              by = "PERM")%>% 
+    select(-PERM)
+
+  calg[[as.character(y)]] <- tmp_calg
+  saveRDS(calg[[as.character(y)]],paste0("data/calg_",y,"_anon.rds"))
+
 }
    if(y > 2012){
      if(y == Y){
    fil.yr <- paste0("mcal",substring(y,3,4))
-   calm[[as.character(y)]] <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat"))
-   
-   saveRDS(calm[[as.character(y)]],paste0("data/calm_",y,".rds"))
+   tmp_calm <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat"))%>%
+     mutate(PERM = PERMIT + Y*1e6)  %>%
+     select(-PERMIT) %>%
+     left_join(.,perm_lookup_nhs,
+               by = "PERM")%>% 
+     select(-PERM)
+
+   calm[[as.character(y)]] <- tmp_calm
+   saveRDS(calm[[as.character(y)]],paste0("data/calm_",y,"_anon.rds"))
+
      }else{
-   calm[[as.character(y)]] <- readRDS(paste0("data/calm_",y,".rds"))
+
+       tmp_calm <- readRDS(paste0("data/calm_",y,".rds"))%>%
+         mutate(PERM = PERMIT + Y*1e6)  %>%
+         select(-PERMIT) %>%
+         left_join(.,perm_lookup_nhs,
+                   by = "PERM") %>% 
+         select(-PERM)
+
+       calm[[as.character(y)]] <- tmp_calm
+
+       saveRDS(calm[[as.character(y)]],paste0("data/calm_",y,"_anon.rds"))
      }
    }
-  
+
+  saveRDS(perm_lookup_nhs,paste0("data/permit_lookup_",y,".rds"))
+
   if(y == Y){
  fil.yr = paste0("persal",substring(y,3,4))
  tmpp <- read_sas(paste0(home.fold1,"/PermitSales/",fil.yr,".sas7bdat"))
@@ -166,12 +256,30 @@ for (y in years){
  ### but then additional changes are needed to align with old data
   if(y == Y){
   fil.yr <- paste0("scs",substring(y,3,4),"e")
-  tmp <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat"))
+  tmp <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat")) %>% 
+    mutate(PERM = PERMIT + y*1e6,
+           PERMIT = permit_replace(PERMIT,y))
+  
+  perm_lookup_scs <- tmp %>% 
+    select(PERM,PERMIT) %>% 
+    distinct()
+  
+  tmp <- tmp %>% 
+    select(-PERM)
   
   if(is.null(tmp)){
     dir.alt <- "C:/Users/smithac/OneDrive - EC-EC/Harvest Survey A146/alt"
-    tmp <- read_sas(paste0(dir.alt,"/",fil.yr,".sas7bdat"))
+    tmp <- read_sas(paste0(dir.alt,"/",fil.yr,".sas7bdat"))%>% 
+      mutate(PERM = PERMIT + y*1e6,
+             PERMIT = permit_replace(PERMIT,y))
+    
+    perm_lookup_scs <- tmp %>% 
+      select(PERM,PERMIT) %>% 
+      distinct()
 
+    
+    tmp <- tmp %>% 
+      select(-PERM)
   }
   # fil.yr <- paste0("scs",substring(y,3,4))
   # tmp2 <- read.ssd(libname = dir.yr,
@@ -207,10 +315,28 @@ for (y in years){
   }
 
   tmp = tmp[,cls]
-  saveRDS(tmp,paste0("data/scs_",y,".rds"))
+  
+  saveRDS(tmp,paste0("data/scs_",y,"_anon.rds"))
+ 
 }else{
-  tmp <- readRDS(paste0("data/scs_",y,".rds"))
+  
+  tmp <- readRDS(paste0("data/scs_",y,".rds"))%>% 
+    mutate(PERM = PERMIT + y*1e6,
+           PERMIT = permit_replace(PERMIT,y))
+  
+  perm_lookup_scs <- tmp %>% 
+    select(PERM,PERMIT) %>% 
+    distinct()
+  
+  
+  tmp <- tmp %>% 
+    select(-PERM)
+  
+  saveRDS(tmp,paste0("data/scs_",y,"_anon.rds"))
+  
 }
+
+  saveRDS(perm_lookup_scs,paste0("data/permit_lookup_scs_",y,"_anon.rds"))
   
   if(y == years[1]) {
     outscse <- tmp
@@ -230,8 +356,6 @@ print(y)
 
 #save.image(file = "data/stored_SAS_download.RData")
 
-
-saveRDS(outscse,paste0("data/outscse.rds"))
 saveRDS(perms,paste0("data/perms.rds"))
 saveRDS(popsiz,paste0("data/popsiz.rds"))
 
@@ -328,6 +452,14 @@ outscse[which(outscse$BSEX %in% c("")),"BSEX"] <- "U"
 #round(prop.table(table(outscse$BSEX,outscse$AOU),2),2)
 
 
+saveRDS(outscse,paste0("data/outscse.rds"))
+
+
+
+# Creating kill file ------------------------------------------------------
+
+
+
 
 cls = c("PERMIT",
         "CASTE",
@@ -393,6 +525,7 @@ if(length(trem)>0){
 }### removing the unused castes; there are permits that have this caste designation across all years
 
 
+## Retaining only potential hunters
 tkp = which(allkill$POTNTL == "Y")
 # if(length(tkp)>0){
 allkill = allkill[tkp,]
@@ -400,18 +533,19 @@ allkill = allkill[tkp,]
 ### and are therefore not potential hunters
 
 
-trem = which(allkill$PERMIT == 0)
-if(length(trem)>0){
-  allkill = allkill[-trem,]
-}### removes a single permit from 1985 with no permit number
 
 
-
-allkill$uniperm = allkill$PERMIT + allkill$SELYEAR*1000000 + allkill$YEAR*10000000000
+allkill$uniperm = allkill$PERMIT 
 dupuni = allkill$uniperm[duplicated(allkill$uniperm)]
 ## there are no duplicates.
-# dupdf = allkill[which(allkill$uniperm %in% dupuni),]
-# dupdf = dupdf[order(dupdf$uniperm),]
+dupdf = allkill[which(allkill$uniperm %in% dupuni),]
+dupdf = dupdf[order(dupdf$uniperm),]
+
+paste("There are ",nrow(dupdf),"permit numbers duplicated")
+paste("WARNING Removing these",nrow(dupdf),"duplicated permits")
+allkill = allkill[which(!allkill$uniperm %in% dupuni),]
+
+
 
 wmigoo <- which(allkill$PRHUNTG == "")
 allkill$PRHUNTG = as.character(allkill$PRHUNTG)
@@ -513,7 +647,7 @@ write.csv(parts_out,paste0("GoogleDrive/All_raw_parts_data_",Y,".csv"))
 zones <- 1:3
 pers <- 1:20
 ##### identify periods based on weeks with at least prop_period-% of the parts across all years
-prop_period <- 0.05
+prop_period <- 0.1
 period.duck <- expand.grid(pr = provs,zo = zones,period = pers,stringsAsFactors = F)
 
 period.duck[,"startweek"] <- NA
@@ -716,7 +850,6 @@ write.csv(period.murre,"data/period.murre.csv",row.names = F)
 
 
 
-#save.image(file = paste0("data/parts and harvest survey info",Y,".RData"))
 
 
 

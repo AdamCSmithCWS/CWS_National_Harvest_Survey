@@ -84,6 +84,7 @@ others = c("COOTK","WOODK","SNIPK","DOVEK","PIGEK","CRANK") #"RAILK" ,"MURRK"
 
 # regulations compile -----------------------------------------------------
 
+## must be aligned with new file format
 regs_other <- list()
 length(regs_other) <- length(others)
 names(regs_other) <- others
