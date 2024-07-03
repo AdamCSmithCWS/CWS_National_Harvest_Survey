@@ -3,7 +3,7 @@
 ## script to summarize the zone level estimates into the national and provincial estimates
 library(jagsUI)
 library(tidyverse)
-library(ggmcmc)
+#library(ggmcmc)
 library(tidybayes)
 library(ggrepel)
 library(ggforce)
@@ -15,7 +15,7 @@ source("functions/utility_functions.R")
 ### age-sex summaries
 ### age-sex raw data for website - 
 
-Y <- 2022
+Y <- 2023
 FY = 1976
 years <- FY:Y
 

@@ -113,6 +113,7 @@ for (y in years){
   fil.yr <- paste0("harv",substring(y,3,4),"w")
 
   tmpharv <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat")) %>%
+    rename_with(.,str_to_upper) %>% 
     mutate(PERM = PERMIT + SELYEAR*1e6,
            PERMIT = permit_replace(PERM,y))
   
@@ -130,7 +131,8 @@ for (y in years){
 
   }else{
 
-    tmpharv <- readRDS(paste0("data/harvw_",y,".rds")) %>%
+    tmpharv <- readRDS(paste0("arch/harvw_",y,".rds")) %>%
+      rename_with(.,str_to_upper) %>% 
       mutate(PERM = PERMIT + SELYEAR*1e6,
              PERMIT = permit_replace(PERM,y))
 
@@ -150,7 +152,7 @@ for (y in years){
   if(y == Y){
   fil.yr <- paste0("dcal",substring(y,3,4))
   tmp_cal <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat")) %>%
-    mutate(PERM = PERMIT + Y*1e6) %>%
+    mutate(PERM = PERMIT + SELYEAR*1e6) %>%
     select(-PERMIT) %>%
     left_join(.,perm_lookup_nhs,
               by = "PERM")%>% 
@@ -161,8 +163,8 @@ for (y in years){
 
   }else{
 
-  tmp_cal <- readRDS(paste0("data/cald_",y,".rds"))%>%
-    mutate(PERM = PERMIT + Y*1e6)  %>%
+  tmp_cal <- readRDS(paste0("arch/cald_",y,".rds")) %>%
+    mutate(PERM = PERMIT + SELYEAR*1e6)  %>%
     select(-PERMIT) %>%
     left_join(.,perm_lookup_nhs,
               by = "PERM")%>% 
@@ -176,7 +178,7 @@ for (y in years){
   if(y == Y){
   fil.yr <- paste0("gcal",substring(y,3,4))
   tmp_calg <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat")) %>%
-    mutate(PERM = PERMIT + Y*1e6)  %>%
+    mutate(PERM = PERMIT + SELYEAR*1e6)  %>%
     select(-PERMIT) %>%
     left_join(.,perm_lookup_nhs,
               by = "PERM")%>% 
@@ -185,8 +187,8 @@ for (y in years){
   calg[[as.character(y)]] <- tmp_calg
   saveRDS(calg[[as.character(y)]],paste0("data/calg_",y,"_anon.rds"))
 }else{
-  tmp_calg <- readRDS(paste0("data/calg_",y,".rds"))%>%
-    mutate(PERM = PERMIT + Y*1e6)  %>%
+  tmp_calg <- readRDS(paste0("arch/calg_",y,".rds"))%>%
+    mutate(PERM = PERMIT + SELYEAR*1e6)  %>%
     select(-PERMIT) %>%
     left_join(.,perm_lookup_nhs,
               by = "PERM")%>% 
@@ -200,7 +202,7 @@ for (y in years){
      if(y == Y){
    fil.yr <- paste0("mcal",substring(y,3,4))
    tmp_calm <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat"))%>%
-     mutate(PERM = PERMIT + Y*1e6)  %>%
+     mutate(PERM = PERMIT + SELYEAR*1e6)  %>%
      select(-PERMIT) %>%
      left_join(.,perm_lookup_nhs,
                by = "PERM")%>% 
@@ -211,8 +213,8 @@ for (y in years){
 
      }else{
 
-       tmp_calm <- readRDS(paste0("data/calm_",y,".rds"))%>%
-         mutate(PERM = PERMIT + Y*1e6)  %>%
+       tmp_calm <- readRDS(paste0("arch/calm_",y,".rds"))%>%
+         mutate(PERM = PERMIT + SELYEAR*1e6)  %>%
          select(-PERMIT) %>%
          left_join(.,perm_lookup_nhs,
                    by = "PERM") %>% 
@@ -320,7 +322,7 @@ for (y in years){
  
 }else{
   
-  tmp <- readRDS(paste0("data/scs_",y,".rds"))%>% 
+  tmp <- readRDS(paste0("arch/scs_",y,".rds"))%>% 
     mutate(PERM = PERMIT + y*1e6,
            PERMIT = permit_replace(PERMIT,y))
   
@@ -642,12 +644,13 @@ write.csv(parts_out,paste0("GoogleDrive/All_raw_parts_data_",Y,".csv"))
 
 
 ######################
-#define periods across all years
+# period define across all years -----------------------------------------
+
 
 zones <- 1:3
 pers <- 1:20
 ##### identify periods based on weeks with at least prop_period-% of the parts across all years
-prop_period <- 0.1
+prop_period <- 0.05
 period.duck <- expand.grid(pr = provs,zo = zones,period = pers,stringsAsFactors = F)
 
 period.duck[,"startweek"] <- NA
