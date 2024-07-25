@@ -44,7 +44,7 @@
 #   The ratio corresponds to the number of males per female bird in the sample. Ratios were calculated if the total sample equals or exceeds 20 parts.
 
 
-Y <- 2022
+Y <- 2023
 FY = 1976
 years <- FY:Y
 
@@ -69,7 +69,7 @@ provs = unique(provzone$prov)
 
 load("data/allkill.RData")
 ### species lists
-
+allkill <- allkill[-which(allkill$PRHUNT == "PQ" & allkill$ZOHUNT == 3),]
 
 
 ### species lists
@@ -88,22 +88,24 @@ others = c("COOTK","WOODK","SNIPK","DOVEK","PIGEK","CRANK") #"RAILK" ,"MURRK"
 regs_other <- list()
 length(regs_other) <- length(others)
 names(regs_other) <- others
+all_regs <- read_csv("data/regulations_track.csv")
+names(all_regs)[which(names(all_regs) == "QC")] <- "PQ"
+names(all_regs)[which(names(all_regs) == "YK")] <- "YT"
+
 
 for(spgp in others){ 
- tmp <- read.csv(file = paste0("data/reg_",spgp,".csv"))
-names(tmp)[which(names(tmp) == "QC")] <- "PQ"
-names(tmp)[which(names(tmp) == "YK")] <- "YT"
-
-### if no changes to regs this year, then repeat last year's regs
+ tmp <- all_regs %>% 
+   filter(group == spgp)
+# 
+# ### if no changes to regs this year, then repeat last year's regs
 if(tmp$YEAR[nrow(tmp)] == Y-1){
-  tmp2 <- tmp %>% 
-    filter(YEAR == Y-1) %>% 
+  tmp2 <- tmp %>%
+    filter(YEAR == Y-1) %>%
     mutate(YEAR = Y)
   tmp <- bind_rows(tmp,tmp2)
-  write.csv(tmp,paste0("data/reg_",spgp,".csv"))
 }
 
-regs_other[[spgp]] <- tmp
+regs_other[[spgp]] <- as.data.frame(tmp)
 }
 
 save(list = c("regs_other","others"),file = "data/regs_other.RData")

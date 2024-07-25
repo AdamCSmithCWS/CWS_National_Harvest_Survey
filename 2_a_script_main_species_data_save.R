@@ -184,10 +184,25 @@ for(spgp in c("duck","goose","murre")){
     
     
     periods <- period[which(period$pr == pr & period$zo == z),]
-    sumkill = allkill[which(allkill[,phunt] == pr &
-                              allkill[,zhunt] == z &
-                              allkill$YEAR %in% years),]
     
+    if(spgp == "murre"){
+      sumkill = allkill[which(allkill[,phunt] == pr &
+                                allkill[,zhunt] == z &
+                                allkill$YEAR %in% years),]
+      
+      
+      one_off_drop <- readRDS("data/permits_drop_murre_2023.rds")
+      w_drop <- which(sumkill$PERMIT %in% one_off_drop$PERMIT )
+      sumkill <- sumkill[-w_drop,]
+      # 
+    }else{
+      sumkill = allkill[which(allkill[,phunt] == pr &
+                                allkill[,zhunt] == z &
+                                allkill$YEAR %in% years),]
+      
+    }
+    
+  
     sumkill$year = sumkill$YEAR-(minyr-1)
     
     

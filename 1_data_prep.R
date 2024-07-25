@@ -607,12 +607,27 @@ z_pops <- popsiz_perm %>%
 # tmp = left_join(popsiz_perm,popsiz_s[,c("zone","caste","TOTPERM","yr","prov")])
 
 
+## one off removal of 99 permits that responded to an incorrectly
+## mailed HQS form that was missing the murre page
+## it was decided to remove responses from these permits when calculating
+## the murre harvest estimates
+## see email from M.Gendron June 11, 2024
+## "Also, as discussed last week, HQS questionnaires from NF from batch A057 should be deleted only when generating the murre estimates. If you recall, these responses were received via the two-page HQS, instead of the 3-pager.  I’ve added in the folder a file with the list of records, if using permit number is easier than batch number."
+##    
+
+if(Y == 2023){
+one_off_drop <- readxl::read_excel("data/NF response via two page HQS.xlsx")
+names(one_off_drop) <- c("PERM","B")
 
 
+perm_lookup_nhs_one_off <- readRDS(paste0("data/permit_lookup_2023.rds"))
 
+perms_drop_murre_2023 <- perm_lookup_nhs_one_off %>%
+  inner_join(one_off_drop, by = "PERM") %>%
+  select(PERMIT)
+saveRDS(perms_drop_murre_2023,"data/permits_drop_murre_2023.rds")
 
-
-
+}
 
 # correcting the age and sex indicators -----------------------------------
 

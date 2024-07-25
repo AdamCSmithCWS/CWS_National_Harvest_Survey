@@ -7,7 +7,7 @@ library(tidyverse)
 library(tidybayes)
 library(ggrepel)
 library(ggforce)
-source("functions/other_reg_setup.R")
+#source("functions/other_reg_setup.R")
 source("functions/utility_functions.R")
 ### caste level summaries
 ### full summaries
@@ -139,8 +139,11 @@ problems <- simplified_summary %>%
          n_fail > 0,
          !grepl("psucc",variable_type), # other model usually uninformed parameters (group by year combinations that have no open season)
          !grepl("NSUCC_gcy",variable_type)) %>% # other model usually uninformed parameters (group by year combinations that have no open season) 
-  select(prov,zone,model,variable_type) %>% 
-  distinct()
+  group_by(prov,zone,model,variable_type) %>% 
+  summarise(n = n(),
+            n_sum = sum(n_fail),
+            max_rhat = max(max_rhat),
+            n_ess_fail = mean(n_ess_fail))
 
 
 
@@ -216,24 +219,24 @@ for(pr in provs){
   
 
 # other data load ---------------------------------------------------------
-
-  nyears = length(years)
-  minyr <- min(years)
-  
-  regf <- other_reg_setup()
-  
-  regs <- regf$regs
-  ngroups <- regf$ngroups
-  grps <- regf$grps
-  
-  reg_mat <- as.matrix(regs[,grps]) #to enter model as data ensuring that group-level annual estimates are never > 0 in years with no season.
-  grps_f <- factor(grps,levels = grps,ordered = TRUE) #ensures consistent ordering of the harvested groups
-  
-  fyear = NA
-  for(g in 1:ngroups){
-    fyear[g] <- min(which(regs[,g+1] > 0))
-  }
-  
+# 
+#   nyears = length(years)
+#   minyr <- min(years)
+#   
+#   regf <- other_reg_setup()
+#   
+#   regs <- regf$regs
+#   ngroups <- regf$ngroups
+#   grps <- regf$grps
+#   
+#   reg_mat <- as.matrix(regs[,grps]) #to enter model as data ensuring that group-level annual estimates are never > 0 in years with no season.
+#   grps_f <- factor(grps,levels = grps,ordered = TRUE) #ensures consistent ordering of the harvested groups
+#   
+#   fyear = NA
+#   for(g in 1:ngroups){
+#     fyear[g] <- min(which(regs[,g+1] > 0))
+#   }
+#   
 
   # data set up -------------------------------------------------------
   
