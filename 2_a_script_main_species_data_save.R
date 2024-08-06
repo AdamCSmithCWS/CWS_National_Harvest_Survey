@@ -71,6 +71,19 @@ library(ggrepel)
 provzone <- read.csv("data/Province and zone table.csv")
 provs = unique(provzone$prov)
 load("data/allkill.RData")
+
+# export anonymized survey responses --------------------------------------
+allkill_exp <- allkill %>% 
+  select(-c(uniperm, caste, RNDMURK, year)) %>% 
+  rename(anonymous_unique_permit = PERMIT)
+write_csv(allkill_exp,
+          "website/all_raw_HQS_responses_anonymous.csv")
+allkill_exp_sel <- allkill_exp %>% 
+  filter(YEAR %in% c(2019, 2022))
+write_csv(allkill_exp_sel,
+          "website/all_raw_HQS_responses_anonymous_2019_2022.csv")
+
+
 load("data/calendars.RData")
 
 # compile total harvest estimates into a dataframe ------------------------
