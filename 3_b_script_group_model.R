@@ -116,8 +116,8 @@ all_zones <- expand.grid(prov = provs,
 
 # all_zones <- data.frame(prov = c("MB","NB","SK","ON"),
 #                         zone = c(2,2,1,3))
-# all_zones <- data.frame(prov = c("MB","AB","NT","PQ","YT"),
-#                         zone = c(1,1,1,2,1))
+all_zones <- data.frame(prov = c("MB","MB","PQ","YT"),
+                        zone = c(1,2,2,1))
 
 # all_zones <- data.frame(prov = c("MB","NB","PQ","YT"),
 #                         zone = c(2,2,2,1))
@@ -185,11 +185,11 @@ parm_check <- c("NACTIVE_y",
 
 
 #adaptSteps = 200              # Number of steps to "tune" the samplers.
-burnInSteps = 50000           # Number of steps to "burn-in" the samplers.
+burnInSteps = 200000           # Number of steps to "burn-in" the samplers.
 
 nChains = 3                   # Number of chains to run.
 numSavedSteps=1000          # Total number of steps in each chain to save.
-thinSteps=100                   # Number of steps to "thin" (1=keep every step).
+thinSteps=300                   # Number of steps to "thin" (1=keep every step).
 
 
 # if(pr %in% c("YT","NT","NB")){

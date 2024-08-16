@@ -43,7 +43,8 @@
 # SEX RATIO: MALES PER FEMALE: 
 #   The ratio corresponds to the number of males per female bird in the sample. Ratios were calculated if the total sample equals or exceeds 20 parts.
 
-setwd("C:/GitHub/CWS_national_harvest_survey")
+#setwd("C:/GitHub/CWS_national_harvest_survey")
+setwd("C:/Users/SmithAC/Documents/GitHub/CWS_national_harvest_survey")
 
 Y <- 2023
 FY = 1976
@@ -87,13 +88,15 @@ fit_table <- provzone %>%
 
 #fit_table <- fit_table %>% filter(spgp %in% c("duck"))
 #fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckNB2","duckMB1","duckYT1"))
-#fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckNB1","duckON1","duckPQ1","duckON2","duckON3"))
+#fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckON2","duckON3","duckPQ1","duckPQ2","gooseNT1"))
+fit_table <- fit_table %>% filter((spgp == "goose" & prov == "NF" & zone == 1))
 
- overwrite <- FALSE # set to TRUE if attempting to overwrite earlier model runs
+
+ overwrite <- TRUE # set to TRUE if attempting to overwrite earlier model runs
  
  
 # Province and Zone loop --------------------------------------------------
-  n_cores <- 4
+  n_cores <- 1
   cluster <- makeCluster(n_cores, type = "PSOCK")
   registerDoParallel(cluster)
 
@@ -202,10 +205,10 @@ parms = c("NACTIVE_y",
 
 
 #adaptSteps = 200              # Number of steps to "tune" the samplers.
-burnInSteps = 30000            # Number of steps to "burn-in" the samplers.
+burnInSteps = 30000*5            # Number of steps to "burn-in" the samplers.
 nChains = 3                   # Number of chains to run.
 numSavedSteps=1000          # Total number of steps in each chain to save.
-thinSteps=60                   # Number of steps to "thin" (1=keep every step).
+thinSteps=60*5                   # Number of steps to "thin" (1=keep every step).
 nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
 
 t1 = Sys.time()
