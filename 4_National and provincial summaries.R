@@ -9,6 +9,10 @@ library(ggrepel)
 library(ggforce)
 #source("functions/other_reg_setup.R")
 source("functions/utility_functions.R")
+source("functions/other_reg_setup.R") 
+others = c("COOTK","WOODK","SNIPK","DOVEK","PIGEK","CRANK") #"RAILK" ,"MURRK"
+#
+# this function removes all SNIPK pre-1991, by setting the allowable limits to 0
 ### caste level summaries
 ### full summaries
 ### harvest, activity, total group-level and species-level
@@ -74,12 +78,20 @@ gps <- c("duck",
 #          d3 = jags_dim_tidy(3,variable))
 
 
-sum_convergence <- FALSE # run this first
+sum_convergence <- TRUE # run this first
+
+if(!sum_convergence){
 parameter_summary <- NULL
 sp_save <- NULL
 for(pr in provs){
   for(z in 1:3){
     for(spgp in gps){
+      
+      # for(i in 1:nrow(problems)){
+      #   pr = as.character(problems[i,"prov"])
+      #   z = as.integer(problems[i,"zone"])
+      #   spgp = as.character(problems[i,"model"])
+        
       if(spgp == "other"){
        saved_file <- paste("output/other harvest zip",pr,z,"alt mod.RData")
       }else{
@@ -107,8 +119,9 @@ for(pr in provs){
                            sp.save.out)
       }
       
+      
     
-    }
+  }
   }
  saveRDS(parameter_summary,
          paste0("output/all_parameter_convergence_summary_",Y,".rds")) 
@@ -184,7 +197,7 @@ other_summary <- parameter_summary %>%
 saveRDS(other_summary,"output/other_summary.rds")
 
 
-
+}
 sum_convergence <- TRUE
 
 
@@ -215,6 +228,8 @@ if(do_sp_props){
 tmp_sp_props <- NULL
 }
 
+
+
 for(pr in provs){
   
 
@@ -223,12 +238,7 @@ for(pr in provs){
 #   nyears = length(years)
 #   minyr <- min(years)
 #   
-#   regf <- other_reg_setup()
-#   
-#   regs <- regf$regs
-#   ngroups <- regf$ngroups
-#   grps <- regf$grps
-#   
+
 #   reg_mat <- as.matrix(regs[,grps]) #to enter model as data ensuring that group-level annual estimates are never > 0 in years with no season.
 #   grps_f <- factor(grps,levels = grps,ordered = TRUE) #ensures consistent ordering of the harvested groups
 #   
@@ -239,19 +249,26 @@ for(pr in provs){
 #   
 
   # data set up -------------------------------------------------------
-  
-
-  wkill = grps
-  wsucc = paste0("SU",gsub("K",replacement = "",x = grps)) 
 
   
    for(z in 1:3){
+     
+     regf <- other_reg_setup()
+     #   
+     regs <- regf$regs
+     ngroups <- regf$ngroups
+     grps <- regf$grps
+     
+     wkill = grps
+     wsucc = paste0("SU",gsub("K",replacement = "",x = grps)) 
+     
      if(file.exists(paste("output/full harvest zip",pr,z,"duck","alt mod.RData"))){
        load(paste("output/full harvest zip",pr,z,"duck","alt mod.RData"))
        
        ys <- data.frame(y = 1:jdat$nyears,
                         year = years) 
        
+
      if(do_sim){
 
        ### using tidybayes package functions to compile posterior samples into dataframes
@@ -443,6 +460,8 @@ for(pr in provs){
      
      if(file.exists(paste("output/other harvest zip",pr,z,"alt mod.RData"))){
       
+       
+       
        if(do_sim){
          load(paste("output/other harvest zip",pr,z,"alt mod.RData"))
        
@@ -524,6 +543,7 @@ save(list = c("tmp_sp"),
   rm(list = "tmp_sp")
   
 }
+
 if(do_sp_demo){
 save(list = c("tmp_sp_demo"),
      file = "national_provincial_summaries3.RData")

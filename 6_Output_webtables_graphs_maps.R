@@ -22,7 +22,7 @@ load("data/Posterior_summaries3.RData")
 
 prov_trans <- read.csv("data/Province_names_EN_FR.csv")
 
-Y <- 2022
+Y <- 2023
 FY = 1976
 years <- FY:Y
 
@@ -896,7 +896,10 @@ for(pr in prov_sort[-1]){
       geom_point()+
       geom_point(aes(x = year, y = raw_prop, colour = raw_part_py+1),
                  alpha = 0.8)+
-      scale_colour_viridis_c(trans = "log10",guide_legend(title = "Total parts by \n period and year"))+
+      geom_smooth(aes(x = year, y = raw_prop),
+                  alpha = 0.3)+
+      scale_colour_viridis_c(trans = "log10",
+                             guide = guide_legend(title = "Total parts by \n period and year"))+
       facet_wrap(vars(period))+
       labs(title = sp_n,
            subtitle = "Proportions of all parts by period (facets) and year (black = estimated and coloured = obs)")+

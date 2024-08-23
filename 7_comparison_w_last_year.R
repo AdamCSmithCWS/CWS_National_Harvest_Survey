@@ -1,6 +1,6 @@
 ### comparing annual species harvests
 library(tidyverse)
-yy = 2022
+yy = 2023
 ly = yy - 1
 
 ddir <- "temparch/"
@@ -16,9 +16,11 @@ ests <- bind_rows(ests,dtall)
 
 
 sp_z <- ests %>% 
-  filter(!is.na(zone),
-         is.na(Age),
-         is.na(Sex))
+  mutate(zone = Zone_ID,
+         prov = Province_ID) %>% 
+  filter(zone != 0,
+         Age == "All",
+         Sex == "All")
 
 
 
@@ -69,14 +71,13 @@ species_web_names = unique(pubEsts_species_all[,c("sp","species")])
 
 original_estimates <- pubEsts_species_all %>% 
   rename(AOU = sp,
-         year_an = year,
-         region_En = prov,
-         mean_moyen = mean,
-         lci_2.5 = lci,
-         uci_97.5 = uci) %>% 
-  select(zone,AOU,year_an,region_En,
-         species,
-         mean_moyen,lci_2.5,uci_97.5) %>% 
+         Year = year,
+         Province_Name = prov,
+         Estimate = mean,
+         Species_Name_English = species) %>% 
+  select(zone,AOU,Year,Province_Name,
+         Species_Name_English,
+         Estimate,lci,uci) %>% 
   mutate(year_est = "2018")
 
 # zone graphs -------------------------------------------------------------
@@ -94,7 +95,7 @@ for(i in 1:nrow(provs)){
     filter(prov == pr,
            zone == z)
   tmp2 <- original_estimates %>% 
-    filter(region_En == unique(tmp$region_En),
+    filter(Province_Name == unique(tmp$Province_Name),
            zone == z)
   tmp <- bind_rows(tmp,tmp2)
   
@@ -111,14 +112,14 @@ for(i in 1:nrow(provs)){
   # duck1 <- unique(tmp[which(tmp$AOU == d1),"species"])  
   # 
   compp <- ggplot(data = tmp,
-                  aes(x = year_an,
-                      y = mean_moyen,
+                  aes(x = Year,
+                      y = Estimate,
                       colour = year_est))+
-    geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.5,width = 0,
+    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.5,width = 0,
                   linewidth = 1,
                   position = position_dodge(width = 0.75))+
     geom_point(position = position_dodge(width = 0.75),alpha = 0.7,size = 1)+
-    facet_wrap(vars(species),ncol = 5,scales = "free_y")+
+    facet_wrap(vars(Species_Name_English),ncol = 5,scales = "free_y")+
     labs(title = paste(pr,z))+
     xlab("")+
     ylab("")+
@@ -139,123 +140,123 @@ for(i in 1:nrow(provs)){
 }
 
 dev.off()
-
-pdf("figures/Quebec_Greater_Snow_Goose.pdf",
-    width = 11,
-    height = 8.5)
-tmp <- sp_z %>% 
-  filter(prov == "PQ",
-         !is.na(zone),
-         grepl("Greater Snow",species))
-tmp2 <- original_estimates %>% 
-  filter(region_En == unique(tmp$region_En),
-         !is.na(zone),
-         grepl("Greater Snow",species))
-tmp <- bind_rows(tmp,tmp2)
-
-compp <- ggplot(data = tmp,
-                aes(x = year_an,
-                    y = mean_moyen,
-                    colour = year_est))+
-  geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.5,width = 0,
-                linewidth = 1,
-                position = position_dodge(width = 0.75))+
-  geom_point(position = position_dodge(width = 0.75),alpha = 0.7,size = 1)+
-  facet_wrap(vars(region_En,zone,species),ncol = 5,scales = "free_y")+
-  #labs(title = paste(pr,z))+
-  xlab("")+
-  ylab("")+
-  theme_bw()+ 
-  theme( 
-    # axis.text = element_text( size = 14 ),
-    #      axis.text.x = element_text( size = 20 ),
-    #      axis.title = element_text( size = 16, face = "bold" ),
-    #      legend.position="none",
-    # The new stuff
-    strip.text = element_text(size = 8))+
-  scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
-
-
-print(compp) 
-
-dev.off()
-
-
-
-pdf("figures/All_Snow_Goose.pdf",
-    width = 17,
-    height = 14)
-tmp <- sp_z %>% 
-  filter(!is.na(zone),
-         grepl("Greater Snow",species))
-tmp2 <- original_estimates %>% 
-  filter(!is.na(zone),
-         grepl("Greater Snow",species))
-tmp <- bind_rows(tmp,tmp2)
-
-compp <- ggplot(data = tmp,
-                aes(x = year_an,
-                    y = mean_moyen,
-                    colour = year_est))+
-  geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.5,width = 0,
-                linewidth = 1,
-                position = position_dodge(width = 0.75))+
-  geom_point(position = position_dodge(width = 0.75),alpha = 0.7,size = 1)+
-  facet_wrap(vars(region_En,species),ncol = 5,scales = "free_y")+
-  labs(title = "Greater Snow Goose")+
-  xlab("")+
-  ylab("")+
-  theme_bw()+ 
-  theme( 
-    # axis.text = element_text( size = 14 ),
-    #      axis.text.x = element_text( size = 20 ),
-    #      axis.title = element_text( size = 16, face = "bold" ),
-    #      legend.position="none",
-    # The new stuff
-    strip.text = element_text(size = 8))+
-  scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
-
-
-print(compp) 
-
-tmp <- sp_z %>% 
-  filter(!is.na(zone),
-         grepl("Lesser Snow",species))
-tmp2 <- original_estimates %>% 
-  filter(!is.na(zone),
-         grepl("Lesser Snow",species))
-tmp <- bind_rows(tmp,tmp2)
-
-compp <- ggplot(data = tmp,
-                aes(x = year_an,
-                    y = mean_moyen,
-                    colour = species))+
-  geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.5,width = 0,
-                linewidth = 1,
-                position = position_dodge(width = 0.75))+
-  geom_point(position = position_dodge(width = 0.75),alpha = 0.7,size = 1)+
-  facet_wrap(vars(region_En,zone),ncol = 5,scales = "free_y")+
-  labs(title = "Lesser Snow Goose")+
-  xlab("")+
-  ylab("")+
-  theme_bw()+ 
-  theme( 
-    # axis.text = element_text( size = 14 ),
-    #      axis.text.x = element_text( size = 20 ),
-    #      axis.title = element_text( size = 16, face = "bold" ),
-    #      legend.position="none",
-    # The new stuff
-    strip.text = element_text(size = 8))+
-  scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
-
-
-print(compp) 
-
-
-dev.off()
-
-
-
+# 
+# pdf("figures/Quebec_Greater_Snow_Goose.pdf",
+#     width = 11,
+#     height = 8.5)
+# tmp <- sp_z %>% 
+#   filter(prov == "PQ",
+#          !is.na(zone),
+#          grepl("Greater Snow",Species_Name_English))
+# tmp2 <- original_estimates %>% 
+#   filter(Province_Name == unique(tmp$Province_Name),
+#          !is.na(zone),
+#          grepl("Greater Snow",Species_Name_English))
+# tmp <- bind_rows(tmp,tmp2)
+# 
+# compp <- ggplot(data = tmp,
+#                 aes(x = Year,
+#                     y = Estimate,
+#                     colour = year_est))+
+#   geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.5,width = 0,
+#                 linewidth = 1,
+#                 position = position_dodge(width = 0.75))+
+#   geom_point(position = position_dodge(width = 0.75),alpha = 0.7,size = 1)+
+#   facet_wrap(vars(Province_Name,zone,Species_Name_English),ncol = 5,scales = "free_y")+
+#   #labs(title = paste(pr,z))+
+#   xlab("")+
+#   ylab("")+
+#   theme_bw()+ 
+#   theme( 
+#     # axis.text = element_text( size = 14 ),
+#     #      axis.text.x = element_text( size = 20 ),
+#     #      axis.title = element_text( size = 16, face = "bold" ),
+#     #      legend.position="none",
+#     # The new stuff
+#     strip.text = element_text(size = 8))+
+#   scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
+# 
+# 
+# print(compp) 
+# 
+# dev.off()
+# 
+# 
+# 
+# pdf("figures/All_Snow_Goose.pdf",
+#     width = 17,
+#     height = 14)
+# tmp <- sp_z %>% 
+#   filter(!is.na(zone),
+#          grepl("Greater Snow",Species_Name_English))
+# tmp2 <- original_estimates %>% 
+#   filter(!is.na(zone),
+#          grepl("Greater Snow",Species_Name_English))
+# tmp <- bind_rows(tmp,tmp2)
+# 
+# compp <- ggplot(data = tmp,
+#                 aes(x = Year,
+#                     y = Estimate,
+#                     colour = year_est))+
+#   geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.5,width = 0,
+#                 linewidth = 1,
+#                 position = position_dodge(width = 0.75))+
+#   geom_point(position = position_dodge(width = 0.75),alpha = 0.7,size = 1)+
+#   facet_wrap(vars(Province_Name,Species_Name_English),ncol = 5,scales = "free_y")+
+#   labs(title = "Greater Snow Goose")+
+#   xlab("")+
+#   ylab("")+
+#   theme_bw()+ 
+#   theme( 
+#     # axis.text = element_text( size = 14 ),
+#     #      axis.text.x = element_text( size = 20 ),
+#     #      axis.title = element_text( size = 16, face = "bold" ),
+#     #      legend.position="none",
+#     # The new stuff
+#     strip.text = element_text(size = 8))+
+#   scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
+# 
+# 
+# print(compp) 
+# 
+# tmp <- sp_z %>% 
+#   filter(!is.na(zone),
+#          grepl("Lesser Snow",Species_Name_English))
+# tmp2 <- original_estimates %>% 
+#   filter(!is.na(zone),
+#          grepl("Lesser Snow",Species_Name_English))
+# tmp <- bind_rows(tmp,tmp2)
+# 
+# compp <- ggplot(data = tmp,
+#                 aes(x = Year,
+#                     y = Estimate,
+#                     colour = Species_Name_English))+
+#   geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.5,width = 0,
+#                 linewidth = 1,
+#                 position = position_dodge(width = 0.75))+
+#   geom_point(position = position_dodge(width = 0.75),alpha = 0.7,size = 1)+
+#   facet_wrap(vars(Province_Name,zone),ncol = 5,scales = "free_y")+
+#   labs(title = "Lesser Snow Goose")+
+#   xlab("")+
+#   ylab("")+
+#   theme_bw()+ 
+#   theme( 
+#     # axis.text = element_text( size = 14 ),
+#     #      axis.text.x = element_text( size = 20 ),
+#     #      axis.title = element_text( size = 16, face = "bold" ),
+#     #      legend.position="none",
+#     # The new stuff
+#     strip.text = element_text(size = 8))+
+#   scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
+# 
+# 
+# print(compp) 
+# 
+# 
+# dev.off()
+# 
+# 
+# 
 
 
 
@@ -271,24 +272,24 @@ for(i in 1:nrow(provs)){
   tmp <- sp_z %>% 
     filter(prov == pr,
            zone == z, 
-           year_an > yy-11)
+           Year > yy-11)
   
   tmp2 <- original_estimates %>% 
-    filter(region_En == unique(tmp$region_En),
+    filter(Province_Name == unique(tmp$Province_Name),
            zone == z, 
-           year_an > yy-11)
+           Year > yy-11)
   tmp <- bind_rows(tmp,tmp2)
   
 
   
   compp <- ggplot(data = tmp,
-                  aes(x = year_an,
-                      y = mean_moyen,
+                  aes(x = Year,
+                      y = Estimate,
                       colour = year_est))+
-    geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.2,width = 0,
+    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.2,width = 0,
                   position = position_dodge(width = 0.33))+
     geom_point(position = position_dodge(width = 0.33))+
-    facet_wrap(vars(species),ncol = 5,scales = "free_y")+
+    facet_wrap(vars(Species_Name_English),ncol = 5,scales = "free_y")+
     labs(title = paste(pr,z))+
     xlab("")+
     ylab("")+
@@ -338,7 +339,9 @@ for(i in c(yy,ly)){
 
 
 sp_z <- ests %>% 
-  filter(!is.na(zone))
+mutate(zone = Zone_ID,
+       prov = Province_ID) %>% 
+  filter(Zone_ID != 0)
 
 
 
@@ -346,14 +349,12 @@ sp_z <- ests %>%
 
 original_estimates <- pubEsts_simple_all %>% 
   rename(Description_En = name,
-         year_an = year,
-         region_En = prov,
-         mean_moyen = mean,
-         lci_2.5 = lci,
-         uci_97.5 = uci) %>% 
-  select(zone,Description_En,year_an,region_En,
+         Year = year,
+         Province_Name = prov,
+         Estimate = mean) %>% 
+  select(zone,Description_En,Year,Province_Name,
          var,
-         mean_moyen,lci_2.5,uci_97.5) %>% 
+         Estimate,lci,uci) %>% 
   mutate(year_est = "2018")
 
 # zone graphs -------------------------------------------------------------
@@ -371,17 +372,17 @@ for(i in 1:nrow(provs)){
     filter(prov == pr,
            zone == z)
   tmp2 <- original_estimates %>% 
-    filter(region_En == unique(tmp$region_En),
+    filter(Province_Name == unique(tmp$Province_Name),
            zone == z)
   tmp <- bind_rows(tmp,tmp2)
   
   
 
   compp <- ggplot(data = tmp,
-                  aes(x = year_an,
-                      y = mean_moyen,
+                  aes(x = Year,
+                      y = Estimate,
                       colour = year_est))+
-    geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.2,width = 0,
+    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.2,width = 0,
                   position = position_dodge(width = 0.75))+
     geom_point(position = position_dodge(width = 0.75),alpha = 0.7)+
     facet_wrap(vars(Description_En),ncol = 5,scales = "free_y")+
@@ -419,21 +420,21 @@ for(i in 1:nrow(provs)){
   tmp <- sp_z %>% 
     filter(prov == pr,
            zone == z, 
-           year_an > yy-11)
+           Year > yy-11)
   
   tmp2 <- original_estimates %>% 
-    filter(region_En == unique(tmp$region_En),
+    filter(Province_Name == unique(tmp$Province_Name),
            zone == z, 
-           year_an > yy-11)
+           Year > yy-11)
   tmp <- bind_rows(tmp,tmp2)
   
   
   
   compp <- ggplot(data = tmp,
-                  aes(x = year_an,
-                      y = mean_moyen,
+                  aes(x = Year,
+                      y = Estimate,
                       colour = year_est))+
-    geom_errorbar(aes(ymin = lci_2.5,ymax = uci_97.5),alpha = 0.2,width = 0,
+    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.2,width = 0,
                   position = position_dodge(width = 0.33))+
     geom_point(position = position_dodge(width = 0.33))+
     facet_wrap(vars(Description_En),ncol = 5,scales = "free_y")+

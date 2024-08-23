@@ -5,7 +5,7 @@
 ############# figure out which tables should be produced and in what format
 library(jagsUI)
 library(tidyverse)
-library(ggmcmc)
+#library(ggmcmc)
 library(tidybayes)
 library(ggrepel)
 library(ggforce)
@@ -18,7 +18,7 @@ source("functions/utility_functions.R")
 ### age-sex summaries
 ### age-sex raw data for website - 
 
-Y <- 2022
+Y <- 2023
 FY = 1976
 years <- FY:Y
 
@@ -184,7 +184,7 @@ rm(list = c("tmp_sp",
 # age ratios --------------------------------------------------------------
 
 # load demographic convergence summary
-demog_summary <- readRDS("~/GitHub/CWS_national_harvest_survey/output/demog_summary.rds")
+demog_summary <- readRDS("output/demog_summary.rds")
 # this identifies species, years, and regions where the demographic parameters
 # failed to converge. 
 # these species x region (maybe years) combinations should be removed from the demographic 

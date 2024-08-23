@@ -1,5 +1,6 @@
 other_reg_setup <- function(oth = others,regs_o = regs_other)
-{for(spgp in oth){ 
+{
+  for(spgp in oth){ 
   tmp <- regs_o[[spgp]][,c("YEAR",pr)]
   tmp[which(tmp[,pr] > 0),pr] <- 1
   names(tmp) <- c("YEAR",spgp)

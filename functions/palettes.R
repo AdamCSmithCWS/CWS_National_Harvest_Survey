@@ -27,12 +27,15 @@ all_levels <- c("Species",
                 "A-F",
                 "A-M",
                 "I-F",
-                "I-M")
+                "I-M",
+                "A-U",
+                "I-U")
 col_bas <- plasma(4,begin = 0.1,end = 0.9,direction = -1)
 my_col_b <- c(my_single_col,
               col_bas[c(1,3)],
               col_bas[c(1,2)],
-              col_bas)
+              col_bas,
+              col_bas[c(1,3)])
 names(my_col_b) <- all_levels
 
 
