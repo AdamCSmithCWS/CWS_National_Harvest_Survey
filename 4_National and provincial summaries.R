@@ -78,7 +78,7 @@ gps <- c("duck",
 #          d3 = jags_dim_tidy(3,variable))
 
 
-sum_convergence <- TRUE # run this first
+sum_convergence <- FALSE # run this first
 
 if(!sum_convergence){
 parameter_summary <- NULL
