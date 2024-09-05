@@ -301,6 +301,7 @@ for(i in 1:nrow(provs)){
       #      legend.position="none",
       # The new stuff
       strip.text = element_text(size = 8))+
+    scale_x_continuous(breaks = seq(yy-11,yy,by = 2))+
     scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
   
   print(compp) 
@@ -449,6 +450,7 @@ for(i in 1:nrow(provs)){
       #      legend.position="none",
       # The new stuff
       strip.text = element_text(size = 8))+
+    scale_x_continuous(breaks = seq(yy-11,yy,by = 2))+
     scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
   
   print(compp) 
