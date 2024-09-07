@@ -89,14 +89,14 @@ fit_table <- provzone %>%
 #fit_table <- fit_table %>% filter(spgp %in% c("duck"))
 #fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckNB2","duckMB1","duckYT1"))
 #fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckON2","duckON3","duckPQ1","duckPQ2","gooseNT1"))
-fit_table <- fit_table %>% filter((spgp == "goose" & prov == "NF" & zone == 1))
+fit_table <- fit_table %>% filter((spgp == "duck" & prov == "MB"))
 
 
  overwrite <- TRUE # set to TRUE if attempting to overwrite earlier model runs
  
  
 # Province and Zone loop --------------------------------------------------
-  n_cores <- 1
+  n_cores <- 2
   cluster <- makeCluster(n_cores, type = "PSOCK")
   registerDoParallel(cluster)
 

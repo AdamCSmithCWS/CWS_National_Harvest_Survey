@@ -119,13 +119,14 @@ all_zones <- expand.grid(prov = provs,
 # all_zones <- data.frame(prov = c("MB","MB","PQ","YT"),
 #                         zone = c(1,2,2,1))
 
+all_zones <- readRDS("2024_rerun_general.rds")
 # all_zones <- data.frame(prov = c("MB","NB","PQ","YT"),
 #                         zone = c(2,2,2,1))
 
 # MCMC loops --------------------------------------------------------------
 rerun <- FALSE # set to true if the loop should force model fit for zones already completed
 
-n_cores <- 3
+n_cores <- nrow(all_zones)
 cluster <- makeCluster(n_cores, type = "PSOCK")
 registerDoParallel(cluster)
 
@@ -226,7 +227,7 @@ if(class(out2) != "try-error"){
     filter(!is.na(rhat))
 
   
-  attempts <- 0
+  attempts <- 1
   
   
   while(any(out2sum$rhat > 1.1) & attempts < 1){
