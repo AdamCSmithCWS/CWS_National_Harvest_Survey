@@ -18,6 +18,9 @@ others = c("COOTK","WOODK","SNIPK","DOVEK","PIGEK","CRANK") #"RAILK" ,"MURRK"
 ### harvest, activity, total group-level and species-level
 ### age-sex summaries
 ### age-sex raw data for website - 
+castes <- data.frame(c = c(1,2,3,4),
+                     caste = c("D","B","A","E"),
+                     residence = c("Resident","Resident","Resident","Non-Resident"))
 
 Y <- 2023
 FY = 1976
@@ -78,7 +81,7 @@ gps <- c("duck",
 #          d3 = jags_dim_tidy(3,variable))
 
 
-sum_convergence <- FALSE # run this first
+sum_convergence <- TRUE # change to FALSE to run convergence summary first
 
 if(!sum_convergence){
 parameter_summary <- NULL
@@ -292,6 +295,30 @@ for(pr in provs){
            
            tmp_sim <- bind_rows(tmp_sim,tmp_duck)
            
+           
+           ## caste specific estimates
+           ## In 2024 make sure to add this commented out version to captuer
+           ## the additional monitored parameters NACTIVE_cy and days_cy
+           ## 
+            # tmp_duck <- out2$samples %>% gather_draws(NSUCC_cy[c,y],
+            #                                           NACTIVE_cy[c,y],
+            #                                           days_cy[c,y],
+            #                                           kill_cy[c,y]) 
+           tmp_duck <- out2$samples %>% gather_draws(kill_cy[c,y]) 
+           
+           vnm <- sim_vars[which(sim_vars$source == "duck"),]
+           #vnm <- rename(vnm,group = var)
+           
+           tmp_duck <- left_join(tmp_duck,vnm,by = c(".variable" = "newvar")) %>% 
+             left_join(.,castes,
+                       by = c("c")) %>% 
+             full_join(.,ys,by = "y")
+           
+           tmp_duck$prov <- pr
+           tmp_duck$zone <- z
+           
+           tmp_sim <- bind_rows(tmp_sim,tmp_duck)
+           
      }
        
            ## species harvests
@@ -358,6 +385,26 @@ for(pr in provs){
            
 
            tmp_goose <- full_join(tmp_goose,ys,by = "y")
+           tmp_goose$prov <- pr
+           tmp_goose$zone <- z
+           tmp_sim <- bind_rows(tmp_sim,tmp_goose)
+           
+           
+           ## caste specific estimates
+           ## 2024 uncomment this next line because NSUCC_cy should have been monitored
+           # tmp_goose <- out2$samples %>% gather_draws(NSUCC_cy[c,y],
+           #                                            kill_cy[c,y]) 
+           # 
+           tmp_goose <- out2$samples %>% gather_draws(kill_cy[c,y]) 
+           
+           vnm <- sim_vars[which(sim_vars$source == "goose"),]
+           #vnm <- rename(vnm,group = var)
+           
+           tmp_goose <- left_join(tmp_goose,vnm,by = c(".variable" = "newvar")) %>% 
+             left_join(.,castes,
+                       by = c("c")) %>% 
+             full_join(.,ys,by = "y")
+           
            tmp_goose$prov <- pr
            tmp_goose$zone <- z
            tmp_sim <- bind_rows(tmp_sim,tmp_goose)
@@ -458,6 +505,10 @@ for(pr in provs){
        }
      }
      
+     
+     
+     
+     
      if(file.exists(paste("output/other harvest zip",pr,z,"alt mod.RData"))){
       
        
@@ -465,7 +516,10 @@ for(pr in provs){
        if(do_sim){
          load(paste("output/other harvest zip",pr,z,"alt mod.RData"))
        
-       vnm <- sim_vars[which(sim_vars$source == "other"),]
+       vnm <- sim_vars[which(sim_vars$source == "other" & 
+                               !grepl(pattern = "cy",sim_vars$newvar)),]
+       vnm1 <- sim_vars[which(sim_vars$source == "other" & 
+                                grepl(pattern = "cy",sim_vars$newvar)),]
        #vnm <- rename(vnm,group = var)
        
        #harvests
@@ -474,7 +528,7 @@ for(pr in provs){
        
        tmp_otherk <- left_join(tmp_otherk,vnm,by = c(".variable" = "newvar"))
        
-       
+       # harvest by group
        tmp_otherkg <- out2$samples %>% gather_draws(kill_yg[y,g])
        
       gpk <- data.frame(g = 1:ngroups,
@@ -482,7 +536,21 @@ for(pr in provs){
       tmp_otherkg <- full_join(tmp_otherkg,gpk,by = "g")
       tmp_otherkg <- left_join(tmp_otherkg,vnm,by = c("var"))
       
-
+      
+      # harvest by caste and group
+      # 2024 - un comment this section because harvest by caste is now monitored
+      # 
+      # tmp_otherkgc <- out2$samples %>% gather_draws(kill_cyg[c,y,g])
+      # 
+      
+      # gpk <- data.frame(g = 1:ngroups,
+      #                   var = grps)
+      # tmp_otherkgc <- full_join(tmp_otherkgc,gpk,by = "g")
+      # tmp_otherkgc <- left_join(tmp_otherkgc,vnm1,by = c("var")) %>% 
+      #   left_join(.,castes,
+      #             by = c("c"))
+      # 
+      # 
       
   #days
       tmp_otherd <- out2$samples %>% gather_draws(days_yg[y,g])
@@ -500,12 +568,28 @@ for(pr in provs){
       tmp_others <- full_join(tmp_others,gps,by = "g")
       tmp_others <- left_join(tmp_others,vnm,by = "var")
       
+    #succ by caste and group
+      # 
+      
+      tmp_othersc <- out2$samples %>% gather_draws(NSUCC_gcy[g,c,y])
+      
+      sugrps <- paste0("SU",gsub("K","",grps))
+      gpk <- data.frame(g = 1:ngroups,
+                        var = sugrps)
+      tmp_othersc <- full_join(tmp_othersc,gpk,by = "g")
+      tmp_othersc <- left_join(tmp_othersc,vnm1,by = c("var")) %>% 
+        left_join(.,castes,
+                  by = c("c"))
+      
       
       tmp_other <- bind_rows(tmp_otherk,
                              tmp_otherkg,
+                             #tmp_otherkgc,  ## 2024 - be sure to uncomment this
                              tmp_otherd,
-                             tmp_others)
+                             tmp_others,
+                             tmp_othersc)
       
+  
       # ys <- data.frame(y = 1:jdat$nyears,
       #                  year = years) 
       

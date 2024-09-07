@@ -134,7 +134,7 @@ for(g in 1:ngroups){
  CCST[1] <- 0
  CCST_day[1] <- 0
  CCST[2] <- 0
- CCST_day[2] <- 0
+ CCST_day[2] <- 0 ## combining castes D and B all resident renewals into 1
  
   for(c in 3:ncastes){
   CCST[c] ~ dnorm(0,16) #strongly informative, shrinkage prior sd = 0.25
@@ -219,8 +219,7 @@ for(g in 1:ngroups){
     nu_day[c] ~ dgamma(2,0.2)
     nu_day_ret[c] <- (1.422*nu_day[c]^0.906)/(1+(1.422*nu_day[c]^0.906)) #approximate retransformation to equate a t-distribution to a normal distribution - see appendix of Link et al. 2020 BBS model selection paper
     
-    ## caste specific intercept priors
-    
+   
     for(g in 1:ngroups){
       for(y in 1:fyear[g]){ #ensures that only years since the start of active hunts influence estimates
      mmu_psucc[g,c,y] ~ dt(0, 1/2.5^2, 1) # cauchy(0, 2.5) prior (Gelman et al., 2008) doi:10.1214/08-AOAS191

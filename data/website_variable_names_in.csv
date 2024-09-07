@@ -1,14 +1,20 @@
 var,name,newvar,source
 ACTIOT,Active non-waterfowl hunters,NACTIVE_y,other
 ACTIWF,Active waterfowl hunters,NACTIVE_y,duck
+ACTIWF,Active waterfowl hunters by residency,NACTIVE_cy,duck
 COOTK,Coot harvest,kill_yg,other
+CRANK,Crane harvest by residency,kill_cyg,other
 CRANK,Crane harvest,kill_yg,other
 DAYOT,Non-waterfowl hunting days,days_y,other
 DAYWF,Waterfowl hunting days,days_y,duck
+DAYWF,Waterfowl hunting days by residency,days_cy,duck
+DOVEK,Dove harvest by residency,kill_cyg,other
 DOVEK,Dove harvest,kill_yg,other
 MURRK,Murre harvest,kill_y,murre
+PIGEK,Band-tailed Pigeon harvest by residency,kill_cyg,other
 PIGEK,Band-tailed Pigeon harvest,kill_yg,other
 POTNTL,Potential hunters,,
+SNIPK,Snipe harvest by residency,kill_cyg,other
 SNIPK,Snipe harvest,kill_yg,other
 SUCOOT,Successful coots hunters,NSUCC_yg,other
 SUCRAN,Successful cranes hunters,NSUCC_yg,other
@@ -20,9 +26,20 @@ SUTOGO,Successful geese hunters (total),NSUCC_y,goose
 SUTOOT,Successful non-waterfowl hunters (total),NSUCC_y,other
 SUTOWF,Successful waterfowl hunters (total),,
 SUWOOD,Successful woodcock hunters,NSUCC_yg,other
+SUCOOT,Successful coots hunters by residency,NSUCC_gcy,other
+SUCRAN,Successful cranes hunters by residency,NSUCC_gcy,other
+SUDOVE,Successful doves hunters by residency,NSUCC_gcy,other
+SUPIGE,Successful band-tailed pigeons hunters,NSUCC_gcy,other
+SUSNIP,Successful snipe hunters by residency,NSUCC_gcy,other
+SUTODU,Successful ducks hunters (total) by residency,NSUCC_cy,duck
+SUTOGO,Successful geese hunters (total) by residency,NSUCC_cy,goose
+SUWOOD,Successful woodcock hunters by residency,NSUCC_gcy,other
 SUMURR,Successful murre hunters,NSUCC_y,murre
 TODUK,Total ducks harvest,kill_y,duck
 TOGOK,Total geese harvest,kill_y,goose
+TODUK,Total ducks harvest by residency,kill_cy,duck
+TOGOK,Total geese harvest by residency,kill_cy,goose
 TOOTK,Total non-waterfowl harvest,kill_y,other
 TOWFK,Total waterfowl harvest,,
 WOODK,Woodcock harvest,kill_yg,other
+WOODK,Woodcock harvest by residency,kill_cyg,other

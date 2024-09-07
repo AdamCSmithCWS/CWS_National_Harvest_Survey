@@ -45,8 +45,8 @@ tmp_sim <- tmp_sim %>%
   left_join(.,alt_regs,
             by = c("prov","zone"))
   
-
 zone_sums_b <- tmp_sim %>%
+  filter(is.na(residence)) %>% 
   group_by(var,prov,zone,year,.draw) %>%
   summarise(sum = sum(.value)) %>%
   group_by(var,prov,zone,year) %>%
@@ -58,6 +58,7 @@ zone_sums_b <- tmp_sim %>%
 
 reg_sums_b <- tmp_sim %>%
   filter(region != "") %>% 
+  filter(is.na(residence)) %>% 
   group_by(var,region,year,.draw) %>%
   summarise(sum = sum(.value)) %>%
   group_by(var,region,year) %>%
@@ -69,6 +70,7 @@ reg_sums_b <- tmp_sim %>%
 
 
 prov_sums_b <- tmp_sim %>%
+  filter(is.na(residence)) %>% 
   group_by(var,prov,year,.draw) %>%
   summarise(sum = sum(.value)) %>%
   group_by(var,prov,year) %>%
@@ -79,6 +81,7 @@ prov_sums_b <- tmp_sim %>%
 
 
 nat_sums_b <- tmp_sim %>%
+  filter(is.na(residence)) %>% 
   group_by(var,year,.draw) %>%
   summarise(sum = sum(.value)) %>%
   group_by(var,year) %>%
@@ -88,11 +91,65 @@ nat_sums_b <- tmp_sim %>%
             uci = as.numeric(hdi(sum,0.95)[2]))
 
 
+### same as above by residency
+### 
+zone_sums_b_res <- tmp_sim %>%
+  filter(!is.na(residence)) %>% 
+  group_by(var,residence,prov,zone,year,.draw) %>%
+  summarise(sum = sum(.value)) %>%
+  group_by(var,residence,prov,zone,year) %>%
+  summarise(mean = mean(sum),
+            median = quantile(sum,0.5,names = FALSE,na.rm = T),
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
+
+
+reg_sums_b_res <- tmp_sim %>%
+  filter(!is.na(residence)) %>% 
+  filter(region != "") %>% 
+  group_by(var,residence,region,year,.draw) %>%
+  summarise(sum = sum(.value)) %>%
+  group_by(var,residence,region,year) %>%
+  summarise(mean = mean(sum),
+            median = quantile(sum,0.5,names = FALSE,na.rm = T),
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
+
+
+
+prov_sums_b_res <- tmp_sim %>%
+  filter(!is.na(residence)) %>% 
+  group_by(var,residence,prov,year,.draw) %>%
+  summarise(sum = sum(.value)) %>%
+  group_by(var,residence,prov,year) %>%
+  summarise(mean = mean(sum),
+            median = quantile(sum,0.5,names = FALSE,na.rm = T),
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
+
+
+nat_sums_b_res <- tmp_sim %>%
+  filter(!is.na(residence)) %>% 
+  group_by(var,residence,year,.draw) %>%
+  summarise(sum = sum(.value)) %>%
+  group_by(var,residence,year) %>%
+  summarise(mean = mean(sum),
+            median = quantile(sum,0.5,names = FALSE,na.rm = T),
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
+
+
+
 save(list = c("nat_sums_b",
               "reg_sums_b",
               "prov_sums_b",
-              "zone_sums_b"),
+              "zone_sums_b",
+              "nat_sums_b_res",
+              "reg_sums_b_res",
+              "prov_sums_b_res",
+              "zone_sums_b_res"),
      file = "data/Posterior_summaries1.RData")
+
 
 
 
@@ -100,7 +157,11 @@ rm(list = c("tmp_sim",
             "nat_sums_b",
    "reg_sums_b",
    "prov_sums_b",
-   "zone_sums_b"))
+   "zone_sums_b",
+   "nat_sums_b_res",
+   "reg_sums_b_res",
+   "prov_sums_b_res",
+   "zone_sums_b_res"))
 
 
 

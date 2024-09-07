@@ -46,7 +46,10 @@ avars = a_var$Variable_Code
 
 
 nat_sums_b$prov <- "CAN"
-a_tab <- bind_rows(nat_sums_b,prov_sums_b,zone_sums_b) %>% 
+nat_sums_b_res$prov <- "CAN"
+
+a_tab <- bind_rows(nat_sums_b,prov_sums_b,zone_sums_b,
+                   nat_sums_b_res, prov_sums_b_res, zone_sums_b_res) %>% 
   filter(var %in% avars) %>% 
   left_join(.,a_var,by = c("var" = "Variable_Code")) %>% 
   select(-median) %>% 
@@ -54,11 +57,11 @@ a_tab <- bind_rows(nat_sums_b,prov_sums_b,zone_sums_b) %>%
          lci = as.integer(round(lci)),
          uci = as.integer(round(uci)),
          prov = factor(prov,levels = prov_sort,ordered = TRUE))%>% 
-  arrange(prov,zone,var,desc(year)) %>% 
+  arrange(prov,zone,var,desc(year),residence) %>% 
   filter(var != "SNIPK" | (var== "SNIPK" & year > 1991)) %>% 
   filter(var != "SUSNIP" | (var== "SUSNIP" & year > 1991)) %>% 
   left_join(.,prov_trans[,c("prov","Prov_En","Prov_Fr")],by = "prov") %>% 
-  relocate(var,prov,zone,year,
+  relocate(var,prov,zone,residence,year,
            mean,lci,uci,
            Description_En,
            Description_Fr,
@@ -68,33 +71,92 @@ miss_var = avars[-which(avars %in% unique(a_tab$var))]
 print(paste("Data missing for variables",paste(miss_var,collapse = " ")))
 
 #
-a_tab1 <- a_tab %>% relocate(Description_Fr,
-                  Description_En,
-                  Prov_Fr,Prov_En,zone,year,
-                  mean,lci,uci,
-                  var,prov)
+# a_tab1 <- a_tab %>% relocate(Description_Fr,
+#                   Description_En,
+#                   Prov_Fr,Prov_En,zone,year,
+#                   mean,lci,uci,
+#                   var,prov)
+# 
+
+# a_tab_out <- a_tab1 %>% 
+#   relocate(var,prov,zone,year,mean,lci,uci,Description_En,Description_Fr,Prov_En,Prov_Fr) %>% 
+#   rowwise() %>% 
+#   mutate(Prov_Fr = ifelse(is.na(Prov_Fr),"0",Prov_Fr),
+#          Prov_En = ifelse(is.na(Prov_En),"0",Prov_En),
+#          zone = ifelse(is.na(zone),0,zone)) %>% 
+#   rename(Variable_Code = var,
+#          Province_ID = prov,
+#          Zone_ID = zone,
+#          Year = year,
+#          Estimate = mean,
+#          Province_Name = Prov_En,
+#          Province_Nom = Prov_Fr)
 
 
-a_tab_out <- a_tab1 %>% 
-  relocate(var,prov,zone,year,mean,lci,uci,Description_En,Description_Fr,Prov_En,Prov_Fr) %>% 
-  rowwise() %>% 
+# 
+# # same as above but by residence ------------------------------------------
+# 
+# 
+# a_tab <- bind_rows(nat_sums_b_res,prov_sums_b_res,zone_sums_b_res) %>%
+#   filter(var %in% avars) %>%
+#   left_join(.,a_var,by = c("var" = "Variable_Code")) %>%
+#   select(-median) %>%
+#   mutate(mean = as.integer(round(mean)),
+#          lci = as.integer(round(lci)),
+#          uci = as.integer(round(uci)),
+#          prov = factor(prov,levels = prov_sort,ordered = TRUE))%>%
+#   arrange(prov,zone,var,residence,desc(year)) %>%
+#   filter(var != "SNIPK" | (var== "SNIPK" & year > 1991)) %>%
+#   filter(var != "SUSNIP" | (var== "SUSNIP" & year > 1991)) %>%
+#   left_join(.,prov_trans[,c("prov","Prov_En","Prov_Fr")],by = "prov") %>%
+#   relocate(var,prov,zone,residence,year,
+#            mean,lci,uci,
+#            Description_En,
+#            Description_Fr,
+#            Prov_En,Prov_Fr)
+# 
+# miss_var = avars[-which(avars %in% unique(a_tab$var))]
+# print(paste("Data missing for variables",paste(miss_var,collapse = " ")))
+# 
+# #
+# a_tab1 <- a_tab %>% relocate(Description_Fr,
+#                              Description_En,
+#                              Prov_Fr,Prov_En,zone,year,residence,
+#                              mean,lci,uci,
+#                              var,prov)
+
+
+a_tab_out <- a_tab %>% 
+  relocate(var,prov,zone,year,mean,residence,lci,uci,Description_En,Description_Fr,Prov_En,Prov_Fr) %>%
+  rowwise() %>%
   mutate(Prov_Fr = ifelse(is.na(Prov_Fr),"0",Prov_Fr),
          Prov_En = ifelse(is.na(Prov_En),"0",Prov_En),
-         zone = ifelse(is.na(zone),0,zone)) %>% 
+         zone = ifelse(is.na(zone),0,zone),
+         residence = ifelse(is.na(residence),"0",residence)) %>%
   rename(Variable_Code = var,
          Province_ID = prov,
          Zone_ID = zone,
+         Canadian_Residents = residence,
          Year = year,
          Estimate = mean,
          Province_Name = Prov_En,
          Province_Nom = Prov_Fr)
 
 
+a_tab_out1 <- a_tab_out %>% 
+  filter(Canadian_Residents != "0")
+
+a_tab_out <- a_tab_out %>% 
+  filter(Canadian_Residents == "0") %>% 
+  select(-Canadian_Residents)
+
 write_csv(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_comma_",FY,"-",Y,".csv"))
 write_csv2(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_point_virgule_",FY,"-",Y,".csv"))
 write_csv(a_tab_out,paste0("website/General_harvest_table",FY,"-",Y,".csv"))
 write_csv(a_tab_out,paste0("website/General_harvest_table.csv"))
 
+write_csv(a_tab_out1,paste0("GoogleDrive/General_Estimates_Residence_Donnees_generales_comma_",FY,"-",Y,".csv"))
+write_csv2(a_tab_out1,paste0("GoogleDrive/General_Estimates_Residence_Donnees_generales_point_virgule_",FY,"-",Y,".csv"))
 
 
 

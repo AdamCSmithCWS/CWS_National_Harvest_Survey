@@ -116,14 +116,14 @@ all_zones <- expand.grid(prov = provs,
 
 # all_zones <- data.frame(prov = c("MB","NB","SK","ON"),
 #                         zone = c(2,2,1,3))
-all_zones <- data.frame(prov = c("MB","MB","PQ","YT"),
-                        zone = c(1,2,2,1))
+# all_zones <- data.frame(prov = c("MB","MB","PQ","YT"),
+#                         zone = c(1,2,2,1))
 
 # all_zones <- data.frame(prov = c("MB","NB","PQ","YT"),
 #                         zone = c(2,2,2,1))
 
 # MCMC loops --------------------------------------------------------------
-rerun <- TRUE # set to true if the loop should force model fit for zones already completed
+rerun <- FALSE # set to true if the loop should force model fit for zones already completed
 
 n_cores <- 3
 cluster <- makeCluster(n_cores, type = "PSOCK")
@@ -157,7 +157,7 @@ parms = c("NACTIVE_y",
           # "mean_totdays_ycg",
            "mean_totkill_ycg_alt",
           # "mean_totdays_ycg_alt",
-          #"kill_cyg",
+          "kill_cyg",
           "kill_yg",
           "days_yg",
           "days_y",
@@ -180,6 +180,7 @@ parms = c("NACTIVE_y",
 parm_check <- c("NACTIVE_y",
   "NSUCC_yg",
   "kill_yg",
+  "kill_cyg",
   "days_yg",
   "days_y")
 

@@ -342,7 +342,8 @@ for(i in c(yy,ly)){
 sp_z <- ests %>% 
 mutate(zone = Zone_ID,
        prov = Province_ID) %>% 
-  filter(Zone_ID != 0)
+  filter(Zone_ID != 0,
+         Canadian_Residents == "0" | is.na(Canadian_Residents))
 
 
 
@@ -439,6 +440,133 @@ for(i in 1:nrow(provs)){
                   position = position_dodge(width = 0.33))+
     geom_point(position = position_dodge(width = 0.33))+
     facet_wrap(vars(Description_En),ncol = 5,scales = "free_y")+
+    labs(title = paste(pr,z))+
+    xlab("")+
+    ylab("")+
+    theme_bw()+ 
+    theme( 
+      # axis.text = element_text( size = 14 ),
+      #      axis.text.x = element_text( size = 20 ),
+      #      axis.title = element_text( size = 16, face = "bold" ),
+      #      legend.position="none",
+      # The new stuff
+      strip.text = element_text(size = 8))+
+    scale_x_continuous(breaks = seq(yy-11,yy,by = 2))+
+    scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
+  
+  print(compp) 
+  
+}
+
+dev.off()
+
+
+
+
+
+
+
+
+
+# Residency comparisons for general estimates -------------------------------------------------------
+
+
+
+sp_z <- ests %>% 
+  filter(Zone_ID != 0,
+         Canadian_Residents != "0") %>% 
+  mutate(zone = Zone_ID,
+         prov = Province_ID,
+         Canadian_Residents = factor(Canadian_Residents, levels = c("Resident",
+                                                                    "Non-Resident",
+                                                                    "0"),
+                                     ordered = TRUE)) 
+
+
+
+
+
+# zone graphs -------------------------------------------------------------
+
+pdf("figures/Estimates_by_residency.pdf",
+    width = 11,
+    height = 8.5)
+provs <- unique(sp_z[,c("prov","zone")])
+
+for(i in 1:nrow(provs)){
+  pr = provs[i,"prov"]
+  z = provs[i,"zone"]
+  
+  tmp <- sp_z %>% 
+    filter(prov == pr,
+           zone == z)
+  # tmp2 <- original_estimates %>% 
+  #   filter(Province_Name == unique(tmp$Province_Name),
+  #          zone == z)
+  # tmp <- bind_rows(tmp,tmp2)
+  
+  
+  
+  compp <- ggplot(data = tmp,
+                  aes(x = Year,
+                      y = Estimate,
+                      colour = Canadian_Residents))+
+    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.2,width = 0,
+                  position = position_dodge(width = 0.75))+
+    geom_point(position = position_dodge(width = 0.75),alpha = 0.7)+
+    facet_wrap(vars(Description_En),scales = "free_y")+
+    labs(title = paste(pr,z))+
+    xlab("")+
+    ylab("")+
+    theme_bw()+ 
+    theme( 
+      # axis.text = element_text( size = 14 ),
+      #      axis.text.x = element_text( size = 20 ),
+      #      axis.title = element_text( size = 16, face = "bold" ),
+      #      legend.position="none",
+      # The new stuff
+      strip.text = element_text(size = 8))+
+    scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
+  
+  print(compp) 
+  
+  
+  
+}
+
+dev.off()
+
+
+pdf("figures/Estimates_by_residency_10yr.pdf",
+    width = 11,
+    height = 8.5)
+provs <- unique(sp_z[,c("prov","zone")])
+
+for(i in 1:nrow(provs)){
+  pr = provs[i,"prov"]
+  z = provs[i,"zone"]
+  
+  tmp <- sp_z %>% 
+    filter(prov == pr,
+           zone == z, 
+           Year > yy-11)
+  
+  # tmp2 <- original_estimates %>% 
+  #   filter(Province_Name == unique(tmp$Province_Name),
+  #          zone == z, 
+  #          Year > yy-11)
+  # tmp <- bind_rows(tmp,tmp2)
+  
+  
+  
+  compp <- ggplot(data = tmp,
+                  aes(x = Year,
+                      y = Estimate,
+                      colour = Canadian_Residents))+
+    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.2,width = 0,
+                  position = position_dodge(width = 0.33))+
+    geom_point(position = position_dodge(width = 0.33))+
+    facet_wrap(vars(Description_En),scales = "free_y")+
     labs(title = paste(pr,z))+
     xlab("")+
     ylab("")+

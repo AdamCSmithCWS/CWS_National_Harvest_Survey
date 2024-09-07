@@ -161,12 +161,15 @@ load(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
   
 
 parms = c("NACTIVE_y",
+          "NACTIVE_cy",
           "NSUCC_y",
+          "NSUCC_cy",
           "nu_day",
           "sdhunter_day",
           "mean_totkill_yc",
           "mean_totdays_yc",
           "kill_cy",
+          "days_cy",
           "kill_ys",
           "kill_y",
           "kill_ysax",
