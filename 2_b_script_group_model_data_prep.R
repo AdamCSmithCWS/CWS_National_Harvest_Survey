@@ -185,14 +185,7 @@ sumkill = allkill[which(allkill[,phunt] == pr &
                              allkill[,zhunt] == z &
                              allkill$YEAR %in% years),]
 
-# if(minyr != FY){
-#   FY1 <- minyr
-# sumkill$year = sumkill$YEAR-(minyr-1)
-# }else{
-   FY1 = FY
-# }
-    
-    
+   
     
  
 
