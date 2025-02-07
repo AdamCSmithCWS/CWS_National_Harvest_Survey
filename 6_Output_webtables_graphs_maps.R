@@ -20,7 +20,9 @@ load("data/Posterior_summaries1.RData")
 load("data/Posterior_summaries2.RData")
 load("data/Posterior_summaries3.RData")
 
-prov_trans <- read.csv("data/Province_names_EN_FR.csv")
+prov_trans <- read_csv("data/Province_names_EN_FR.csv",
+                       locale = locale(encoding = "latin1"),
+                       name_repair = make.names)
 
 Y <- 2023
 FY = 1976
@@ -39,7 +41,9 @@ mod_vars = unique(nat_sums_b$var)
 
 ## includes general harvest data from duck, goose, murre, and other
 
-a_var = read.csv("website/A_variable_names.csv")
+a_var = read_csv("website/A_variable_names.csv",
+                 locale = locale(encoding = "latin1"),
+                 name_repair = make.names)
 a_var = a_var[which(a_var$keep.in.new.database == TRUE),]
 a_var = a_var[,-which(names(a_var) == "keep.in.new.database")]
 avars = a_var$Variable_Code
@@ -119,11 +123,11 @@ print(paste("Data missing for variables",paste(miss_var,collapse = " ")))
 # print(paste("Data missing for variables",paste(miss_var,collapse = " ")))
 # 
 # #
-# a_tab1 <- a_tab %>% relocate(Description_Fr,
-#                              Description_En,
-#                              Prov_Fr,Prov_En,zone,year,residence,
-#                              mean,lci,uci,
-#                              var,prov)
+a_tab1 <- a_tab %>% relocate(Description_Fr,
+                             Description_En,
+                             Prov_Fr,Prov_En,zone,year,residence,
+                             mean,lci,uci,
+                             var,prov)
 
 
 a_tab_out <- a_tab %>% 
@@ -153,7 +157,7 @@ a_tab_out <- a_tab_out %>%
 write_csv(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_comma_",FY,"-",Y,".csv"))
 write_csv2(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_point_virgule_",FY,"-",Y,".csv"))
 write_csv(a_tab_out,paste0("website/General_harvest_table",FY,"-",Y,".csv"))
-write_csv(a_tab_out,paste0("website/General_harvest_table.csv"))
+#write_csv(a_tab_out,paste0("website/General_harvest_table.csv"))
 
 write_csv(a_tab_out1,paste0("GoogleDrive/General_Estimates_Residence_Donnees_generales_comma_",FY,"-",Y,".csv"))
 write_csv2(a_tab_out1,paste0("GoogleDrive/General_Estimates_Residence_Donnees_generales_point_virgule_",FY,"-",Y,".csv"))
@@ -166,7 +170,9 @@ write_csv2(a_tab_out1,paste0("GoogleDrive/General_Estimates_Residence_Donnees_ge
 
 sp_harv_list = unique(nat_sums_a$AOU)
 
-b_var = read.csv("website/B_species_names.csv")
+b_var = read_csv("website/B_species_names.csv",
+                 locale = locale(encoding = "latin1"),
+                 name_repair = make.names)
 
 bvars = b_var$Species_Code
 nat_sums_a$prov <- "CAN"
@@ -248,7 +254,7 @@ write_csv(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_comma_
 write_csv2(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_point_virgule_",FY,"-",Y,".csv"))
 write_csv(b_tab_out,paste0("website/species_harvest_table_incl_age_sex",FY,"-",Y,".csv"))
 
-write_csv(b_tab_out,paste0("website/species_harvest_table_incl_age_sex.csv"))
+#write_csv(b_tab_out,paste0("website/species_harvest_table_incl_age_sex.csv"))
 
 
 
@@ -265,12 +271,19 @@ load("data/allkill.RData")
 #   group_by(PRHUNT,ZOHUNT,AOU,YEAR,BSEX) %>% 
 #   summarise(n_parts = n())
 # 
+
 nparts_species_year_age_sex <- outscse %>%
   group_by(PRHUNT,ZOHUNT,AOU,YEAR,BAGE,BSEX) %>%
   summarise(n_parts = as.integer(n()),
             .groups = "drop") %>% 
   mutate(DEMOGRAPHIC = paste(BAGE,BSEX,sep = "-")) %>% 
-  filter(AOU > 100) %>% 
+  filter(AOU > 100,
+         !(AOU == 1550 & PRHUNT %in% c("NF", #dropping Harlequin Duck parts accidentally submitted in regions with no HARL harvest
+                                     "PE",
+                                     "NS",
+                                     "NB") & YEAR > 1988),
+         !(AOU == 1550 & PRHUNT %in% c("PQ",
+                                     "ON") & YEAR > 1989)) %>% 
   select(-c(BAGE,BSEX)) %>% 
   pivot_wider(.,names_from = DEMOGRAPHIC,
               values_from = n_parts,
@@ -399,7 +412,7 @@ c_tab_out <- c_tab %>%
 write_csv(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_comma_",FY,"-",Y,".csv"))
 write_csv2(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_point_virgule_",FY,"-",Y,".csv"))
 write_csv(c_tab_out,paste0("website/species_age_ratios",FY,"-",Y,".csv"))
-write_csv(c_tab_out,paste0("website/species_age_ratios.csv"))
+#write_csv(c_tab_out,paste0("website/species_age_ratios.csv"))
 
 
 c_tab_plot <- c_tab1 %>% 
@@ -685,9 +698,12 @@ for(i in 1:nrow(sp_maps_b)){
   bbks <- round(bbkst/(10^om))*10^om
   ss <- 1
   
-  while(any(duplicated(bbks))){
+  while(any(duplicated(bbks)) & ss < 10){
     bbks <- round((bbkst/(10^(om-ss)))*10^(om-ss))
     ss = ss+1
+  }
+  if(any(duplicated(bbks))){
+    bbks <- unique(bbks)
   }
   bks <- c(0,
            bbks,
@@ -881,7 +897,9 @@ for(i in 1:nrow(sp_maps_c)){
 # Species proportions comparison ------------------------------------------
 
 converge_sum <- readRDS(paste0("output/all_parameter_convergence_summary_",Y,".rds")) 
-b_var = read.csv("website/B_species_names.csv")
+b_var = read_csv("website/B_species_names.csv",
+                 locale = locale(encoding = "latin1"),
+                 name_repair = make.names)
 
 prop_estimates <- converge_sum %>% 
   filter(grepl("pcomp_psy",variable)) %>% 

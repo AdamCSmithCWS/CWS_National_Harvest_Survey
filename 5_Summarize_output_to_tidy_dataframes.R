@@ -176,6 +176,31 @@ tmp_sp <- tmp_sp %>%
   left_join(.,alt_regs,
             by = c("prov","zone"))
 
+
+# Temporary Removal of Harlequin Duck harvest in East ---------------------
+## Must be integrated into the full model or the data-prep process
+## in 2024-2025 analysis
+
+harl <- 1550
+
+tst <- tmp_sp %>% 
+  filter(!(AOU == harl & prov %in% c("NF",
+                                     "PE",
+                                     "NS",
+                                     "NB") & year > 1988),
+         !(AOU == harl & prov %in% c("PQ",
+                                     "ON") & year > 1989))
+
+tst2 <- tst %>% filter(AOU == harl)
+
+tmp_sp <- tmp_sp %>% 
+  filter(!(AOU == harl & prov %in% c("NF",
+                                     "PE",
+                                     "NS",
+                                     "NB") & year > 1988),
+         !(AOU == harl & prov %in% c("PQ",
+                                     "ON") & year > 1989))
+
 # Snow Goose combined blue- and white-phases
 sngo_aou <- c(1692,1693) # white- and blue-phase sngo
 
@@ -260,7 +285,12 @@ sp_demog_never <- c(1300,
                     1630,
                     1650,
                     1660,
-                    1670)
+                    1670,
+                    1360,
+                    1520,
+                    1550,
+                    1620,
+                    1730)
 # sp_demog_keep <- demog_summary %>% 
 #   group_by(.,prov,zone,model,AOU) %>% 
 #   summarise(keep = ifelse(any(rhat_fail),FALSE,TRUE),
