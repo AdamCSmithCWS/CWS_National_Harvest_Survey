@@ -675,7 +675,8 @@ for(i in 1:nrow(var_maps_a)){
 
 sp_maps_b = b_tab %>% 
   distinct(AOU,year,English_Name,French_Name_New,Scientific_Name) %>% 
-  mutate(map_file = paste0(AOU,"_",year,".png"))
+  mutate(AOU_leading = ifelse(nchar(AOU) == 3,paste0("0",AOU),AOU),
+         map_file = paste0(AOU_leading,"_",year,".png"))
 
 
 
