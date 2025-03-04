@@ -631,6 +631,22 @@ saveRDS(perms_drop_murre_2023,"data/permits_drop_murre_2023.rds")
 
 # correcting the age and sex indicators -----------------------------------
 
+
+# removing Harlequin duck from provs and years with no season -------------
+
+
+harl <- 1550
+
+outscse <- outscse %>% 
+  filter(!(AOU == harl & PRHUNT %in% c("NF",
+                                     "PE",
+                                     "NS",
+                                     "NB") & YRHUNT > 1988),
+         !(AOU == harl & PRHUNT %in% c("PQ",
+                                     "ON") & YRHUNT > 1989))
+
+
+
 save(list = c("allkill",
               "outscse",
               "z_pops",
@@ -638,7 +654,6 @@ save(list = c("allkill",
               "popsiz_perm",
               "sps"),
      file = "data/allkill.RData")
-
 
 
 # exporting the parts data as a readable csv file -------------------------
@@ -654,6 +669,8 @@ names(parts_out) <- c("Province of hunt",
                       "Week of season")
 parts_out <- left_join(parts_out,sps,by = "AOU")
 write.csv(parts_out,paste0("GoogleDrive/All_raw_parts_data_",Y,".csv"))
+
+
 # tmp <- parts_out %>% filter(specieslevelenglish == "Mallard")
 # write.csv(tmp,paste0("output/Mallard_parts_all_years_through_",Y,".csv"))
 
