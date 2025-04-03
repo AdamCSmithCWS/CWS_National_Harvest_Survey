@@ -637,7 +637,7 @@ saveRDS(perms_drop_murre_2023,"data/permits_drop_murre_2023.rds")
 
 harl <- 1550
 
-outscse <- outscse %>% 
+tmp <- outscse %>% 
   filter(!(AOU == harl & PRHUNT %in% c("NF",
                                      "PE",
                                      "NS",
@@ -668,7 +668,7 @@ names(parts_out) <- c("Province of hunt",
                       "Sex",
                       "Week of season")
 parts_out <- left_join(parts_out,sps,by = "AOU")
-write.csv(parts_out,paste0("GoogleDrive/All_raw_parts_data_",Y,".csv"))
+write_excel_csv(parts_out,paste0("GoogleDrive/All_raw_parts_data_",Y,".csv"))
 
 
 # tmp <- parts_out %>% filter(specieslevelenglish == "Mallard")
