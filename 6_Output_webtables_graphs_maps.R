@@ -1183,3 +1183,34 @@ dev.off()
 
 
 
+
+pdf("Figures/Species_harv_by_period.pdf",
+    width = 11,
+    height = 8.5)
+for(z in unique(period_plotting$Species_Name_English)){
+  
+  tmp <- period_plotting %>% 
+    filter(Species_Name_English == z) 
+  nper <- max(tmp$Period)
+  plot_tmp <- ggplot(data = tmp,
+                     aes(x = Period,y = Estimate,
+                         colour = Year,
+                         group = Year))+
+    # geom_pointrange(aes(ymin = lci,ymax = uci),
+    #                 position = position_dodge(width = 0.3))+
+    geom_point(alpha = 0.8, size = 0.75)+
+    geom_line(alpha = 0.5)+
+    theme_bw()+
+    scale_y_continuous(transform = "log10")+
+    scale_x_continuous(breaks = c(1:nper))+
+    scale_colour_viridis()+
+    labs(title = z)+
+    ylab("Harvest during period")+
+    facet_wrap(vars(zone),
+               scales = "free")
+  print(plot_tmp)
+}
+dev.off()
+
+
+
