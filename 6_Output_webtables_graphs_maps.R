@@ -16,10 +16,6 @@ dir.create("website")
 dir.create("website/maps")
 
 
-load("data/Posterior_summaries1.RData")
-load("data/Posterior_summaries2.RData")
-load("data/Posterior_summaries3.RData")
-
 prov_trans <- read_csv("data/Province_names_EN_FR.csv",
                        locale = locale(encoding = "latin1"),
                        name_repair = make.names)
@@ -34,6 +30,10 @@ prov_sort <- c("CAN","BC","YT","AB","SK","NT","MB","ON","PQ","NB","PE","NS","NF"
 
 
 
+
+load("data/Posterior_summaries1.RData")
+load("data/Posterior_summaries2.RData")
+load("data/Posterior_summaries3.RData")
 
 
 # General Harvest Estimates Table -----------------------------------------------------------------
@@ -1006,3 +1006,180 @@ dev.off()
 #   scale_colour_viridis_c(trans = "log10")+
 #   facet_wrap(vars(d1))
 # print(prop_plot)
+# 
+# 
+# 
+
+
+
+# Species harvest by period and zone --------------------------------------
+
+load("data/posterior_summaries5.RData")
+
+
+
+
+
+load("data/allkill.RData")
+sps <- sps %>% 
+  select(AOU,group)
+
+
+sp_harv_list = unique(nat_sums_per$AOU)
+
+b_var = read_csv("website/B_species_names.csv",
+                 locale = locale(encoding = "latin1"),
+                 name_repair = make.names) %>% 
+  left_join(sps, by = c("Species_Code" = "AOU"))
+per_tab <- NULL
+for(spgp in c("duck","goose","murre")){
+  b_var_tmp <- b_var %>% 
+    filter(group == spgp)
+  
+  periods = read.csv(paste0("data/period.",spgp,".csv"))
+  
+bvars = b_var_tmp$Species_Code
+
+per_tab_tmp <- zone_sums_per %>% 
+  filter(AOU %in% bvars)%>% 
+  left_join(.,b_var_tmp,by = c("AOU" = "Species_Code")) %>% 
+  left_join(periods,by = c("period",
+                           "prov" = "pr",
+                           "zone" = "zo")) %>% 
+  select(-median) %>% 
+  mutate(mean = as.integer(round(mean)),
+         lci = as.integer(round(lci)),
+         uci = as.integer(round(uci)),
+         prov = factor(prov,levels = prov_sort,ordered = TRUE))%>% 
+  arrange(prov,zone,AOU,period,desc(year)) %>% 
+  left_join(.,prov_trans[,c("prov","Prov_En","Prov_Fr")],by = "prov") 
+
+per_tab <- bind_rows(per_tab,per_tab_tmp)
+
+}
+# Add the species demographic harvest estimates to same file
+
+
+
+#
+
+per_tab1 <- per_tab %>% relocate(French_Name_New,
+                             English_Name,
+                             Scientific_Name,
+                             Prov_Fr,Prov_En,
+                             zone,year,
+                             mean,lci,uci,
+                             French_Name_Old) %>% 
+  rename(espece = French_Name_New,
+         species = English_Name,
+         scientific = Scientific_Name,
+         espece_alt = French_Name_Old)
+
+
+
+per_tab_out <- per_tab %>% 
+  rowwise() %>% 
+  mutate(zone = ifelse(is.na(zone),0,zone),
+         Number_of_weeks_in_period = 1+(endweek-startweek)) %>% 
+  rename(Species_Code = AOU,
+         Province_ID = prov,
+         Zone_ID = zone,
+         Year = year,
+         Period = period,
+         First_week_of_period_rel_sept_1 = startweek,
+         Last_week_of_period = endweek,
+         Estimate = mean,
+         Species_Name_English = English_Name,
+         Species_Name_French = French_Name_New,
+         Province_Name = Prov_En,
+         Province_Nom = Prov_Fr) %>% 
+  select(Species_Code,Province_ID,Zone_ID,Year,Period,First_week_of_period_rel_sept_1,Last_week_of_period,Number_of_weeks_in_period,
+         Estimate,lci,uci,
+         Species_Name_English,Species_Name_French,Scientific_Name,
+         Province_Name,Province_Nom)
+
+write_csv(per_tab_out,paste0("GoogleDrive/Species_period_Harvest_Prises_par_period_Espece_comma_",FY,"-",Y,".csv"))
+
+write_csv2(per_tab_out,paste0("GoogleDrive/Species_period_Harvest_Prises_par_period_Espece_point_virgule_",FY,"-",Y,".csv"))
+write_csv(per_tab_out,paste0("website/species_period_harvest_table",FY,"-",Y,".csv"))
+
+
+
+
+# check against species totals --------------------------------------------
+
+period_sums <- per_tab_out %>% 
+  group_by(Species_Name_English,Province_Name,Zone_ID,
+           Year) %>% 
+  summarise(summed_period_harvest = sum(Estimate))
+
+species_harv <- read_csv(paste0("website/species_harvest_table_incl_age_sex",FY,"-",Y,".csv")) %>% 
+  filter(Zone_ID != 0,
+         Sex == "All",
+         Age == "All") %>% 
+  select(Species_Name_English,Province_Name,Zone_ID,
+         Year,Estimate,lci,uci) %>% 
+  inner_join(period_sums) %>% 
+  mutate(zone = paste(Province_Name,Zone_ID,sep = "-"))
+
+pdf("Figures/compare_species_harv_w_summed_periods.pdf",
+    width = 11,
+    height = 8.5)
+for(z in unique(species_harv$zone)){
+  
+  tmp <- species_harv %>% 
+    filter(zone == z)
+  
+  plot_tmp <- ggplot(data = tmp,
+                     aes(x = Year,y = Estimate))+
+    geom_pointrange(aes(ymin = lci,ymax = uci),
+                    colour = grey(0.7))+
+    geom_point(aes(x = Year,y = summed_period_harvest),
+               inherit.aes = FALSE)+
+    theme_bw()+
+    labs(title = z)+
+    facet_wrap(vars(Species_Name_English),
+               scales = "free_y")
+  print(plot_tmp)
+}
+dev.off()
+
+
+
+
+
+period_plotting <- per_tab_out %>% 
+  mutate(zone = paste(Province_Name,Zone_ID,sep = "-"))
+
+
+pdf("Figures/Species_weekly_harv_by_period.pdf",
+    width = 11,
+    height = 8.5)
+for(z in unique(period_plotting$Species_Name_English)){
+  
+  tmp <- period_plotting %>% 
+    filter(Species_Name_English == z) %>% 
+    mutate(Estimate = Estimate/Number_of_weeks_in_period)
+  
+  plot_tmp <- ggplot(data = tmp,
+                     aes(x = Last_week_of_period,y = Estimate,
+                         colour = Year,
+                         group = Year))+
+    # geom_pointrange(aes(ymin = lci,ymax = uci),
+    #                 position = position_dodge(width = 0.3))+
+    geom_point(alpha = 0.8)+
+    geom_line(alpha = 0.5)+
+    theme_bw()+
+    scale_y_continuous(transform = "log10")+
+    scale_colour_viridis()+
+    labs(title = z)+
+    ylab("Weekly harvest estimate")+
+    facet_wrap(vars(zone),
+               scales = "free")
+  print(plot_tmp)
+}
+dev.off()
+
+
+
+

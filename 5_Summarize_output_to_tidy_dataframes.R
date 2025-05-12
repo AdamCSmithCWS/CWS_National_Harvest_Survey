@@ -776,6 +776,132 @@ save(list = c("nat_sums_cF",
 
 
 
+# period specific harvest -------------------------------------------------
+
+
+
+load("national_provincial_summaries5.RData")
+
+tmp_sp_period_all <- tmp_sp_period_all %>% 
+  left_join(.,alt_regs,
+            by = c("prov","zone"))
+
+
+# Temporary Removal of Harlequin Duck harvest in East ---------------------
+## Must be integrated into the full model or the data-prep process
+## in 2024-2025 analysis
+
+harl <- 1550
+
+# tst <- tmp_sp_period_all %>% 
+#   filter(!(AOU == harl & prov %in% c("NF",
+#                                      "PE",
+#                                      "NS",
+#                                      "NB") & year > 1988),
+#          !(AOU == harl & prov %in% c("PQ",
+#                                      "ON") & year > 1989))
+# 
+# tst2 <- tst %>% filter(AOU == harl)
+
+tmp_sp_period_all <- tmp_sp_period_all %>% 
+  filter(!(AOU == harl & prov %in% c("NF",
+                                     "PE",
+                                     "NS",
+                                     "NB") & year > 1988),
+         !(AOU == harl & prov %in% c("PQ",
+                                     "ON") & year > 1989))
+
+# Snow Goose combined blue- and white-phases
+sngo_aou <- c(1692,1693) # white- and blue-phase sngo
+
+sngo_obs <- tmp_sp_period_all %>% # extract only sngo records
+  filter(AOU %in% sngo_aou) %>% 
+  group_by(prov,zone,period,year,.draw) %>%
+  summarise(.value = sum(.value)) %>% # sum draw values for each prov, zone, and year 
+  mutate(AOU = 1695) # add new AOU value
+
+tmp_sp_period_all <- bind_rows(tmp_sp_period_all,sngo_obs) #append sngo full species to rest of estimates
+
+aous <- unique(tmp_sp_period_all$AOU)
+
+nat_sums_per <- NULL
+prov_sums_per <- NULL
+zone_sums_per <- NULL
+
+for(aou in aous){
+  if(is.na(aou)){next}
+tmp_sp_per_sel <- tmp_sp_period_all %>%
+  filter(AOU %in% aou)
+
+
+zone_sums_per_t <- tmp_sp_per_sel %>%
+  group_by(AOU,prov,zone,period,year,.draw) %>%
+  summarise(sum = sum(.value)) %>%
+  group_by(AOU,prov,zone,period,year) %>%
+  summarise(mean = mean(sum),
+            median = quantile(sum,0.5,names = FALSE),
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
+
+zone_sums_per <- bind_rows(zone_sums_per,
+                           zone_sums_per_t)
+
+
+
+# Have to change this to weekly estimates period varies by zone -----------
+
+
+
+prov_sums_per_t <- tmp_sp_per_sel %>%
+  group_by(AOU,prov,period,year,.draw) %>%
+  summarise(sum = sum(.value)) %>%
+  group_by(AOU,prov,period,year) %>%
+  summarise(mean = mean(sum),
+            median = quantile(sum,0.5,names = FALSE),
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
+
+prov_sums_per <- bind_rows(prov_sums_per,
+                           prov_sums_per_t)
+
+
+
+# reg_sums_a <- tmp_sp %>%
+#   filter(region != "") %>% 
+#   group_by(AOU,region,year,.draw) %>%
+#   summarise(sum = sum(.value)) %>%
+#   group_by(AOU,region,year) %>%
+#   summarise(mean = mean(sum),
+#             median = quantile(sum,0.5,names = FALSE),
+#             lci = as.numeric(hdi(sum,0.95)[1]),
+#             uci = as.numeric(hdi(sum,0.95)[2]))
+
+
+nat_sums_per_t <- tmp_sp_per_sel %>%
+  group_by(AOU,period,year,.draw) %>%
+  summarise(sum = sum(.value)) %>%
+  group_by(AOU,period,year) %>%
+  summarise(mean = mean(sum),
+            median = quantile(sum,0.5,names = FALSE),
+            lci = as.numeric(hdi(sum,0.95)[1]),
+            uci = as.numeric(hdi(sum,0.95)[2]))
+
+nat_sums_per <- bind_rows(nat_sums_per,
+                           nat_sums_per_t)
+
+
+}
+
+
+save(list = c("nat_sums_per",
+              "prov_sums_per",
+              #"reg_sums_a",
+              "zone_sums_per"),
+     file = "data/Posterior_summaries5.RData")
+rm(list = c("nat_sums_per",
+            "prov_sums_per",
+            #"reg_sums_a",
+            "zone_sums_per"))
 
 
 

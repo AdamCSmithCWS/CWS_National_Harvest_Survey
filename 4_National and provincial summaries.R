@@ -45,6 +45,10 @@ names(years) <- paste(years)
 provzone <- read.csv("data/Province and zone table.csv")
 provs = unique(provzone$prov)
 
+period_duck = read.csv(paste0("data/period.duck.csv"))
+period_goose = read.csv(paste0("data/period.goose.csv"))
+period_murre = read.csv(paste0("data/period.murre.csv"))
+
 
 # Load other harvest regulations ------------------------------------------
 
@@ -81,9 +85,9 @@ gps <- c("duck",
 #          d3 = jags_dim_tidy(3,variable))
 
 
-sum_convergence <- TRUE # change to FALSE to run convergence summary first
+summed_convergence <- FALSE # change to FALSE to run convergence summary first
 
-if(!sum_convergence){
+if(!summed_convergence){
 parameter_summary <- NULL
 sp_save <- NULL
 for(pr in provs){
@@ -201,7 +205,7 @@ saveRDS(other_summary,"output/other_summary.rds")
 
 
 }
-sum_convergence <- TRUE
+summed_convergence <- TRUE
 
 
 
@@ -215,6 +219,7 @@ do_sim <- ifelse(jj == 1,TRUE,FALSE)  # ~ 10GB RAM
 do_sp <- ifelse(jj == 2,TRUE,FALSE) # ~20GM RAM
 do_sp_demo <- ifelse(jj == 3,TRUE,FALSE) # ~80GB RAM!
 do_sp_props <- ifelse(jj == 4,TRUE,FALSE) # not currently implemented, calculated in 6_Output_webtables...R
+do_sp_period <- ifelse(jj == 5,TRUE,FALSE) # harvest by species and period and year
 
 
   
@@ -229,6 +234,9 @@ if(do_sp_demo){
 }
 if(do_sp_props){
 tmp_sp_props <- NULL
+}
+if(do_sp_period){
+  tmp_sp_period <- NULL
 }
 
 
@@ -362,7 +370,30 @@ for(pr in provs){
            
        }     
            
-
+          ## species harvest by period and year
+        if(do_sp_period){
+          prv = pr
+          period_tmp <- period_duck %>% 
+            filter(pr == prv,
+                   zo == z) %>% 
+            select(period, startweek,endweek)
+        
+          tmp_sp_duck_period <- out2$samples %>% gather_draws(kill_pys[p,y,s]) 
+          
+          vnm <- sp_vars[which(sp_vars$source == "duck"),c("sp","species")]
+          spss <- sp.save.out[which(sp.save.out$PRHUNT == pr & sp.save.out$ZOHUNT == z),c("AOU","spfact","spn")]
+          spss <- spss[order(spss$spn),]
+          tmp_sp_duck_period <- left_join(tmp_sp_duck_period,spss,by = c("s" = "spn"))
+          tmp_sp_duck_period <- left_join(tmp_sp_duck_period,vnm,by = c("AOU" = "sp"))
+          tmp_sp_duck_period <- left_join(tmp_sp_duck_period,ys,by = "y")
+          tmp_sp_duck_period <- left_join(tmp_sp_duck_period,period_tmp,by = c("p" = "period"))
+          tmp_sp_duck_period$prov <- pr
+          tmp_sp_duck_period$zone <- z
+          
+          tmp_sp_period <- bind_rows(tmp_sp_period,tmp_sp_duck_period)
+          
+          
+          }
              
            
            }
@@ -446,7 +477,31 @@ for(pr in provs){
            tmp_sp_demo <- bind_rows(tmp_sp_demo,tmp_sp_goose_demo)
            
        }
-           
+         
+       ## species harvest by period and year
+       if(do_sp_period){
+         prv = pr
+         period_tmp <- period_goose %>% 
+           filter(pr == prv,
+                  zo == z) %>% 
+           select(period, startweek,endweek)
+         
+         tmp_sp_goose_period <- out2$samples %>% gather_draws(kill_pys[p,y,s]) 
+         
+         vnm <- sp_vars[which(sp_vars$source == "goose"),c("sp","species")]
+         spss <- sp.save.out[which(sp.save.out$PRHUNT == pr & sp.save.out$ZOHUNT == z),c("AOU","spfact","spn")]
+         spss <- spss[order(spss$spn),]
+         tmp_sp_goose_period <- left_join(tmp_sp_goose_period,spss,by = c("s" = "spn"))
+         tmp_sp_goose_period <- left_join(tmp_sp_goose_period,vnm,by = c("AOU" = "sp"))
+         tmp_sp_goose_period <- left_join(tmp_sp_goose_period,ys,by = "y")
+         tmp_sp_goose_period <- left_join(tmp_sp_goose_period,period_tmp,by = c("p" = "period"))
+         tmp_sp_goose_period$prov <- pr
+         tmp_sp_goose_period$zone <- z
+         
+         tmp_sp_period <- bind_rows(tmp_sp_period,tmp_sp_goose_period)
+         
+         
+       }  
      }
      
      if(file.exists(paste("output/full harvest zip",pr,z,"murre","alt mod.RData"))){
@@ -505,7 +560,30 @@ for(pr in provs){
        }
      }
      
-     
+     ## species harvest by period and year
+     if(do_sp_period){
+       prv = pr
+       period_tmp <- period_murre %>% 
+         filter(pr == prv,
+                zo == z) %>% 
+         select(period, startweek,endweek)
+       
+       tmp_sp_murre_period <- out2$samples %>% gather_draws(kill_pys[p,y,s]) 
+       
+       vnm <- sp_vars[which(sp_vars$source == "murre"),c("sp","species")]
+       spss <- sp.save.out[which(sp.save.out$PRHUNT == pr & sp.save.out$ZOHUNT == z),c("AOU","spfact","spn")]
+       spss <- spss[order(spss$spn),]
+       tmp_sp_murre_period <- left_join(tmp_sp_murre_period,spss,by = c("s" = "spn"))
+       tmp_sp_murre_period <- left_join(tmp_sp_murre_period,vnm,by = c("AOU" = "sp"))
+       tmp_sp_murre_period <- left_join(tmp_sp_murre_period,ys,by = "y")
+       tmp_sp_murre_period <- left_join(tmp_sp_murre_period,period_tmp,by = c("p" = "period"))
+       tmp_sp_murre_period$prov <- pr
+       tmp_sp_murre_period$zone <- z
+       
+       tmp_sp_period <- bind_rows(tmp_sp_period,tmp_sp_murre_period)
+       
+       
+     }  
      
      
      
@@ -661,6 +739,10 @@ if(do_sp_props){
        file = "national_provincial_summaries4.RData")
   }
 
+if(do_sp_period){
+  save(list = c("tmp_sp_period"),
+       file = "national_provincial_summaries5.RData")
+}
 
 }#jj
 

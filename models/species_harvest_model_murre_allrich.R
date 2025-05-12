@@ -280,13 +280,23 @@ model {
           # estimate of the mean (per hunter) kill, by period, caste, year, and species
           # mean kill by period caste and year * proportional composition of each species in each period and year
           mean_kill_pcys[p,c,y,s] <- mean_kill_pcy[p,c,y] * pcomp_psy[p,s,y]
+          kill_pcys[p,c,y,s] <- mean_kill_pcys[p,c,y,s] * NACTIVE_cy[c,y]
           #
         }#s
       }#p
     }#y
   }#c
-  
-  
+ 
+ #total harvest estimate by species year and period
+ for(p in 1:nperiods){
+   for(y in 1:nyears){
+     for(s in 1:nspecies){
+       kill_pys[p,y,s] <- sum(kill_pcys[p,1:ncastes,y,s])
+     }#p
+   }#y
+ }#s
+ 
+ 
 
   #total harvest estimate by species year and caste
   ## mean harvest and days * population sizes of each caste and year * estimated proportion of population that is active to generate final harvest estimates.
