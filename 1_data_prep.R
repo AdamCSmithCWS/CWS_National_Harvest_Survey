@@ -265,7 +265,7 @@ harvw[[as.character(y)]] <- tmpharv
  ### but then additional changes are needed to align with old data
  
 
-   if(y == Y | y > 2017){
+   if(y == Y | y > 2006){
     
     ## replacting sas versions of parts with raw database output
 
