@@ -20,7 +20,7 @@ prov_trans <- read_csv("data/Province_names_EN_FR.csv",
                        locale = locale(encoding = "latin1"),
                        name_repair = make.names)
 
-Y <- 2023
+Y <- 2024
 FY = 1976
 years <- FY:Y
 
@@ -127,7 +127,10 @@ a_tab1 <- a_tab %>% relocate(Description_Fr,
                              Description_En,
                              Prov_Fr,Prov_En,zone,year,residence,
                              mean,lci,uci,
-                             var,prov)
+                             var,prov) %>% 
+  filter(is.na(residence))
+
+
 
 
 a_tab_out <- a_tab %>% 
@@ -569,7 +572,7 @@ seqs <- seq(0,1,length = length(colscale1)+1)[-c(1,length(colscale1)+1)]
 
 
 # General harvest estimates
-var_maps_a = a_tab %>% distinct(var,year,Description_En,Description_Fr) %>% 
+var_maps_a = a_tab1 %>% distinct(var,year,Description_En,Description_Fr) %>% 
   mutate(map_file = paste0(var,"_",year,".png"))
 
 
@@ -577,7 +580,7 @@ var_maps_a = a_tab %>% distinct(var,year,Description_En,Description_Fr) %>%
 for(i in 1:nrow(var_maps_a)){
   vv = as.character(var_maps_a[i,"var"])
   
-  rng <- a_tab %>% filter(var == vv,
+  rng <- a_tab1 %>% filter(var == vv,
                          !is.na(zone)) %>%
     ungroup() %>% 
     select(mean)
@@ -616,7 +619,7 @@ for(i in 1:nrow(var_maps_a)){
   yy = as.integer(var_maps_a[i,"year"])
   ft =  as.character(var_maps_a[i,"map_file"])
   
-  tmp <- a_tab %>% filter(var == vv,
+  tmp <- a_tab1 %>% filter(var == vv,
                           year == yy,
                           !is.na(zone)) %>% 
     mutate(plot_cat = cut(mean,breaks = bks))
@@ -674,6 +677,7 @@ for(i in 1:nrow(var_maps_a)){
 
 
 sp_maps_b = b_tab %>% 
+  mutate(AOU = as.character(AOU)) %>% 
   distinct(AOU,year,English_Name,French_Name_New,Scientific_Name) %>% 
   mutate(AOU_leading = ifelse(nchar(AOU) == 3,paste0("0",AOU),AOU),
          map_file = paste0(AOU_leading,"_",year,".png"))
@@ -1111,7 +1115,7 @@ write_csv(per_tab_out,paste0("website/species_period_harvest_table",FY,"-",Y,".c
 period_sums <- per_tab_out %>% 
   group_by(Species_Name_English,Province_Name,Zone_ID,
            Year) %>% 
-  summarise(summed_period_harvest = sum(Estimate))
+  summarise(summed_period_harvest = sum(Estimate,na.rm = TRUE))
 
 species_harv <- read_csv(paste0("website/species_harvest_table_incl_age_sex",FY,"-",Y,".csv")) %>% 
   filter(Zone_ID != 0,

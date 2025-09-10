@@ -20,10 +20,10 @@
 # 1550 = western, 1551 = eastern?
 ### consider splitting eastern and western Barrow's Goldeneye
 # 1520 = western, 1521 = eastern?
+### Drop Razorbill, AOU = 320
 
 
-
-Y <- 2023
+Y <- 2024
 years <- 1976:Y
 
 names(years) <- paste(years)
@@ -33,14 +33,14 @@ home.fold1 <- "C:/Users/smithac/OneDrive - EC-EC/Harvest Survey A146/"
 home.fold <- getwd()
 # setwd(home.fold)
 
-#library(foreign)
+library(foreign)
 #library(runjags)
 library(rjags)
 library(tidyverse)
 library(haven)
 
 
-#sashome <- "C:\\Program Files\\SASHome\\SASFoundation\\9.4"
+sashome <- "C:\\Program Files\\SASHome\\SASFoundation\\9.4"
 provs = c("AB","BC","SK","MB","ON","PQ","NS","PE","NB","NF","NT","YT")#,"NU") #All prov
 #ignoring territories above
 
@@ -54,7 +54,7 @@ species <- unique(sps[which(sps$group %in% c("duck","goose","murre")),"speciesle
 species <- species[-which(species == "Hybrid Mallard/Northern Pintail")]
 gnames <- unique(sps[which(sps$group == "goose"),"specieslevelenglish"])
 dnames <- unique(sps[which(sps$group == "duck"),"specieslevelenglish"])
- dnames <- dnames[-which(dnames == "Hybrid Mallard/Northern Pintail")]
+dnames <- dnames[-which(dnames == "Hybrid Mallard/Northern Pintail")]
 #
 #
 #
@@ -112,41 +112,43 @@ for (y in years){
   if(y == Y){
   fil.yr <- paste0("harv",substring(y,3,4),"w")
 
-  tmpharv <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat")) %>%
-    rename_with(.,str_to_upper) %>% 
-    mutate(PERM = PERMIT + SELYEAR*1e6,
-           PERMIT = permit_replace(PERM,y))
-  
-  perm_lookup_nhs <- tmpharv %>%
-    select(PERM,PERMIT) %>%
-    distinct()
+tmpharv <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat")) %>%
+  rename_with(.,str_to_upper) %>%
+  mutate(PERM = PERMIT + SELYEAR*1e6,
+         PERMIT = permit_replace(PERM,y))
 
-  tmpharv <- tmpharv %>%
-    select(-PERM)
+perm_lookup_nhs <- tmpharv %>%
+  select(PERM,PERMIT) %>%
+  distinct()
+
+tmpharv <- tmpharv %>%
+  select(-PERM)
 
 
-  harvw[[as.character(y)]] <- tmpharv
+harvw[[as.character(y)]] <- tmpharv
 
   saveRDS(harvw[[as.character(y)]],paste0("data/harvw_",y,"_anon.rds"))
 
+  #harvw[[as.character(y)]] <- readRDS(paste0("data/harvw_",y,"_anon.rds"))
   }else{
 
-    tmpharv <- readRDS(paste0("arch/harvw_",y,".rds")) %>%
-      rename_with(.,str_to_upper) %>% 
-      mutate(PERM = PERMIT + SELYEAR*1e6,
-             PERMIT = permit_replace(PERM,y))
+    # tmpharv <- readRDS(paste0("arch/harvw_",y,".rds")) %>%
+    #   rename_with(.,str_to_upper) %>%
+    #   mutate(PERM = PERMIT + SELYEAR*1e6,
+    #          PERMIT = permit_replace(PERM,y))
+    # 
+    # perm_lookup_nhs <- tmpharv %>%
+    #     select(PERM,PERMIT) %>%
+    #     distinct()
+    # 
+    #   tmpharv <- tmpharv %>%
+    #     select(-PERM)
+    # 
+    # harvw[[as.character(y)]] <- tmpharv
+    # 
+    # saveRDS(harvw[[as.character(y)]],paste0("data/harvw_",y,"_anon.rds"))
 
-    perm_lookup_nhs <- tmpharv %>%
-        select(PERM,PERMIT) %>%
-        distinct()
-
-      tmpharv <- tmpharv %>%
-        select(-PERM)
-
-    harvw[[as.character(y)]] <- tmpharv
-
-    saveRDS(harvw[[as.character(y)]],paste0("data/harvw_",y,"_anon.rds"))
-
+    harvw[[as.character(y)]] <- readRDS(paste0("data/harvw_",y,"_anon.rds"))
   }
 
   if(y == Y){
@@ -163,16 +165,17 @@ for (y in years){
 
   }else{
 
-  tmp_cal <- readRDS(paste0("arch/cald_",y,".rds")) %>%
-    mutate(PERM = PERMIT + SELYEAR*1e6)  %>%
-    select(-PERMIT) %>%
-    left_join(.,perm_lookup_nhs,
-              by = "PERM")%>% 
-    select(-PERM)
+  # tmp_cal <- readRDS(paste0("arch/cald_",y,".rds")) %>%
+  #   mutate(PERM = PERMIT + SELYEAR*1e6)  %>%
+  #   select(-PERMIT) %>%
+  #   left_join(.,perm_lookup_nhs,
+  #             by = "PERM")%>% 
+  #   select(-PERM)
+  # 
+  # cald[[as.character(y)]] <- tmp_cal
+  # saveRDS(cald[[as.character(y)]],paste0("data/cald_",y,"_anon.rds"))
 
-  cald[[as.character(y)]] <- tmp_cal
-  saveRDS(cald[[as.character(y)]],paste0("data/cald_",y,"_anon.rds"))
-
+  cald[[as.character(y)]] <- readRDS(paste0("data/cald_",y,"_anon.rds"))
   }
 
   if(y == Y){
@@ -187,16 +190,17 @@ for (y in years){
   calg[[as.character(y)]] <- tmp_calg
   saveRDS(calg[[as.character(y)]],paste0("data/calg_",y,"_anon.rds"))
 }else{
-  tmp_calg <- readRDS(paste0("arch/calg_",y,".rds"))%>%
-    mutate(PERM = PERMIT + SELYEAR*1e6)  %>%
-    select(-PERMIT) %>%
-    left_join(.,perm_lookup_nhs,
-              by = "PERM")%>% 
-    select(-PERM)
+  # tmp_calg <- readRDS(paste0("arch/calg_",y,".rds"))%>%
+  #   mutate(PERM = PERMIT + SELYEAR*1e6)  %>%
+  #   select(-PERMIT) %>%
+  #   left_join(.,perm_lookup_nhs,
+  #             by = "PERM")%>% 
+  #   select(-PERM)
+  # 
+  # calg[[as.character(y)]] <- tmp_calg
+  # saveRDS(calg[[as.character(y)]],paste0("data/calg_",y,"_anon.rds"))
 
-  calg[[as.character(y)]] <- tmp_calg
-  saveRDS(calg[[as.character(y)]],paste0("data/calg_",y,"_anon.rds"))
-
+  calg[[as.character(y)]] <- readRDS(paste0("data/calg_",y,"_anon.rds"))
 }
    if(y > 2012){
      if(y == Y){
@@ -211,23 +215,26 @@ for (y in years){
    calm[[as.character(y)]] <- tmp_calm
    saveRDS(calm[[as.character(y)]],paste0("data/calm_",y,"_anon.rds"))
 
+   saveRDS(perm_lookup_nhs,paste0("data/permit_lookup_",y,".rds"))
+   
      }else{
 
-       tmp_calm <- readRDS(paste0("arch/calm_",y,".rds"))%>%
-         mutate(PERM = PERMIT + SELYEAR*1e6)  %>%
-         select(-PERMIT) %>%
-         left_join(.,perm_lookup_nhs,
-                   by = "PERM") %>% 
-         select(-PERM)
-
-       calm[[as.character(y)]] <- tmp_calm
-
-       saveRDS(calm[[as.character(y)]],paste0("data/calm_",y,"_anon.rds"))
+       # tmp_calm <- readRDS(paste0("arch/calm_",y,".rds"))%>%
+       #   mutate(PERM = PERMIT + SELYEAR*1e6)  %>%
+       #   select(-PERMIT) %>%
+       #   left_join(.,perm_lookup_nhs,
+       #             by = "PERM") %>% 
+       #   select(-PERM)
+       # 
+       # calm[[as.character(y)]] <- tmp_calm
+       # 
+       # saveRDS(calm[[as.character(y)]],paste0("data/calm_",y,"_anon.rds"))
+       
+       calm[[as.character(y)]] <- readRDS(paste0("data/calm_",y,"_anon.rds"))
      }
    }
 
-  saveRDS(perm_lookup_nhs,paste0("data/permit_lookup_",y,".rds"))
-
+ 
   if(y == Y){
  fil.yr = paste0("persal",substring(y,3,4))
  tmpp <- read_sas(paste0(home.fold1,"/PermitSales/",fil.yr,".sas7bdat"))
@@ -256,11 +263,47 @@ for (y in years){
 
  ### if desired to swap BAGE for PAGE (geese), then scsYY is required, instead of scsYYe
  ### but then additional changes are needed to align with old data
-  if(y == Y){
-  fil.yr <- paste0("scs",substring(y,3,4),"e")
-  tmp <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat")) %>% 
-    mutate(PERM = PERMIT + y*1e6,
-           PERMIT = permit_replace(PERMIT,y))
+ 
+
+   if(y == Y | y > 2006){
+    
+    ## replacting sas versions of parts with raw database output
+
+  fil.yr <- paste0("STATS",y,".txt")
+  # tmp <- read_sas(paste0(dir.yr,"/",fil.yr,".sas7bdat")) %>% 
+  #   mutate(PERM = PERMIT + y*1e6,
+  #          PERMIT = permit_replace(PERMIT,y))
+  
+  coltypes <- paste(c("c",
+                rep("i",8),
+                rep("c",4),
+                rep("i",1),
+                "c",
+                "i"),collapse = "")
+ 
+ tmp <- read_fwf(paste0(dir.yr,"/",fil.yr),
+                 col_positions = fwf_cols(PRHUNT = c(3,4),
+                                          ZOHUNT = c(5,6),
+                                          AOU = c(7,10),
+                                          MONH = c(12,13),
+                                          DAYH = c(14,15),
+                                          KLATDEG = c(20,21),
+                                          KLATMIN = c(22,23),
+                                          KLONDEG = c(24,26),
+                                          KLONMIN = c(27,28),
+                                          BAGE = c(29,29),
+                                          BSEX = c(30,30),
+                                          PAGE = c(31,31),
+                                          SAMPLE = c(32,32),
+                                          PERMIT = c(34,39),
+                                          PRSALE = c(40,41),
+                                          ZOSALE = c(43,43)),
+                 col_types = coltypes) %>% 
+      mutate(PERMIT = as.integer(PERMIT),
+             PERM = PERMIT + y*1e6,
+             PERMIT = permit_replace(PERMIT,y),
+             YRHUNT = ifelse(MONH < 6,y+1,y),
+             YEAR = y)
   
   perm_lookup_scs <- tmp %>% 
     select(PERM,PERMIT) %>% 
@@ -268,86 +311,108 @@ for (y in years){
   
   tmp <- tmp %>% 
     select(-PERM)
-  
-  if(is.null(tmp)){
-    dir.alt <- "C:/Users/smithac/OneDrive - EC-EC/Harvest Survey A146/alt"
-    tmp <- read_sas(paste0(dir.alt,"/",fil.yr,".sas7bdat"))%>% 
-      mutate(PERM = PERMIT + y*1e6,
-             PERMIT = permit_replace(PERMIT,y))
-    
-    perm_lookup_scs <- tmp %>% 
-      select(PERM,PERMIT) %>% 
-      distinct()
-
-    
-    tmp <- tmp %>% 
-      select(-PERM)
-  }
+  # 
+  # if(is.null(tmp)){
+  #   dir.alt <- "C:/Users/smithac/OneDrive - EC-EC/Harvest Survey A146/alt"
+  #   tmp <- read_sas(paste0(dir.alt,"/",fil.yr,".sas7bdat"))%>% 
+  #     mutate(PERM = PERMIT + y*1e6,
+  #            PERMIT = permit_replace(PERMIT,y))
+  #   
+  #   perm_lookup_scs <- tmp %>% 
+  #     select(PERM,PERMIT) %>% 
+  #     distinct()
+  # 
+  #   
+  #   tmp <- tmp %>% 
+  #     select(-PERM)
+  # }
   # fil.yr <- paste0("scs",substring(y,3,4))
   # tmp2 <- read.ssd(libname = dir.yr,
   #                  sectionnames = fil.yr,
   #                  sascmd = file.path(sashome, "sas.exe"))
   #
   # tmp2u <- unique(tmp2[,c("PRHUNT","ZOHUNT","AOU","MONH","DAYH","BAGE","BSEX","PAGE","PERMIT")])
-
-  tmp[which(tmp$PRHUNT == ""),"PRHUNT"] <- tmp[which(tmp$PRHUNT == ""),"PRSALE"]
-  tmp[which(tmp$PRHUNT == ""),"ZOHUNT"] <- tmp[which(tmp$PRHUNT == ""),"ZOSALE"]
+# 
+#   tmp[which(tmp$PRHUNT == ""),"PRHUNT"] <- tmp[which(tmp$PRHUNT == ""),"PRSALE"]
+#   tmp[which(tmp$PRHUNT == ""),"ZOHUNT"] <- tmp[which(tmp$PRHUNT == ""),"ZOSALE"]
 
   ## fixing a handful of years in which column names varied and years were recorded as 2 digits
-  if(c("YHUN") %in% names(tmp)){
-    names(tmp)[which(names(tmp) == "YHUN")] <- "YRHUNT"
-  }
-  if(any(tmp$YEAR < min(years),na.rm = T)){
-    tmp[which(tmp$YEAR < min(years)),"YEAR"] <- tmp[which(tmp$YEAR < min(years)),"YEAR"]+1900
-  }
-  if(any(tmp$YRHUNT < min(years),na.rm = T)){
-    tmp[which(tmp$YRHUNT < min(years)),"YRHUNT"] <- tmp[which(tmp$YRHUNT < min(years)),"YRHUNT"]+1900
-  }
-  # if(any(tmp$JDHUN < 1000)){
+  # if(c("YHUN") %in% names(tmp)){
+  #   names(tmp)[which(names(tmp) == "YHUN")] <- "YRHUNT"
+  # }
+  # if(any(tmp$YEAR < min(years),na.rm = T)){
+  #   tmp[which(tmp$YEAR < min(years)),"YEAR"] <- tmp[which(tmp$YEAR < min(years)),"YEAR"]+1900
+  # }
+  # if(any(tmp$YRHUNT < min(years),na.rm = T)){
+  #   tmp[which(tmp$YRHUNT < min(years)),"YRHUNT"] <- tmp[which(tmp$YRHUNT < min(years)),"YRHUNT"]+1900
+  # }
+  # # if(any(tmp$JDHUN < 1000)){
   #   tmp[which(tmp$JDHUN < 1000),"JDHUN"] <- tmp[which(tmp$JDHUN < 1000),"JDHUN"]+((y-1900)*10)
   # }
 
-  miscls = cls[-which(cls %in% names(tmp))]
-
-  if(length(miscls) > 0){
-
-  if(miscls == "PAGE"){
-    tmp$PAGE <- ""
-  }
-  }
-
-  tmp = tmp[,cls]
-  
+  # miscls = cls[-which(cls %in% names(tmp))]
+  # 
+  # if(length(miscls) > 0){
+  # 
+  # if(miscls == "PAGE"){
+  #   tmp$PAGE <- ""
+  # }
+  # }
+  # 
+  # tmp = tmp[,cls]
+  # 
   saveRDS(tmp,paste0("data/scs_",y,"_anon.rds"))
  
+  saveRDS(perm_lookup_scs,paste0("data/permit_lookup_scs_",y,"_anon.rds"))
+  
 }else{
-  
-  tmp <- readRDS(paste0("arch/scs_",y,".rds"))%>% 
-    mutate(PERM = PERMIT + y*1e6,
-           PERMIT = permit_replace(PERMIT,y))
-  
-  perm_lookup_scs <- tmp %>% 
-    select(PERM,PERMIT) %>% 
+  # fil.yr <- paste0("scs",substring(y,3,4),"e")
+  #   tmp <- read.ssd(libname = dir.yr,
+  #                   sectionnames = fil.yr,
+  #                   sascmd = file.path(sashome, "sas.exe"))%>%
+  #     mutate(PERMIT = as.integer(PERMIT),
+  #            PERM = PERMIT + y*1e6,
+  #            PERMIT = permit_replace(PERMIT,y),
+  #            ZOSALE = as.integer(ZOSALE),
+  #            YRHUNT = ifelse(MONH < 6,y+1,y),
+  #            YEAR = y)
+  #   
+
+  tmp <- read.ssd(libname = paste0(home.fold1,"Parts Extrapolation Factors"),
+          sectionnames = paste0("parts",substring(y,3,4)),
+                                sascmd = file.path(sashome, "sas.exe"))%>%
+    mutate(PERMIT = as.integer(PERMIT),
+           PERM = PERMIT + y*1e6,
+           PERMIT = permit_replace(PERMIT,y),
+           ZOSALE = as.integer(ZOSALE),
+           YRHUNT = ifelse(MONH < 6,y+1,y),
+           YEAR = y) 
+
+  perm_lookup_scs <- tmp %>%
+    select(PERM,PERMIT) %>%
     distinct()
   
   
-  tmp <- tmp %>% 
+
+
+  tmp <- tmp %>%
     select(-PERM)
-  
+
   saveRDS(tmp,paste0("data/scs_",y,"_anon.rds"))
+  saveRDS(perm_lookup_scs,paste0("data/permit_lookup_scs_",y,"_anon.rds"))
   
+  # tmp <- readRDS(paste0("data/scs_",y,"_anon.rds"))
 }
 
-  saveRDS(perm_lookup_scs,paste0("data/permit_lookup_scs_",y,"_anon.rds"))
   
   if(y == years[1]) {
     outscse <- tmp
     perms = tmpp
     popsiz = tmppop
   }else{
-    outscse <- rbind(outscse,tmp)
-    perms = rbind(perms,tmpp)
-    popsiz = rbind(popsiz,tmppop)
+    outscse <- bind_rows(outscse,tmp)
+    perms = bind_rows(perms,tmpp)
+    popsiz = bind_rows(popsiz,tmppop)
     }
   #
 
@@ -395,12 +460,25 @@ for(i in 1:nrow(aou_rec)){
 
 outscse <- outscse[which(!is.na(outscse$AOU)),]
 
-#fixing historical data with -weeks
-tof <- which(outscse$WEEK < 1) #small % of parts have negative weeks because the dates indicate hunting in August (range from -5 to -1)
-outscse[tof,"MONH"] <- 9 #this works because all tof have MONH == 8, it's just hunters getting the month wrong
-
 tof2 = which(outscse$MONH == 8) #few remaining parts with harvest month = august
 outscse[tof2,"MONH"] <- 9 #this works because all tof have MONH == 8, it's just hunters getting the month wrong
+
+
+tof3 = which(outscse$MONH %in% c(9,11) & outscse$DAYH == 31) #parts with impossible date
+outscse[tof3,"DAYH"] <- 30 #this assumes that they correctly indicated month, but got the day wrong.
+
+
+tof4 = which(outscse$MONH > 12) #parts with likely swap of month and day
+mon_rep <- outscse[tof4,"DAYH"]
+day_rep <- outscse[tof4,"MONH"]
+
+outscse[tof4,"DAYH"] <- day_rep #this assumes that they correctly indicated month, but got the day wrong.
+outscse[tof4,"MONH"] <- mon_rep #this assumes that they correctly indicated month, but got the day wrong.
+
+
+tof5 = which(outscse$MONH %in% c(2) & outscse$DAYH > 29) #parts with impossible date
+outscse[tof5,"DAYH"] <- 28 #this assumes that they correctly indicated month, but got the day wrong.
+
 
 first_day <- "09-01" ### No hunting in August, so all week definitions begin on September 1
 
@@ -425,7 +503,11 @@ outscse[wy,"WEEK"] = as.integer(ceiling((outscse[wy,"date"]-(min_day_y-1))/7))
 # 
 # 
 tof <- which(outscse$WEEK < 1) #small % of parts have negative weeks because the dates indicate hunting in August (range from -5 to -1)
-if(length(tof) > 0){stop("some parts have non-positive weeks = hunting pre September 1")}
+
+outscse <- outscse[-tof,]
+
+
+if(length(tof) > 0){warning("some parts have non-positive weeks = hunting pre September 1")}
 
 
 
@@ -453,8 +535,10 @@ outscse[which(outscse$BSEX %in% c("")),"BSEX"] <- "U"
 #outscse$BSEX = factor(outscse$BSEX)
 #round(prop.table(table(outscse$BSEX,outscse$AOU),2),2)
 
+chkweek <- outscse %>% filter(is.na(WEEK))
 
-saveRDS(outscse,paste0("data/outscse.rds"))
+outscse <- outscse %>% 
+  filter(!is.na(WEEK))
 
 
 
@@ -637,7 +721,7 @@ saveRDS(perms_drop_murre_2023,"data/permits_drop_murre_2023.rds")
 
 harl <- 1550
 
-tmp <- outscse %>% 
+outscse <- outscse %>% 
   filter(!(AOU == harl & PRHUNT %in% c("NF",
                                      "PE",
                                      "NS",
@@ -645,6 +729,28 @@ tmp <- outscse %>%
          !(AOU == harl & PRHUNT %in% c("PQ",
                                      "ON") & YRHUNT > 1989))
 
+# removing Razorbill there is no season for Razorbill-------------
+
+
+RAZO <- 320
+
+outscse <- outscse %>% 
+  filter(!(AOU == RAZO))
+
+
+
+# Fix latitude and longitude to DD ----------------------------------------
+
+outscse <- outscse %>% 
+  mutate(latitude = KLATDEG + (KLATMIN/60),
+         longitude = KLONDEG + (KLONMIN/60),
+         longitude = -1*longitude,
+         longitude = ifelse(longitude > -53 | longitude < -141,
+                            NA,longitude),
+         latitude = ifelse(latitude < 41,
+                           NA, latitude))
+
+saveRDS(outscse,paste0("data/outscse.rds"))
 
 
 save(list = c("allkill",
@@ -657,7 +763,8 @@ save(list = c("allkill",
 
 
 # exporting the parts data as a readable csv file -------------------------
-parts_out <- outscse[,c("PRHUNT","ZOHUNT","AOU","YRHUNT","MONH","DAYH","BAGE","BSEX","WEEK")]
+parts_out <- outscse[,c("PRHUNT","ZOHUNT","AOU","YRHUNT","MONH","DAYH","BAGE","BSEX","WEEK",
+                        "latitude","longitude")]
 names(parts_out) <- c("Province of hunt",
                       "Zone of hunt",
                       "AOU",
@@ -666,7 +773,8 @@ names(parts_out) <- c("Province of hunt",
                       "Day",
                       "Age",
                       "Sex",
-                      "Week of season")
+                      "Week of season",
+                      "latitude","longitude")
 parts_out <- left_join(parts_out,sps,by = "AOU")
 write_excel_csv(parts_out,paste0("GoogleDrive/All_raw_parts_data_",Y,".csv"))
 
@@ -682,7 +790,7 @@ write_excel_csv(parts_out,paste0("GoogleDrive/All_raw_parts_data_",Y,".csv"))
 zones <- 1:3
 pers <- 1:20
 ##### identify periods based on weeks with at least prop_period-% of the parts across all years
-prop_period <- 0.05
+prop_period <- 0.1
 period.duck <- expand.grid(pr = provs,zo = zones,period = pers,stringsAsFactors = F)
 
 period.duck[,"startweek"] <- NA

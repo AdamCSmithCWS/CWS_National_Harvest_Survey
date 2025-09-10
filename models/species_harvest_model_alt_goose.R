@@ -317,7 +317,7 @@ model {
       days_cy[c,y] <- mean_totdays_yc[y,c]*NACTIVE_cy[c,y] #total days by caste and year
       
       for(s in 1:nspecies){
-  kill_cys[c,y,s] <- sum(mean_kill_pcys[1:nperiods,c,y,s]) * NACTIVE_cy[c,y]
+        kill_cys[c,y,s] <- sum(kill_pcys[1:nperiods,c,y,s])
       }#s
     }#c
     

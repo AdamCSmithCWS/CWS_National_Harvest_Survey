@@ -44,10 +44,10 @@
 #   The ratio corresponds to the number of males per female bird in the sample. Ratios were calculated if the total sample equals or exceeds 20 parts.
 
 #setwd("C:/GitHub/CWS_national_harvest_survey")
-setwd("C:/Users/SmithAC/Documents/GitHub/CWS_national_harvest_survey")
+#setwd("C:/Users/SmithAC/Documents/GitHub/CWS_national_harvest_survey")
 setwd("G:/CWS_national_harvest_survey")
 
-Y <- 2023
+Y <- 2024
 FY = 1976
 years <- FY:Y
 
@@ -92,7 +92,7 @@ fit_table <- provzone %>%
 #fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckON2","duckON3","duckPQ1","duckPQ2","gooseNT1"))
 #fit_table <- fit_table %>% filter((spgp == "duck" & prov == "MB"))
 
-fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("gooseON2","duckSK3","duckPQ1"))
+#fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("gooseON2","duckSK3","duckPQ1"))
  overwrite <- TRUE # set to TRUE if attempting to overwrite earlier model runs
  
  
@@ -175,6 +175,7 @@ parms = c("NACTIVE_y",
           "kill_y",
           "kill_ysax",
           "kill_pys",
+          "kill_cys",
           "days_y",
           "nu",
           "psi",
@@ -390,7 +391,7 @@ if(class(out2) != "try-error"){
   # and sample more if >0.5% of parameters have rhat > 1.1
   while(quantile(out2sum$rhat,0.995) > 1.1 & attempts < 1){
     attempts <- attempts+1
-    burnInSteps = 0
+    burnInSteps = 1000
     thinSteps = thinSteps*5
     nIter = ceiling( ( (numSavedSteps * thinSteps )+burnInSteps)) # Steps per chain.
     

@@ -18,7 +18,7 @@ source("functions/utility_functions.R")
 ### age-sex summaries
 ### age-sex raw data for website - 
 
-Y <- 2023
+Y <- 2024
 FY = 1976
 years <- FY:Y
 
@@ -788,28 +788,27 @@ tmp_sp_period_all <- tmp_sp_period_all %>%
 
 
 # Temporary Removal of Harlequin Duck harvest in East ---------------------
-## Must be integrated into the full model or the data-prep process
-## in 2024-2025 analysis
+## Should no longer be necessary, because all HARL parts removed in 1-data_prep.R
 
-harl <- 1550
-
-# tst <- tmp_sp_period_all %>% 
+# harl <- 1550
+# 
+# # tst <- tmp_sp_period_all %>% 
+# #   filter(!(AOU == harl & prov %in% c("NF",
+# #                                      "PE",
+# #                                      "NS",
+# #                                      "NB") & year > 1988),
+# #          !(AOU == harl & prov %in% c("PQ",
+# #                                      "ON") & year > 1989))
+# # 
+# # tst2 <- tst %>% filter(AOU == harl)
+# 
+# tmp_sp_period_all <- tmp_sp_period_all %>% 
 #   filter(!(AOU == harl & prov %in% c("NF",
 #                                      "PE",
 #                                      "NS",
 #                                      "NB") & year > 1988),
 #          !(AOU == harl & prov %in% c("PQ",
 #                                      "ON") & year > 1989))
-# 
-# tst2 <- tst %>% filter(AOU == harl)
-
-tmp_sp_period_all <- tmp_sp_period_all %>% 
-  filter(!(AOU == harl & prov %in% c("NF",
-                                     "PE",
-                                     "NS",
-                                     "NB") & year > 1988),
-         !(AOU == harl & prov %in% c("PQ",
-                                     "ON") & year > 1989))
 
 # Snow Goose combined blue- and white-phases
 sngo_aou <- c(1692,1693) # white- and blue-phase sngo
@@ -898,6 +897,8 @@ save(list = c("nat_sums_per",
               #"reg_sums_a",
               "zone_sums_per"),
      file = "data/Posterior_summaries5.RData")
+
+
 rm(list = c("nat_sums_per",
             "prov_sums_per",
             #"reg_sums_a",
