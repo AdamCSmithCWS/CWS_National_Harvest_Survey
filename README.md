@@ -1,6 +1,9 @@
 # CWS National Harvest Survey
 
-This archive contains all of the code and data required to recreate the Canadian Wildlife Service analyses of the National Harvest Survey up to the 2021-2022 hunting season v2021.
+This archive contains all of the code and data required to recreate the Canadian Wildlife Service analyses of the National Harvest Survey up to the 2024-2025 hunting season v2024.
+
+## Release v2023
+The repository includes the code, data and results from v2023, spanning all annual hunting seasons from 1975-1976 to 2023-2024 inclusive. This release is archived along with the results files, in release v2023, finalized in October, 2024.
 
 ## Release v2022
 The repository includes the code, data and results from v2022, spanning all annual hunting seasons from 1975-1976 to 2022-2023 inclusive. This release is archived along with the results files, in release v2022, finalized on June 13, 2024.
