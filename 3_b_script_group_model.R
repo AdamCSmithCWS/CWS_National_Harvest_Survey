@@ -44,7 +44,7 @@
 #   The ratio corresponds to the number of males per female bird in the sample. Ratios were calculated if the total sample equals or exceeds 20 parts.
 
 
-Y <- 2022
+Y <- 2024
 FY = 1976
 years <- FY:Y
 
@@ -67,7 +67,7 @@ library(posterior)
 
 # load output from data_prep.R --------------------------------------------
 
-setwd("C:/Users/SmithAC/Documents/GitHub/CWS_national_harvest_survey")
+setwd("G:/CWS_national_harvest_survey")
 #load(paste0("data/parts and harvest survey info",Y,".RData"))
 
 source("functions/get_final_values.R")
@@ -119,14 +119,14 @@ all_zones <- expand.grid(prov = provs,
 # all_zones <- data.frame(prov = c("MB","MB","PQ","YT"),
 #                         zone = c(1,2,2,1))
 
-all_zones <- readRDS("2024_rerun_general.rds")
+#all_zones <- readRDS("2024_rerun_general.rds")
 # all_zones <- data.frame(prov = c("MB","NB","PQ","YT"),
 #                         zone = c(2,2,2,1))
 
 # MCMC loops --------------------------------------------------------------
-rerun <- FALSE # set to true if the loop should force model fit for zones already completed
+rerun <- TRUE # set to true if the loop should force model fit for zones already completed
 
-n_cores <- nrow(all_zones)
+n_cores <- 10
 cluster <- makeCluster(n_cores, type = "PSOCK")
 registerDoParallel(cluster)
 

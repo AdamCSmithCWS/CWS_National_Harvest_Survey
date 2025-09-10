@@ -1,6 +1,6 @@
 ### comparing annual species harvests
 library(tidyverse)
-yy = 2023
+yy = 2024
 ly = yy - 1
 
 ddir <- "temparch/"
@@ -342,8 +342,7 @@ for(i in c(yy,ly)){
 sp_z <- ests %>% 
 mutate(zone = Zone_ID,
        prov = Province_ID) %>% 
-  filter(Zone_ID != 0,
-         Canadian_Residents == "0" | is.na(Canadian_Residents))
+  filter(Zone_ID != 0)
 
 
 
@@ -472,9 +471,17 @@ dev.off()
 
 
 
+ests <- NULL
+for(i in c(yy,ly)){
+  dtall = read.csv(paste0(ddir,"General_Estimates_Residence_Donnees_generales_comma_1976-",i,".csv")) %>% 
+    mutate(year_est = as.character(i))
+  
+  ests <- bind_rows(ests,dtall)
+  
+}
+
 sp_z <- ests %>% 
-  filter(Zone_ID != 0,
-         Canadian_Residents != "0") %>% 
+  filter(Zone_ID != 0) %>% 
   mutate(zone = Zone_ID,
          prov = Province_ID,
          Canadian_Residents = factor(Canadian_Residents, levels = c("Resident",
