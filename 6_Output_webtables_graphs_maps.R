@@ -157,13 +157,13 @@ a_tab_out <- a_tab_out %>%
   filter(Canadian_Residents == "0") %>% 
   select(-Canadian_Residents)
 
-write_csv(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_comma_",FY,"-",Y,".csv"))
-write_csv2(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_point_virgule_",FY,"-",Y,".csv"))
-write_csv(a_tab_out,paste0("website/General_harvest_table",FY,"-",Y,".csv"))
-#write_csv(a_tab_out,paste0("website/General_harvest_table.csv"))
+readr::write_excel_csv(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_comma_",FY,"-",Y,".csv"))
+readr::write_excel_csv2(a_tab_out,paste0("GoogleDrive/General_Estimates_Donnees_generales_point_virgule_",FY,"-",Y,".csv"))
+readr::write_excel_csv(a_tab_out,paste0("website/General_harvest_table",FY,"-",Y,".csv"))
+#readr::write_excel_csv(a_tab_out,paste0("website/General_harvest_table.csv"))
 
-write_csv(a_tab_out1,paste0("GoogleDrive/General_Estimates_Residence_Donnees_generales_comma_",FY,"-",Y,".csv"))
-write_csv2(a_tab_out1,paste0("GoogleDrive/General_Estimates_Residence_Donnees_generales_point_virgule_",FY,"-",Y,".csv"))
+readr::write_excel_csv(a_tab_out1,paste0("GoogleDrive/General_Estimates_Residence_Donnees_generales_comma_",FY,"-",Y,".csv"))
+readr::write_excel_csv2(a_tab_out1,paste0("GoogleDrive/General_Estimates_Residence_Donnees_generales_point_virgule_",FY,"-",Y,".csv"))
 
 
 
@@ -252,12 +252,12 @@ b_tab_out <- b_tab %>%
          Species_Name_English,Species_Name_French,Scientific_Name,
          Province_Name,Province_Nom)
 
-write_csv(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_comma_",FY,"-",Y,".csv"))
+readr::write_excel_csv(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_comma_",FY,"-",Y,".csv"))
 
-write_csv2(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_point_virgule_",FY,"-",Y,".csv"))
-write_csv(b_tab_out,paste0("website/species_harvest_table_incl_age_sex",FY,"-",Y,".csv"))
+readr::write_excel_csv2(b_tab_out,paste0("GoogleDrive/Species_Harvest_Prises_par_Espece_point_virgule_",FY,"-",Y,".csv"))
+readr::write_excel_csv(b_tab_out,paste0("website/species_harvest_table_incl_age_sex",FY,"-",Y,".csv"))
 
-#write_csv(b_tab_out,paste0("website/species_harvest_table_incl_age_sex.csv"))
+#readr::write_excel_csv(b_tab_out,paste0("website/species_harvest_table_incl_age_sex.csv"))
 
 
 
@@ -295,7 +295,7 @@ nparts_species_year_age_sex <- outscse %>%
               names_expand = TRUE) %>% 
   arrange(PRHUNT,ZOHUNT,AOU,YEAR)
 
-write_csv(nparts_species_year_age_sex,
+readr::write_excel_csv(nparts_species_year_age_sex,
           file = paste0("GoogleDrive/n_parts_by_zone_year_aou_sex_age",FY,"-",Y,".csv"))
 
 
@@ -412,10 +412,10 @@ c_tab_out <- c_tab %>%
          Province_Name, Province_Nom, Part_Count)
   
 
-write_csv(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_comma_",FY,"-",Y,".csv"))
-write_csv2(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_point_virgule_",FY,"-",Y,".csv"))
-write_csv(c_tab_out,paste0("website/species_age_ratios",FY,"-",Y,".csv"))
-#write_csv(c_tab_out,paste0("website/species_age_ratios.csv"))
+readr::write_excel_csv(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_comma_",FY,"-",Y,".csv"))
+readr::write_excel_csv2(c_tab_out,paste0("GoogleDrive/Ratio_dAge_Espece_Species_Age_Ratios_point_virgule_",FY,"-",Y,".csv"))
+readr::write_excel_csv(c_tab_out,paste0("website/species_age_ratios",FY,"-",Y,".csv"))
+#readr::write_excel_csv(c_tab_out,paste0("website/species_age_ratios.csv"))
 
 
 c_tab_plot <- c_tab1 %>% 
@@ -667,6 +667,13 @@ for(i in 1:nrow(var_maps_a)){
   
   } 
 
+fil_list <- list.files("website/maps/A/")
+
+if(nrow(var_maps_a) != length(fil_list)){
+  warning(paste("There are",length(fil_list)-nrow(var_maps_a),"too many images in the maps folder"))
+}
+
+
 
 
 # species harvest estimates - folder B ------------------------------------
@@ -761,6 +768,12 @@ for(i in 1:nrow(sp_maps_b)){
 } 
 
 
+fil_list <- list.files("website/maps/B/")
+
+if(nrow(sp_maps_b) != length(fil_list)){
+  warning(paste("There are",length(fil_list)-nrow(sp_maps_b),"too many images in the maps folder"))
+}
+
 
 
 
@@ -775,9 +788,13 @@ for(i in 1:nrow(sp_maps_b)){
 
 
 
+
+
 sp_maps_c = c_tab %>% 
+  mutate(AOU = as.character(AOU)) %>% 
   distinct(AOU,year,English_Name,French_Name_New,Scientific_Name) %>% 
-  mutate(map_file = paste0("Ratio_",AOU,"_",year,".png"))
+  mutate(AOU_leading = ifelse(nchar(AOU) == 3,paste0("0",AOU),AOU),
+         map_file = paste0("Ratio_",AOU_leading,"_",year,".png"))
 
 nbks <- (length(colscale2)+1)/2
 
@@ -894,6 +911,13 @@ for(i in 1:nrow(sp_maps_c)){
   
 } 
 
+
+
+fil_list <- list.files("website/maps/C/")
+
+if(nrow(sp_maps_c) != length(fil_list)){
+  warning(paste("There are",length(fil_list)-nrow(sp_maps_c),"images too many in the maps folder"))
+}
 
 
 
@@ -1102,10 +1126,10 @@ per_tab_out <- per_tab %>%
          Species_Name_English,Species_Name_French,Scientific_Name,
          Province_Name,Province_Nom)
 
-write_csv(per_tab_out,paste0("GoogleDrive/Species_period_Harvest_Prises_par_period_Espece_comma_",FY,"-",Y,".csv"))
+readr::write_excel_csv(per_tab_out,paste0("GoogleDrive/Species_period_Harvest_Prises_par_period_Espece_comma_",FY,"-",Y,".csv"))
 
-write_csv2(per_tab_out,paste0("GoogleDrive/Species_period_Harvest_Prises_par_period_Espece_point_virgule_",FY,"-",Y,".csv"))
-write_csv(per_tab_out,paste0("website/species_period_harvest_table",FY,"-",Y,".csv"))
+readr::write_excel_csv2(per_tab_out,paste0("GoogleDrive/Species_period_Harvest_Prises_par_period_Espece_point_virgule_",FY,"-",Y,".csv"))
+readr::write_excel_csv(per_tab_out,paste0("website/species_period_harvest_table",FY,"-",Y,".csv"))
 
 
 
