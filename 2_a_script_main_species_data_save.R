@@ -44,7 +44,7 @@
 #   The ratio corresponds to the number of males per female bird in the sample. Ratios were calculated if the total sample equals or exceeds 20 parts.
 
 
-Y <- 2024
+Y <- 2025
 FY = 1976
 years <- FY:Y
 
@@ -78,10 +78,10 @@ allkill_exp <- allkill %>%
   rename(anonymous_unique_permit = PERMIT)
 write_csv(allkill_exp,
           "website/all_raw_HQS_responses_anonymous.csv")
-allkill_exp_sel <- allkill_exp %>% 
-  filter(YEAR %in% c(2019, 2022))
-write_csv(allkill_exp_sel,
-          "website/all_raw_HQS_responses_anonymous_2019_2022.csv")
+# allkill_exp_sel <- allkill_exp %>% 
+#   filter(YEAR %in% c(2019, 2022))
+# write_csv(allkill_exp_sel,
+#           "website/all_raw_HQS_responses_anonymous_2019_2022.csv")
 
 
 load("data/calendars.RData")
@@ -346,11 +346,12 @@ for(spgp in c("duck","goose","murre")){
     nhunter_y = vector(length = nyears)
     names(nhunter_y) = as.character(years)
     
+
     for(y in years){
       
       tmp <- cal.spgp[[as.character(y)]]
-      tmp1 <- tmp[which(tmp$PRHUNT == pr &
-                          tmp$ZOHUNT == z),]
+      tmp1 <- tmp[which(tmp[,phunt] == pr &
+                          tmp[,zhunt] == z),]
       nhunter_y[as.character(y)] <- length(unique(tmp1$PERMIT))
       
       
@@ -368,8 +369,8 @@ for(spgp in c("duck","goose","murre")){
     for(yn in 1:nyears){
       y = years[yn]
       tmp <- cal.spgp[[as.character(y)]]
-      tmp1 <- tmp[which(tmp$PRHUNT == pr &
-                          tmp$ZOHUNT == z),]
+      tmp1 <- tmp[which(tmp[,phunt] == pr &
+                          tmp[,zhunt] == z),]
       tmp1[which(tmp1$MONH >12),"MONH"] = tmp1[which(tmp1$MONH >12),"MONH"]-12
       tmp1$yearhunt = tmp1$YEAR
       tmp1[which(tmp1$MONH < 9),"yearhunt"] = tmp1[which(tmp1$MONH < 9),"YEAR"]+1
@@ -429,6 +430,7 @@ for(spgp in c("duck","goose","murre")){
     print(round(rowSums(periodkill[,y,],na.rm = F)/sum(rowSums(periodkill[,y,],na.rm = F)),3))
     if(any(is.na(round(rowSums(periodkill[,y,],na.rm = F)/sum(rowSums(periodkill[,y,],na.rm = F)),3)))){print(y)}
       }
+    print(paste("proportional period harvest of",spgp,"for years (rows) and columns() in",pr,z))
     
     
     
