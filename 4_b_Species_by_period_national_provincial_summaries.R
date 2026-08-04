@@ -12,7 +12,7 @@ castes <- data.frame(c = c(1,2,3,4),
                      caste = c("D","B","A","E"),
                      residence = c("Resident","Resident","Resident","Non-Resident"))
 
-Y <- 2024
+Y <- 2025
 FY = 1976
 years <- FY:Y
 

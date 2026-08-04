@@ -18,7 +18,7 @@ source("functions/utility_functions.R")
 ### age-sex summaries
 ### age-sex raw data for website - 
 
-Y <- 2024
+Y <- 2025
 FY = 1976
 years <- FY:Y
 

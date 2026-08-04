@@ -22,7 +22,7 @@ castes <- data.frame(c = c(1,2,3,4),
                      caste = c("D","B","A","E"),
                      residence = c("Resident","Resident","Resident","Non-Resident"))
 
-Y <- 2024
+Y <- 2025
 FY = 1976
 years <- FY:Y
 
@@ -32,7 +32,7 @@ names(years) <- paste(years)
 
 # load website published estimates ----------------------------------------
 
-
+ext_dir <- "D:/CWS_National_Harvest_Survey"
 
 # # write.csv(var_names_sim,"data/website_variable_names.csv",row.names = F)
 # # 
@@ -84,6 +84,7 @@ gps <- c("duck",
 #          d2 = jags_dim_tidy(2,variable),
 #          d3 = jags_dim_tidy(3,variable))
 
+# SK, 3, goose
 
 summed_convergence <- FALSE # change to FALSE to run convergence summary first
 
@@ -100,9 +101,9 @@ for(pr in provs){
       #   spgp = as.character(problems[i,"model"])
         
       if(spgp == "other"){
-       saved_file <- paste("output/other harvest zip",pr,z,"alt mod.RData")
+       saved_file <- paste0(ext_dir,paste("/output/other harvest zip",pr,z,"alt mod.RData"))
       }else{
-        saved_file <- paste("output/full harvest zip",pr,z,spgp,"alt mod.RData")        
+        saved_file <- paste0(ext_dir,paste("/output/full harvest zip",pr,z,spgp,"alt mod.RData")  )      
       }
       if(!file.exists(saved_file)){next}
       load(saved_file)
@@ -205,6 +206,9 @@ saveRDS(other_summary,"output/other_summary.rds")
 
 
 }
+
+
+
 summed_convergence <- TRUE
 
 
@@ -273,8 +277,8 @@ for(pr in provs){
      wkill = grps
      wsucc = paste0("SU",gsub("K",replacement = "",x = grps)) 
      
-     if(file.exists(paste("output/full harvest zip",pr,z,"duck","alt mod.RData"))){
-       load(paste("output/full harvest zip",pr,z,"duck","alt mod.RData"))
+     if(file.exists(paste0(ext_dir,paste("/output/full harvest zip",pr,z,"duck","alt mod.RData")))){
+       load(paste0(ext_dir,paste("/output/full harvest zip",pr,z,"duck","alt mod.RData")))
        
        ys <- data.frame(y = 1:jdat$nyears,
                         year = years) 
@@ -398,8 +402,8 @@ for(pr in provs){
            
            }
      
-     if(file.exists(paste("output/full harvest zip",pr,z,"goose","alt mod.RData"))){
-             load(paste("output/full harvest zip",pr,z,"goose","alt mod.RData"))
+     if(file.exists(paste0(ext_dir,paste("/output/full harvest zip",pr,z,"goose","alt mod.RData")))){
+             load(paste0(ext_dir,paste("/output/full harvest zip",pr,z,"goose","alt mod.RData")))
              
        ys <- data.frame(y = 1:jdat$nyears,
                         year = years) 
@@ -504,8 +508,8 @@ for(pr in provs){
        }  
      }
      
-     if(file.exists(paste("output/full harvest zip",pr,z,"murre","alt mod.RData"))){
-       load(paste("output/full harvest zip",pr,z,"murre","alt mod.RData"))
+     if(file.exists(paste0(ext_dir,paste("/output/full harvest zip",pr,z,"murre","alt mod.RData")))){
+       load(paste0(ext_dir,paste("/output/full harvest zip",pr,z,"murre","alt mod.RData")))
 
        ys <- data.frame(y = 1:jdat$nyears,
                         year = years[c(((length(years)-jdat$nyears)+1):length(years))]) 
@@ -587,12 +591,12 @@ for(pr in provs){
      
      
      
-     if(file.exists(paste("output/other harvest zip",pr,z,"alt mod.RData"))){
+     if(file.exists(paste0(ext_dir,paste("/output/other harvest zip",pr,z,"alt mod.RData")))){
       
        
        
        if(do_sim){
-         load(paste("output/other harvest zip",pr,z,"alt mod.RData"))
+         load(paste0(ext_dir,paste("/output/other harvest zip",pr,z,"alt mod.RData")))
        
        vnm <- sim_vars[which(sim_vars$source == "other" & 
                                !grepl(pattern = "cy",sim_vars$newvar)),]
