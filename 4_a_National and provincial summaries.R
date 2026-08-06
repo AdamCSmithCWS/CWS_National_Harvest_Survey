@@ -32,7 +32,7 @@ names(years) <- paste(years)
 
 # load website published estimates ----------------------------------------
 
-ext_dir <- "D:/CWS_National_Harvest_Survey"
+ext_dir <- "f:/CWS_National_Harvest_Survey"
 
 # # write.csv(var_names_sim,"data/website_variable_names.csv",row.names = F)
 # # 
@@ -86,7 +86,7 @@ gps <- c("duck",
 
 # SK, 3, goose
 
-summed_convergence <- FALSE # change to FALSE to run convergence summary first
+summed_convergence <- TRUE # change to FALSE to run convergence summary first
 
 if(!summed_convergence){
 parameter_summary <- NULL
