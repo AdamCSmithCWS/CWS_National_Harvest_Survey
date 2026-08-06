@@ -5,6 +5,8 @@ library(ggforce)
 library(sf)
 library(RColorBrewer)
 
+ext_dir <- "f:/CWS_National_Harvest_Survey"
+
 ## load the output tidy output files
 source("functions/palettes.R")
 source("functions/general_plot_function.R")
@@ -20,7 +22,7 @@ prov_trans <- read_csv("data/Province_names_EN_FR.csv",
                        locale = locale(encoding = "latin1"),
                        name_repair = make.names)
 
-Y <- 2024
+Y <- 2025
 FY = 1976
 years <- FY:Y
 
@@ -549,6 +551,10 @@ for(l in c("En","Fr")){
 
 # mapping of estimates ----------------------------------------------------
 
+generate_web_maps <- FALSE
+
+if(generate_web_maps){
+
 ## load map
 base_map = st_read(dsn = "input_map",
                    layer = "Harvest_Survey_Zones_2017")
@@ -921,11 +927,12 @@ if(nrow(sp_maps_c) != length(fil_list)){
 
 
 
+}#end if generate_web_maps
 
 
 # Species proportions comparison ------------------------------------------
 
-converge_sum <- readRDS(paste0("output/all_parameter_convergence_summary_",Y,".rds")) 
+converge_sum <- readRDS(paste0(ext_dir,"/","output/all_parameter_convergence_summary_",Y,".rds")) 
 b_var = read_csv("website/B_species_names.csv",
                  locale = locale(encoding = "latin1"),
                  name_repair = make.names)

@@ -7,6 +7,8 @@ library(tidybayes)
 library(ggrepel)
 source("functions/utility_functions.R")
 
+ext_dir <- "f:/CWS_National_Harvest_Survey"
+
 ### age-sex raw data for website - 
 castes <- data.frame(c = c(1,2,3,4),
                      caste = c("D","B","A","E"),
@@ -66,12 +68,11 @@ sp_vars <- read.csv("data/website_species_variable_names_in.csv")
     
     # data set up -------------------------------------------------------
     
-    
     for(z in 1:3){
       
 
-      if(file.exists(paste("output/full harvest zip",pr,z,"duck","alt mod.RData"))){
-        load(paste("output/full harvest zip",pr,z,"duck","alt mod.RData"))
+      if(file.exists(paste0(ext_dir,paste("/output/full harvest zip",pr,z,"duck","alt mod.RData")))){
+        load(paste0(ext_dir,paste("/output/full harvest zip",pr,z,"duck","alt mod.RData")))
         
         ys <- data.frame(y = 1:jdat$nyears,
                          year = years) 
@@ -106,8 +107,8 @@ sp_vars <- read.csv("data/website_species_variable_names_in.csv")
         
       }
       
-      if(file.exists(paste("output/full harvest zip",pr,z,"goose","alt mod.RData"))){
-        load(paste("output/full harvest zip",pr,z,"goose","alt mod.RData"))
+      if(file.exists(paste0(ext_dir,paste("/output/full harvest zip",pr,z,"goose","alt mod.RData")))){
+        load(paste0(ext_dir,paste("/output/full harvest zip",pr,z,"goose","alt mod.RData")))
         
         ys <- data.frame(y = 1:jdat$nyears,
                          year = years) 
@@ -140,8 +141,8 @@ sp_vars <- read.csv("data/website_species_variable_names_in.csv")
         }  
       }
       
-      if(file.exists(paste("output/full harvest zip",pr,z,"murre","alt mod.RData"))){
-        load(paste("output/full harvest zip",pr,z,"murre","alt mod.RData"))
+      if(file.exists(paste0(ext_dir,paste("/output/full harvest zip",pr,z,"murre","alt mod.RData")))){
+        load(paste0(ext_dir,paste("/output/full harvest zip",pr,z,"murre","alt mod.RData")))
         
         ys <- data.frame(y = 1:jdat$nyears,
                          year = years[c(((length(years)-jdat$nyears)+1):length(years))]) 
@@ -180,7 +181,7 @@ sp_vars <- read.csv("data/website_species_variable_names_in.csv")
       }
     }#z
       save(list = c("tmp_sp_period"),
-           file = paste0("output/national_provincial_summaries5",pr,".RData"))
+           file = paste0(ext_dir,"/","output/national_provincial_summaries5",pr,".RData"))
     print(pr)
   }
   
@@ -188,7 +189,7 @@ sp_vars <- read.csv("data/website_species_variable_names_in.csv")
  
  for(pr in provs){
   
-     load(paste0("output/national_provincial_summaries5",pr,".RData"))
+     load(paste0(ext_dir,"/","output/national_provincial_summaries5",pr,".RData"))
    tmp_sp_period_all <- bind_rows(tmp_sp_period_all,tmp_sp_period)
    print(pr)
    rm("tmp_sp_period")

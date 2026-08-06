@@ -8,9 +8,11 @@ library(tidyverse)
 #library(ggmcmc)
 library(tidybayes)
 library(ggrepel)
-library(ggforce)
+#library(ggforce)
 library(HDInterval)
 source("functions/utility_functions.R")
+
+ext_dir <- "f:/CWS_National_Harvest_Survey"
 
 ### caste level summaries
 ### full summaries
@@ -36,7 +38,7 @@ alt_regs <- prov_zone %>%
 # will be affected...also 
 # alternative is to flag estimates that
 
-converge_sum <- readRDS(paste0("output/all_parameter_convergence_summary_",Y,".rds")) 
+converge_sum <- readRDS(paste0(ext_dir,"/","output/all_parameter_convergence_summary_",Y,".rds")) 
 # Simple estimates effort and groups --------------------------------------
 
 load("national_provincial_summaries1.RData")
@@ -270,7 +272,7 @@ rm(list = c("tmp_sp",
 # age ratios --------------------------------------------------------------
 
 # load demographic convergence summary
-demog_summary <- readRDS("output/demog_summary.rds")
+demog_summary <- readRDS(paste0(ext_dir,"/","output/demog_summary.rds"))
 # this identifies species, years, and regions where the demographic parameters
 # failed to converge. 
 # these species x region (maybe years) combinations should be removed from the demographic 
