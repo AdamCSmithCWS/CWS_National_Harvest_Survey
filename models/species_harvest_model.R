@@ -220,7 +220,7 @@ model {
         ##  t-distribution used for overdispersion in activity to allow for heavy-tailed 
         ## variances on both activity and harvest are caste-specific precision to allow hunter-level dispersion to vary among castes
         ## consider whether tauhunter should also vary among all years...
-        wy[c,y,h] <- step(y-(nyears/2))+1 #trick to identify if this value is in the first of last half of the time-series
+        wy[c,y,h] <- step(y-(2001-1976))+1 #trick to identify if this year is before 2000
         hntr_day[c,y,h] ~ dt(0,tauhunter_day[c],nu_day[c])
         hntr[c,y,h] ~ dt(0,tauhunter[c,wy[c,y,h]],nu[c,wy[c,y,h]])
         #n days probably accounts for a bit of the hunting skill effect as well as the activity effect
@@ -269,7 +269,7 @@ model {
       # mean_totdays_yc_alt[y,c] <- mean(totdays_hcy[y,c,1:nhunter_cy[c,y]]) #mean days per active hunter
 
       #mean per-hunter kill and days by year and caste - alternative estimate
-      wy2[y,c] <- step(y-(nyears/2))+1 #trick to identify if this value is in the first of last half of the time-series
+      wy2[y,c] <- step(y-(2001-1976))+1 #trick to identify if this year is before 2000
       
       mean_totkill_yc[y,c] <- exp(ann[y] + cst[c,y] + ann_day[y] + cst_day[c,y] + retrans_hunter_day[c] + retrans_hunter[c,wy2[y,c]]) *psi[y]
       mean_totdays_yc[y,c] <- exp(ann_day[y] + cst_day[c,y] + retrans_hunter_day[c])
