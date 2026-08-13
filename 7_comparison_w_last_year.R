@@ -1,6 +1,6 @@
 ### comparing annual species harvests
 library(tidyverse)
-yy = 2024
+yy = 2025
 ly = yy - 1
 
 ddir <- "temparch/"
@@ -115,10 +115,10 @@ for(i in 1:nrow(provs)){
                   aes(x = Year,
                       y = Estimate,
                       colour = year_est))+
-    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.5,width = 0,
-                  linewidth = 1,
+    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.8,width = 0,
+                  linewidth = 0.2,
                   position = position_dodge(width = 0.75))+
-    geom_point(position = position_dodge(width = 0.75),alpha = 0.7,size = 1)+
+    geom_point(position = position_dodge(width = 0.75),alpha = 0.8,size = 0.4)+
     facet_wrap(vars(Species_Name_English),ncol = 5,scales = "free_y")+
     labs(title = paste(pr,z))+
     xlab("")+
@@ -286,9 +286,11 @@ for(i in 1:nrow(provs)){
                   aes(x = Year,
                       y = Estimate,
                       colour = year_est))+
-    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.2,width = 0,
-                  position = position_dodge(width = 0.33))+
-    geom_point(position = position_dodge(width = 0.33))+
+    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.8,width = 0,
+                  position = position_dodge(width = 0.7),
+                  linewidth = 0.2)+
+    geom_point(position = position_dodge(width = 0.7),
+               size = 0.4)+
     facet_wrap(vars(Species_Name_English),ncol = 5,scales = "free_y")+
     labs(title = paste(pr,z))+
     xlab("")+
@@ -302,7 +304,7 @@ for(i in 1:nrow(provs)){
       # The new stuff
       strip.text = element_text(size = 8))+
     scale_x_continuous(breaks = seq(yy-11,yy,by = 2))+
-    scale_colour_viridis_d(begin = 0.2,end = 0.8,direction = -1)
+    scale_colour_viridis_d(begin = 0.1,end = 0.9,direction = -1)
   
   print(compp) 
   
@@ -383,9 +385,10 @@ for(i in 1:nrow(provs)){
                   aes(x = Year,
                       y = Estimate,
                       colour = year_est))+
-    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.2,width = 0,
+    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.8,width = 0,
+                  linewidth = 0.2,
                   position = position_dodge(width = 0.75))+
-    geom_point(position = position_dodge(width = 0.75),alpha = 0.7)+
+    geom_point(position = position_dodge(width = 0.75),alpha = 0.8,size = 0.4)+
     facet_wrap(vars(Description_En),ncol = 5,scales = "free_y")+
     labs(title = paste(pr,z))+
     xlab("")+
@@ -435,9 +438,11 @@ for(i in 1:nrow(provs)){
                   aes(x = Year,
                       y = Estimate,
                       colour = year_est))+
-    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.2,width = 0,
-                  position = position_dodge(width = 0.33))+
-    geom_point(position = position_dodge(width = 0.33))+
+    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.8,width = 0,
+                  position = position_dodge(width = 0.7),
+                  linewidth = 0.2)+
+    geom_point(position = position_dodge(width = 0.7),
+               size = 0.4)+
     facet_wrap(vars(Description_En),ncol = 5,scales = "free_y")+
     labs(title = paste(pr,z))+
     xlab("")+
@@ -517,10 +522,14 @@ for(i in 1:nrow(provs)){
   compp <- ggplot(data = tmp,
                   aes(x = Year,
                       y = Estimate,
-                      colour = Canadian_Residents))+
-    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.2,width = 0,
-                  position = position_dodge(width = 0.75))+
-    geom_point(position = position_dodge(width = 0.75),alpha = 0.7)+
+                      colour = Canadian_Residents,
+                      group = year_est,
+                      shape = year_est))+
+    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.8,width = 0,
+                  position = position_dodge(width = 0.75),
+                  linewidth = 0.2)+
+    geom_point(position = position_dodge(width = 0.75),alpha = 0.8,
+               size = 0.4)+
     facet_wrap(vars(Description_En),scales = "free_y")+
     labs(title = paste(pr,z))+
     xlab("")+
@@ -569,10 +578,14 @@ for(i in 1:nrow(provs)){
   compp <- ggplot(data = tmp,
                   aes(x = Year,
                       y = Estimate,
-                      colour = Canadian_Residents))+
-    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.2,width = 0,
-                  position = position_dodge(width = 0.33))+
-    geom_point(position = position_dodge(width = 0.33))+
+                      colour = Canadian_Residents,
+                      group = year_est,
+                      shape = year_est))+
+    geom_errorbar(aes(ymin = lci,ymax = uci),alpha = 0.8,width = 0,
+                  position = position_dodge(width = 0.75),
+                  linewidth = 0.2)+
+    geom_point(position = position_dodge(width = 0.75),alpha = 0.8,
+               size = 0.4)+
     facet_wrap(vars(Description_En),scales = "free_y")+
     labs(title = paste(pr,z))+
     xlab("")+

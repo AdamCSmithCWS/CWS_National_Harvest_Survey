@@ -5,7 +5,7 @@ library(ggforce)
 library(sf)
 library(RColorBrewer)
 
-ext_dir <- "f:/CWS_National_Harvest_Survey"
+ext_dir <- "d:/CWS_National_Harvest_Survey"
 
 ## load the output tidy output files
 source("functions/palettes.R")

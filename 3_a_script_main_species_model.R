@@ -92,7 +92,7 @@ fit_table <- provzone %>%
 #fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckON2","duckON3","duckPQ1","duckPQ2","gooseNT1"))
 #fit_table <- fit_table %>% filter((spgp == "duck" & prov == "MB"))
 
-fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("gooseSK3","gooseAB1","gooseNF2"))
+fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("gooseSK1"))
  overwrite <- TRUE # set to TRUE if attempting to overwrite earlier model runs
  
  
@@ -121,7 +121,7 @@ if(file.exists(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))){
 load(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
 
   if(paste0(spgp,pr,z) %in% c("goosePQ1","goosePQ2","gooseON3")){
-  mod.file = "models/species_harvest_model_alt_goose.R" # version with nu fixed at 3
+  mod.file = "models/species_harvest_model_alt_goose.R" # version with nu fixed at 3 and 2 time periods for hunter variance
   }else{
     if(spgp == "duck" & pr %in% c("ON","PQ")){
     mod.file = "models/species_harvest_model_more_flexible.R" #
@@ -136,7 +136,7 @@ load(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
     mod.file = "models/species_harvest_model_allrich.R" #
     jdat$species_sparse <- NULL
     if(paste0(spgp,pr,z) %in% c("goosePQ1","goosePQ2","gooseON3")){
-      mod.file = "models/species_harvest_model_alt_goose_allrich.R" # version with nu fixed at 3
+      mod.file = "models/species_harvest_model_alt_goose_allrich.R" # version with nu fixed at 3 and 2 time periods for hunter variance
     }
     
     
