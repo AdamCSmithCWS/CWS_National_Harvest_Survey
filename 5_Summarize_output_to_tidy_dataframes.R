@@ -223,6 +223,41 @@ zone_sums_a <- tmp_sp %>%
             lci = as.numeric(hdi(sum,0.95)[1]),
             uci = as.numeric(hdi(sum,0.95)[2]))
 
+
+
+## testing alt models
+# 
+# sngo_obs <- tmp_sp %>% # extract only sngo records
+#   filter(AOU %in% sngo_aou) %>%
+#   group_by(model,prov,zone,year,.draw) %>%
+#   summarise(.value = sum(.value)) %>% # sum draw values for each prov, zone, and year
+#   mutate(AOU = 1695) # add new AOU value
+# 
+# tmp_sp <- bind_rows(tmp_sp,sngo_obs) #append sngo full species to rest of estimates
+# 
+# zone_sums_a <- tmp_sp %>%
+#   group_by(model,AOU,prov,zone,year,.draw) %>%
+#   summarise(sum = sum(.value)) %>%
+#   group_by(model,AOU,prov,zone,year) %>%
+#   summarise(mean = mean(sum),
+#             median = quantile(sum,0.5,names = FALSE),
+#             lci = as.numeric(hdi(sum,0.95)[1]),
+#             uci = as.numeric(hdi(sum,0.95)[2]))
+# 
+# tst <- ggplot()+
+#   geom_pointrange(data = zone_sums_a,
+#                   aes(x = year,y = median,
+#                       ymin = lci, ymax = uci,
+#                       colour = model),
+#                   alpha = 0.5,
+#                   position = position_dodge(width = 0.3))+
+#   facet_wrap(vars(AOU))
+# 
+# tst
+
+### end testing
+
+
 prov_sums_a <- tmp_sp %>%
   group_by(AOU,prov,year,.draw) %>%
   summarise(sum = sum(.value)) %>%

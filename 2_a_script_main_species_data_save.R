@@ -62,7 +62,6 @@ library(ggrepel)
 #load.module("glm") 
 
 
-
 # load output from data_prep.R --------------------------------------------
 
 
@@ -70,6 +69,31 @@ library(ggrepel)
 
 provzone <- read.csv("data/Province and zone table.csv")
 provs = unique(provzone$prov)
+
+nfmurre <- data.frame(prov = "NF",
+                      zone = 1,
+                      spgp = "murre")
+fit_table <- provzone %>% 
+  select(prov,zone) %>% 
+  expand_grid(.,spgp = c("duck_","goose")) %>% 
+  bind_rows(.,nfmurre) %>% 
+  arrange(spgp)
+
+
+# creating control file for gpsc model fitting ----------------------------
+
+
+fit_table <- fit_table |> 
+  mutate(model_name = paste0(spgp,prov,zone))
+
+fit_table_gpsc <- fit_table |> 
+  select(model_name)
+
+write_tsv(fit_table_gpsc,
+          col_names = FALSE,
+          "model_list.txt")
+# upload model_list.txt to gpsc in teh main NMS folder
+
 load("data/allkill.RData")
 
 # export anonymized survey responses --------------------------------------

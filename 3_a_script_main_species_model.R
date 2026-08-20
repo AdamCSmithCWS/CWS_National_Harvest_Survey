@@ -92,7 +92,7 @@ fit_table <- provzone %>%
 #fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("duckON2","duckON3","duckPQ1","duckPQ2","gooseNT1"))
 #fit_table <- fit_table %>% filter((spgp == "duck" & prov == "MB"))
 
-fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("gooseSK1"))
+fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("gooseMB2"))
  overwrite <- TRUE # set to TRUE if attempting to overwrite earlier model runs
  
  
@@ -113,7 +113,6 @@ fit_table <- fit_table %>% filter(paste0(spgp,prov,zone) %in% c("gooseSK1"))
       pr <- as.character(fit_table[i,"prov"])
       z <- as.character(fit_table[i,"zone"])
       
-      period = read.csv(paste0("data/period.",spgp,".csv"))
       
 if(overwrite | !file.exists(paste("output/full harvest zip",pr,z,spgp,"alt mod.RData"))){
       
@@ -159,7 +158,15 @@ load(paste("data/data",pr,z,spgp,"save.RData",sep = "_"))
   jdat$species_sparse <- NULL
   
   }
+ 
   
+  # resetting overall summary values to be summaries for the midyear 
+jdat$w_s <- jdat$w_sy[1:jdat$nspecies,jdat$midyear]
+jdat$nparts <- jdat$nparts_y[jdat$midyear]
+
+
+
+
 
 parms = c("NACTIVE_y",
           "NACTIVE_cy",
@@ -429,7 +436,7 @@ if(class(out2) != "try-error"){
   
 
   save(list = c("out2","jdat","sp.save.out","out2sum", "attempts"),
-       file = paste("output/full harvest zip",pr,z,spgp,"alt mod.RData"))
+       file = paste("output/full harvest zip",pr,z,spgp,"alt mod2.RData"))
   
 
 

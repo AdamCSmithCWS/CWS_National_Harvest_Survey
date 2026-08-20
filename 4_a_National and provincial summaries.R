@@ -32,8 +32,8 @@ names(years) <- paste(years)
 
 # load website published estimates ----------------------------------------
 
-ext_dir <- "f:/CWS_National_Harvest_Survey"
-
+ext_dir <- "d:/CWS_National_Harvest_Survey"
+ext_dir <- getwd()
 # # write.csv(var_names_sim,"data/website_variable_names.csv",row.names = F)
 # # 
 # # write.csv(species_web_names,"data/website_species_variable_names.csv",row.names = F)
@@ -144,8 +144,9 @@ parameter_summary <- parameter_summary %>%
          ess_fail = ifelse(ess_bulk < ess_lim,TRUE,FALSE))
 
 simplified_summary <- parameter_summary %>% 
-  group_by(prov,zone,model,variable_type) %>% 
-  summarise(n_fail = sum(rhat_fail),
+  group_by(prov,zone,model,variable_type,rhat_fail) %>% 
+  summarise(n = n(),
+            n_fail = sum(rhat_fail),
             max_rhat = max(rhat),
             n_ess_fail = sum(ess_fail))
 
@@ -164,9 +165,23 @@ problems <- simplified_summary %>%
   summarise(n = n(),
             n_sum = sum(n_fail),
             max_rhat = max(max_rhat),
-            n_ess_fail = mean(n_ess_fail))
+            n_ess_fail = sum(n_ess_fail))
 
 
+if(nrow(problems) > 0){
+
+re_run <- problems |> 
+  select(prov,zone,model) |> 
+  distinct() |> 
+  mutate(model = ifelse(model == "duck","duck_",model),
+         model_name = paste0(model,prov,zone))|> 
+  ungroup() |> 
+  select(model_name)
+
+write_tsv(re_run,
+          col_names = FALSE,
+          "model_list.txt")
+}
 
 demog_summary <- parameter_summary %>% 
   filter(grepl("ax",variable_type),
