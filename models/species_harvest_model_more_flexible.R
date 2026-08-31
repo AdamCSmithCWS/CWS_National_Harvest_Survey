@@ -396,7 +396,7 @@ model {
   }
   tau_alpha_py[1] ~ dscaled.gamma(0.5,50)
   for(p in 2:nperiods){
-    alpha_py[p,midyear] ~ dnorm(0,0.5) # fixed effect period-effects on total kill
+    alpha_py[p,midyear] ~ dnorm(0,0.1) # fixed effect period-effects on total kill
     #alpha_py[p,1] <- alpha_p[p]
     for(y in (midyear+1):nyears){
       
@@ -476,7 +476,7 @@ model {
   alpha_s[1] <- 0
   
   for(s in 2:nspecies){
-    alpha_s[s] ~ dnorm(0,0.5)
+    alpha_s[s] ~ dnorm(0,0.1)
   }
   
   ### first species is the reference group in each year
@@ -485,7 +485,7 @@ model {
   }
   
   for(s in 2:nspecies){
-    alpha_sy[s,midyear] <- alpha_s[s] # ~ dnorm(0,0.5) 
+    alpha_sy[s,midyear] <- alpha_s[s] # ~ dnorm(0,0.1) 
     for(y in (midyear+1):nyears){
       
       alpha_sy[s,y] ~ dnorm(alpha_sy[s,y-1],tau_alpha_s) 
@@ -532,7 +532,7 @@ model {
   }
   
   for(s in 2:nspecies){
-    alpha_ps[midperiod,s] ~ dnorm(0,0.5) #fixed effect for species 2:nspecies in middle period
+    alpha_ps[midperiod,s] ~ dnorm(0,0.1) #fixed effect for species 2:nspecies in middle period
   }
   
   for(p in (midperiod+1):nperiods){
