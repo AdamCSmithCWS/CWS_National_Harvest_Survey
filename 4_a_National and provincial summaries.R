@@ -32,8 +32,8 @@ names(years) <- paste(years)
 
 # load website published estimates ----------------------------------------
 
-ext_dir <- "d:/CWS_National_Harvest_Survey"
-ext_dir <- getwd()
+ext_dir <- "f:/CWS_National_Harvest_Survey"
+#ext_dir <- getwd()
 # # write.csv(var_names_sim,"data/website_variable_names.csv",row.names = F)
 # # 
 # # write.csv(species_web_names,"data/website_species_variable_names.csv",row.names = F)

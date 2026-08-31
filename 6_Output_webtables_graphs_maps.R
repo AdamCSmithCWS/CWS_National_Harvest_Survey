@@ -5,7 +5,7 @@ library(ggforce)
 library(sf)
 library(RColorBrewer)
 
-ext_dir <- "d:/CWS_National_Harvest_Survey"
+ext_dir <- "f:/CWS_National_Harvest_Survey"
 
 ## load the output tidy output files
 source("functions/palettes.R")
@@ -551,10 +551,15 @@ for(l in c("En","Fr")){
 
 # mapping of estimates ----------------------------------------------------
 
-generate_web_maps <- FALSE
+generate_web_maps <- TRUE
 
 if(generate_web_maps){
 
+  if(any(!dir.exists(paste0("website/maps/",c("A","B","C"))))){
+    for(l in c("A","B","C")){
+    dir.create(paste0("website/maps/",l))
+    }
+  }
 ## load map
 base_map = st_read(dsn = "input_map",
                    layer = "Harvest_Survey_Zones_2017")
