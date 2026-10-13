@@ -327,11 +327,11 @@ for(pr in provs){
            ## In 2024 make sure to add this commented out version to captuer
            ## the additional monitored parameters NACTIVE_cy and days_cy
            ## 
-            # tmp_duck <- out2$samples %>% gather_draws(NSUCC_cy[c,y],
-            #                                           NACTIVE_cy[c,y],
-            #                                           days_cy[c,y],
-            #                                           kill_cy[c,y]) 
-           tmp_duck <- out2$samples %>% gather_draws(kill_cy[c,y]) 
+            tmp_duck <- out2$samples %>% gather_draws(NSUCC_cy[c,y],
+                                                      NACTIVE_cy[c,y],
+                                                      days_cy[c,y],
+                                                      kill_cy[c,y])
+           #tmp_duck <- out2$samples %>% gather_draws(kill_cy[c,y]) 
            
            vnm <- sim_vars[which(sim_vars$source == "duck"),]
            #vnm <- rename(vnm,group = var)
