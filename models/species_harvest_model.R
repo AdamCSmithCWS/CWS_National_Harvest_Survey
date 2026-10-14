@@ -441,7 +441,7 @@ model {
   # summing across all of the periods
   # this estimate is useful to generate the alpha_sy[s,y] values that are used as a predictor in the 
   # full annual period and year specific proportions
- w_s[1:nspecies] ~ dmulti(pcomp_s[1:nspecies], nparts)   # w_s is the total number of parts for each species (across all years), nparts is the sum of the total parts
+ w_s[1:nspecies] ~ dmulti(pcomp_s[1:nspecies], nparts)   # w_s is the total number of parts for each species in the mid-year of the time-series and nparts is the total number of parts in that year
   
  
    for (s in 1:nspecies){
